@@ -1,0 +1,9 @@
+# Default initial positions for so101_new_calib's ros2_control fake system
+
+initial_positions:
+  Elbow: 0
+  Jaw: 0
+  Pitch: 0
+  Rotation: 0
+  Wrist_Pitch: 0
+  Wrist_Roll: 0
