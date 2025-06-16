@@ -20,7 +20,7 @@ install(
 		urdf/
 	DESTINATION
 		share/${PROJECT_NAME}/urdf
-	FILES_MATCHING PATTERN "*.urdf"
+	FILES_MATCHING PATTERN "*.urdf" PATTERN "*.xacro"
 )
 
 # Install other directories
@@ -29,10 +29,16 @@ install(
 		meshes
 		config
 		launch
+		rviz
 	DESTINATION
 		share/${PROJECT_NAME}
 	OPTIONAL
 )
+
+if(BUILD_TESTING)
+	find_package(ament_lint_auto REQUIRED)
+	ament_lint_auto_find_test_dependencies()
+endif()
 
 ament_package()
 

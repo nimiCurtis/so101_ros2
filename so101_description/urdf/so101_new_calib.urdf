@@ -321,16 +321,6 @@
     <limit effort="10" velocity="10" lower="-0.174533" upper="1.74533"/>
   </joint>
 
-  <transmission name="6_trans">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="Jaw">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="motor6">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
 
   <!-- Joint from wrist to gripper -->
   <joint name="Wrist_Roll" type="revolute">
@@ -341,17 +331,6 @@
     <limit effort="10" velocity="10" lower="-2.79253" upper="2.79253"/>
   </joint>
 
-  <transmission name="5_trans">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="Wrist_Roll">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="motor5">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-
   <!-- Joint from lower_arm to wrist -->
   <joint name="Wrist_Pitch" type="revolute">
     <origin xyz="-0.1349 0.0052 1.65232e-16" rpy="3.2474e-15 2.86219e-15 -1.5708"/>
@@ -360,17 +339,6 @@
     <axis xyz="0 0 1"/>
     <limit effort="10" velocity="10" lower="-1.65806" upper="1.65806"/>
   </joint>
-
-  <transmission name="4_trans">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="Wrist_Pitch">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="motor4">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
 
   <!-- Joint from upper_arm to lower_arm -->
   <joint name="Elbow" type="revolute">
@@ -381,17 +349,6 @@
     <limit effort="10" velocity="10" lower="-1.74533" upper="1.5708"/>
   </joint>
 
-  <transmission name="3_trans">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="Elbow">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="motor3">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-
   <!-- Joint from shoulder to upper_arm -->
   <joint name="Pitch" type="revolute">
     <origin xyz="-0.0303992 -0.0182778 -0.0542" rpy="-1.5708 -1.5708 0"/>
@@ -401,17 +358,6 @@
     <limit effort="10" velocity="10" lower="-1.74533" upper="1.74533"/>
   </joint>
 
-  <transmission name="2_trans">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="Pitch">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="motor2">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-
   <!-- Joint from base to shoulder -->
   <joint name="Rotation" type="revolute">
     <origin xyz="0.0207909 -0.0230745 0.0948817" rpy="-3.14159 6.03684e-16 1.5708"/>
@@ -420,16 +366,5 @@
     <axis xyz="0 0 1"/>
     <limit effort="10" velocity="10" lower="-1.91986" upper="1.91986"/>
   </joint>
-
-  <transmission name="1_trans">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="Rotation">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="motor1">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
 
 </robot>
