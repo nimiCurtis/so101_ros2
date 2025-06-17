@@ -11,6 +11,10 @@
     <color rgba="0.1 0.1 0.1 1.0"/>
   </material>
 
+
+  <!-- Virtual world link -->
+  <link name="world"/>
+
   <!-- Link base -->
   <link name="base">
     <inertial>
@@ -367,4 +371,11 @@
     <limit effort="10" velocity="10" lower="-1.91986" upper="1.91986"/>
   </joint>
 
+    <!-- Fixed joint between world and robot base -->
+    <joint name="world_to_base" type="fixed">
+      <parent link="world"/>
+      <child link="base"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+    
 </robot>

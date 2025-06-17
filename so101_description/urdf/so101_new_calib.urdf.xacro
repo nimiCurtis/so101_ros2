@@ -4,16 +4,20 @@
     <!-- Arguments -->
     <xacro:arg name="initial_positions_file" default="$(find so101_description)/config/initial_positions.yaml" />
     <xacro:arg name="display" default="false"/>
-    
+    <xacro:arg name="mode" default="gazebo"/> 
+    <!-- or 'isaac' or 'real' -->
+
     <!-- Import so101_new_calib urdf file -->
     <xacro:include filename="$(find so101_description)/urdf/so101_new_calib.urdf" />
 
     <!-- Conditionally include transmissions & control -->
     <xacro:if value="$(eval not display)">
+        <xacro:include filename="$(find so101_description)/urdf/so101_new_calib_gazebo.xacro"/>
         <xacro:include filename="$(find so101_description)/urdf/so101_new_calib_with_transmission.xacro"/>
-        <!-- Import control_xacro -->
-        <xacro:include filename="so101_new_calib.ros2_control.xacro" />
-        <xacro:so101_new_calib_ros2_control name="FakeSystem" initial_positions_file="$(arg initial_positions_file)"/>
+            <!-- Import control_xacro -->
+        <xacro:include filename="$(find so101_description)/urdf/so101_new_calib.ros2_control.xacro" />
+        <xacro:so101_new_calib_ros2_control name="RobotSystem" initial_positions_file="$(arg initial_positions_file)"/>
+
     </xacro:if>
 
 

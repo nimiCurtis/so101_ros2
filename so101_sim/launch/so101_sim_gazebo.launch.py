@@ -33,7 +33,9 @@ def generate_launch_description():
                                     " ",
                                     LaunchConfiguration("model"),
                                     " ",
-                                    "display:=true"  # or false if you want ros2_control enabled
+                                    "display:=false"  # or false if you want ros2_control enabled
+                                    " ",
+                                    "mode:=gazebo" 
                                 ]),
                             value_type=str
                             )
@@ -73,7 +75,7 @@ def generate_launch_description():
         package="ros_gz_bridge",
         executable="parameter_bridge",
         arguments=[
-                '/clock@rosgraph_msgs/msg/Clock[ignition.msgs.Clock',
+                "/clock@rosgraph_msgs/msg/Clock[ignition.msgs.Clock",
             ],
         )
 

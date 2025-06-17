@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="so101_new_calib">
+
+    <!-- ROS 2 Control -->
+    <gazebo>
+        <!-- ROS 2 Humble -->
+        <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
+            <parameters>$(find so101_controller)/config/so101_controllers.yaml</parameters>
+        </plugin>
+    </gazebo>
+
+</robot>
