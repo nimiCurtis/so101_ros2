@@ -34,3 +34,8 @@ ros2 launch so101_sim so101_sim_gazebo.launch.py
 ## License
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for the
 full license text.
+
+## Development
+
+Linting is checked with [flake8](https://flake8.pycqa.org/) via GitHub Actions.
+Run `flake8` locally before submitting changes.
