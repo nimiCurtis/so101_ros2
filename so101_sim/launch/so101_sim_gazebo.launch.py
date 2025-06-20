@@ -20,7 +20,7 @@ def generate_launch_description():
         description="Absolute path to the robot URDF/xacro file"
         )
 
-    gazebo_resuorce_path = SetEnvironmentVariable(
+    gazebo_resource_path = SetEnvironmentVariable(
         name="GZ_SIM_RESOURCE_PATH",
         value=[
             str(Path(so101_description_share_dir).parent.resolve())
@@ -81,7 +81,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         model_arg,
-        gazebo_resuorce_path,
+        gazebo_resource_path,
         robot_state_publisher,
         gazebo_launch,
         gazebo_spawn_entity,
