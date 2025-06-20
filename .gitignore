@@ -10,3 +10,4 @@ install_manifest.txt
 .moveit_ci/
 docs_output
 docs_build
+__pycache__/
