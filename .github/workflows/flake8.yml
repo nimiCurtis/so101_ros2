@@ -2,12 +2,12 @@ name: Lint
 
 on:
   push:
-    branches: [ main ]
+    branches: [main, dev]
   pull_request:
-    branches: [ main ]
+    branches: [main, dev]
 
 jobs:
-  flake8:
+  pre-commit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -15,6 +15,6 @@ jobs:
         with:
           python-version: '3.x'
       - name: Install dependencies
-        run: pip install flake8
-      - name: Run flake8
-        run: flake8
+        run: pip install pre-commit
+      - name: Run pre-commit
+        run: pre-commit run --all-files --show-diff-on-failure
