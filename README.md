@@ -25,10 +25,6 @@ colcon build
 source install/setup.bash
 ```
 
-This repository provides a meta-package named `so101_ros2`. Building this
-package compiles all other packages in the workspace so a single `colcon build`
-will fetch the entire driver stack.
-
 ---
 
 ## Usage
