@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>so101_ros2</name>
+  <version>0.1.0</version>
+  <description>Metapackage for the SO101 ROS 2 workspace.</description>
+  <maintainer email="nimicu21@gmail.com">nimrod</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>so101_controller</exec_depend>
+  <exec_depend>so101_description</exec_depend>
+  <exec_depend>so101_moveit</exec_depend>
+  <exec_depend>so101_sim</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
