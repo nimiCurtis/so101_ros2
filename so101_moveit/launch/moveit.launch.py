@@ -10,26 +10,19 @@ from ament_index_python.packages import get_package_share_directory
 def generate_launch_description():
 
     is_sim = LaunchConfiguration("is_sim")
-    
-    is_sim_arg = DeclareLaunchArgument(
-        "is_sim",
-        default_value="True"
-    )
+
+    is_sim_arg = DeclareLaunchArgument("is_sim", default_value="True")
 
     robot_description_share_dir = get_package_share_directory("so101_description")
     robot_description_f = os.path.join(
-            robot_description_share_dir,
-            "urdf",
-            "so101_new_calib.urdf.xacro"
-            )
+        robot_description_share_dir, "urdf", "so101_new_calib.urdf.xacro"
+    )
     joint_limits_f = os.path.join(
-            robot_description_share_dir,
-            "config",
-            "joint_limits.yaml"
-            )
+        robot_description_share_dir, "config", "joint_limits.yaml"
+    )
     moveit_controllers_f = "config/moveit_controllers.yaml"
     srdf_f = "config/so101_new_calib.srdf"
-    
+
     moveit_config = (
         MoveItConfigsBuilder("so101_new_calib", package_name="so101_moveit")
         .robot_description(file_path=robot_description_f)
@@ -43,17 +36,19 @@ def generate_launch_description():
         package="moveit_ros_move_group",
         executable="move_group",
         output="screen",
-        parameters=[moveit_config.to_dict(), 
-                    {"use_sim_time": is_sim},
-                    {"publish_robot_description_semantic": True}],
+        parameters=[
+            moveit_config.to_dict(),
+            {"use_sim_time": is_sim},
+            {"publish_robot_description_semantic": True},
+        ],
         arguments=["--ros-args", "--log-level", "info"],
     )
 
     # RViz
     rviz_config = os.path.join(
         get_package_share_directory("so101_moveit"),
-            "rviz",
-            "moveit.rviz",
+        "rviz",
+        "moveit.rviz",
     )
     rviz_node = Node(
         package="rviz2",
@@ -69,10 +64,4 @@ def generate_launch_description():
         ],
     )
 
-    return LaunchDescription(
-        [
-            is_sim_arg,
-            move_group_node, 
-            rviz_node
-        ]
-    )
+    return LaunchDescription([is_sim_arg, move_group_node, rviz_node])

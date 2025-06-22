@@ -25,6 +25,10 @@ colcon build
 source install/setup.bash
 ```
 
+This repository provides a meta-package named `so101_ros2`. Building this
+package compiles all other packages in the workspace so a single `colcon build`
+will fetch the entire driver stack.
+
 ---
 
 ## Usage
@@ -52,5 +56,8 @@ full license text.
 
 ## Development
 
-Linting is checked with [flake8](https://flake8.pycqa.org/) via GitHub Actions.
-Run `flake8` locally before submitting changes.
+Formatting and linting are handled with
+[pre-commit](https://pre-commit.com/) which runs `black` and `flake8`.
+Install the hooks with `pre-commit install` so the checks run automatically
+before each commit. The CI executes `pre-commit` on pushes and pull requests
+to the `main` and `dev` branches.

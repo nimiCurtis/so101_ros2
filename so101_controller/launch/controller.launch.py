@@ -11,10 +11,7 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
 
-    is_sim_arg = DeclareLaunchArgument(
-        "is_sim",
-        default_value="True"
-    )
+    is_sim_arg = DeclareLaunchArgument("is_sim", default_value="True")
 
     is_sim = LaunchConfiguration("is_sim")
 
@@ -43,8 +40,7 @@ def generate_launch_description():
         package="controller_manager",
         executable="ros2_control_node",
         parameters=[
-            {"robot_description": robot_description,
-             "use_sim_time": is_sim},
+            {"robot_description": robot_description, "use_sim_time": is_sim},
             os.path.join(
                 get_package_share_directory("so101_controller"),
                 "config",
