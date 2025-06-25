@@ -1,10 +1,11 @@
 import os
+
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from moveit_configs_utils import MoveItConfigsBuilder
-from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
-from ament_index_python.packages import get_package_share_directory
+from launch_ros.actions import Node
+from moveit_configs_utils import MoveItConfigsBuilder
 
 
 def generate_launch_description():

@@ -15,7 +15,9 @@
         <joint name="Elbow"/>
         <joint name="Wrist_Pitch"/>
         <joint name="Wrist_Roll"/>
+        <!-- <joint name="Jaw"/> -->
     </group>
+
     <group name="gripper">
         <joint name="Jaw"/>
     </group>
@@ -26,6 +28,7 @@
     <group_state name="open" group="gripper">
         <joint name="Jaw" value="1.4483"/>
     </group_state>
+
     <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
     <end_effector name="endeffector" parent_link="gripper" group="gripper" parent_group="arm"/>
     <!--VIRTUAL JOINT: Purpose: this element defines a virtual joint between a robot link and an external frame of reference (considered fixed with respect to the robot)-->
