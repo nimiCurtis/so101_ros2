@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>so101_ros2</name>
   <version>0.1.0</version>
   <description>Metapackage for the SO101 ROS 2 workspace.</description>
   <maintainer email="nimicu21@gmail.com">nimrod</maintainer>
   <license>MIT</license>
-
+  <!-- packages in so101_ros2 -->
   <exec_depend>so101_controller</exec_depend>
   <exec_depend>so101_description</exec_depend>
   <exec_depend>so101_moveit</exec_depend>
