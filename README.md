@@ -13,6 +13,14 @@ environment for testing and development.
 
 ---
 
+## Dependencies
+
+- ROS2 Humble [ Link to the official installation ]
+- Gazebo fortress-ignition [installtion guide]
+- RMW cyclonedds [ installation ]
+
+---
+
 ## Build
 
 Clone this repository into the `src` folder of your ROS 2 workspace and build
