@@ -40,10 +40,13 @@ endforeach()
 find_package(moveit_common REQUIRED)
 moveit_package()
 
-set(TARGET_KEYBOARD so101_keyboard_teleop)
-set(SERVO_CONTROLLER_INPUT servo_controller_input)
+# Keyboard
 set(SERVO_KEYBOARD_INPUT_LIB keyboard_servo_component_lib)
-set(SERVO_KEYBOARD_EXEC keyboard_servo_input)
+set(SERVO_KEYBOARD_EXEC keyboard_servo_exec)
+
+# Joy
+set(SERVO_JOY_INPUT_LIB joy_servo_component_lib)
+set(SERVO_JOY_EXEC joy_servo_exec)
 
 include_directories(
   include
@@ -55,10 +58,13 @@ include_directories(
 
 # Add and export library to run as a ROS node component, and receive commands via topics
 # Add executable for using a controller
-add_library(${SERVO_CONTROLLER_INPUT} SHARED src/joystick_servo_example.cpp)
-ament_target_dependencies(${SERVO_CONTROLLER_INPUT} ${THIS_PACKAGE_INCLUDE_DEPENDS})
-rclcpp_components_register_nodes(${SERVO_CONTROLLER_INPUT} "moveit_servo::JoyToServoPub")
 
+# Keyboard
+add_library(${SERVO_JOY_INPUT_LIB} SHARED src/joystick_servo_component.cpp)
+ament_target_dependencies(${SERVO_JOY_INPUT_LIB} ${THIS_PACKAGE_INCLUDE_DEPENDS})
+rclcpp_components_register_nodes(${SERVO_JOY_INPUT_LIB} "moveit_servo::JoyToServoComponent")
+
+# Joy
 add_library(${SERVO_KEYBOARD_INPUT_LIB} SHARED src/keyboard_servo_component.cpp)
 ament_target_dependencies(${SERVO_KEYBOARD_INPUT_LIB} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 rclcpp_components_register_nodes(${SERVO_KEYBOARD_INPUT_LIB} "moveit_servo::KeyboardServoComponent")
@@ -68,9 +74,11 @@ rclcpp_components_register_nodes(${SERVO_KEYBOARD_INPUT_LIB} "moveit_servo::Keyb
 ######################
 
 # Executable that wraps the component
-add_executable(keyboard_servo_input src/keyboard_servo_main.cpp)
-target_link_libraries(keyboard_servo_input keyboard_servo_component_lib)  # Use the component lib name here
-ament_target_dependencies(keyboard_servo_input ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
+# Keyboard
+add_executable(keyboard_servo_exec src/keyboard_servo_main.cpp)
+target_link_libraries(keyboard_servo_exec keyboard_servo_component_lib)  # Use the component lib name here
+ament_target_dependencies(keyboard_servo_exec ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 install(
   TARGETS
@@ -78,21 +86,14 @@ install(
   DESTINATION lib/${PROJECT_NAME}
 )
 
+# # Joy
+# add_executable(keyboard_servo_exec src/keyboard_servo_main.cpp)
+# target_link_libraries(keyboard_servo_exec keyboard_servo_component_lib)  # Use the component lib name here
+# ament_target_dependencies(keyboard_servo_exec ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
-# add_executable(${TARGET_KEYBOARD} src/so101_keyboard_teleop.cpp)
-
-# target_include_directories(${TARGET_KEYBOARD} PUBLIC
-#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#   $<INSTALL_INTERFACE:include>
-# )
-# target_compile_features(${TARGET_KEYBOARD} PUBLIC c_std_99 cxx_std_17)
-
-# ament_target_dependencies(${TARGET_KEYBOARD}
-#   rclcpp
-#   std_msgs
-# )
-
-# install(TARGETS ${TARGET_NAME}
+# install(
+#   TARGETS
+#     ${SERVO_KEYBOARD_EXEC}
 #   DESTINATION lib/${PROJECT_NAME}
 # )
 
