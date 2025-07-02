@@ -3,7 +3,7 @@ import os
 import yaml
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch_ros.actions import ComposableNodeContainer, Node
+from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 from moveit_configs_utils import MoveItConfigsBuilder
 
@@ -56,7 +56,7 @@ def generate_launch_description():
     )
 
     # Get parameters for the Servo node
-    servo_yaml = load_yaml("so101_teleop", "config/so101_simulated_config.yaml")
+    servo_yaml = load_yaml("so101_teleop", "config/so101_servo_config.yaml")
     servo_params = {"moveit_servo": servo_yaml}
 
     # Launch as much as possible in components
@@ -68,50 +68,24 @@ def generate_launch_description():
         composable_node_descriptions=[
             # Example of launching Servo as a node component
             # Assuming ROS2 intraprocess communications works well, this is a more efficient way.
-            # ComposableNode(
-            #     package="moveit_servo",
-            #     plugin="moveit_servo::ServoServer",
-            #     name="servo_server",
-            #     parameters=[
-            #         servo_params,
-            #         moveit_config.robot_description,
-            #         moveit_config.robot_description_semantic,
-            #     ],
-            # ),
+            ComposableNode(
+                package="moveit_servo",
+                plugin="moveit_servo::ServoServer",
+                name="servo_server",
+                parameters=[
+                    servo_params,
+                    moveit_config.robot_description,
+                    moveit_config.robot_description_semantic,
+                ],
+            ),
             ComposableNode(
                 package="robot_state_publisher",
                 plugin="robot_state_publisher::RobotStatePublisher",
                 name="robot_state_publisher",
                 parameters=[moveit_config.robot_description],
             ),
-            # ComposableNode(
-            #     package="so101_teleop",
-            #     plugin="moveit_servo::KeyboardServoComponent",
-            #     name="keyboard_to_servo_node",
-            # ),
         ],
         output="screen",
     )
 
-    keyboard_node = Node(
-        package="so101_teleop",
-        executable="keyboard_servo_input",  # <-- Match your target name in CMakeLists
-        name="so101_keyboard_teleop",
-        output="screen",
-    )
-
-    # Launch a standalone Servo node.
-    # As opposed to a node component, this may be necessary (for example) if Servo is running on a different PC
-    servo_node = Node(
-        package="moveit_servo",
-        executable="servo_node_main",
-        parameters=[
-            servo_params,
-            moveit_config.robot_description,
-            moveit_config.robot_description_semantic,
-            moveit_config.robot_description_kinematics,
-        ],
-        output="screen",
-    )
-
-    return LaunchDescription([servo_node, container, keyboard_node])
+    return LaunchDescription([container])
