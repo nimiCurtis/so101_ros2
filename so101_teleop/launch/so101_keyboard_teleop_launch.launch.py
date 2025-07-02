@@ -70,12 +70,14 @@ def generate_launch_description():
             # Assuming ROS2 intraprocess communications works well, this is a more efficient way.
             ComposableNode(
                 package="moveit_servo",
-                plugin="moveit_servo::ServoServer",
-                name="servo_server",
+                plugin="moveit_servo::ServoNode",
+                name="servo_node",
                 parameters=[
                     servo_params,
                     moveit_config.robot_description,
                     moveit_config.robot_description_semantic,
+                    moveit_config.robot_description_kinematics,
+                    moveit_config.joint_limits,
                 ],
             ),
             ComposableNode(

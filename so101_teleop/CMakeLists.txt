@@ -42,11 +42,11 @@ moveit_package()
 
 # Keyboard
 set(SERVO_KEYBOARD_INPUT_LIB keyboard_servo_component_lib)
-set(SERVO_KEYBOARD_EXEC keyboard_servo_exec)
+set(SERVO_KEYBOARD_EXEC keyboard_servo_node)
 
 # Joy
 set(SERVO_JOY_INPUT_LIB joystick_servo_component_lib)
-set(SERVO_JOY_EXEC joy_servo_exec)
+set(SERVO_JOY_EXEC joy_servo_node)
 
 include_directories(
   include
@@ -78,9 +78,9 @@ rclcpp_components_register_nodes(${SERVO_JOY_INPUT_LIB} "moveit_servo::JoyToServ
 # Executable that wraps the component
 
 # Keyboard
-add_executable(keyboard_servo_exec src/keyboard_servo_node.cpp)
-target_link_libraries(keyboard_servo_exec keyboard_servo_component_lib)  # Use the component lib name here
-ament_target_dependencies(keyboard_servo_exec ${THIS_PACKAGE_INCLUDE_DEPENDS})
+add_executable(${SERVO_KEYBOARD_EXEC} src/keyboard_servo_node.cpp)
+target_link_libraries(${SERVO_KEYBOARD_EXEC} keyboard_servo_component_lib)  # Use the component lib name here
+ament_target_dependencies(${SERVO_KEYBOARD_EXEC} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 install(
   TARGETS
@@ -89,9 +89,9 @@ install(
 )
 
 # Joy
-add_executable(joy_servo_exec src/joystick_servo_node.cpp)
-target_link_libraries(joy_servo_exec joystick_servo_component_lib)  # Use the component lib name here
-ament_target_dependencies(joy_servo_exec ${THIS_PACKAGE_INCLUDE_DEPENDS})
+add_executable(${SERVO_JOY_EXEC} src/joystick_servo_node.cpp)
+target_link_libraries(${SERVO_JOY_EXEC} joystick_servo_component_lib)  # Use the component lib name here
+ament_target_dependencies(${SERVO_JOY_EXEC} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 install(
   TARGETS
@@ -115,20 +115,6 @@ install(
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
 )
-
-
-
-
-# # Install Libraries
-# install(
-#   TARGETS
-#     ${SERVO_CONTROLLER_INPUT}
-#   EXPORT export_${PROJECT_NAME}
-#   LIBRARY DESTINATION lib
-#   ARCHIVE DESTINATION lib
-#   RUNTIME DESTINATION bin
-#   INCLUDES DESTINATION include
-# )
 
 
 # Install include, launch, config directories
