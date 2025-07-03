@@ -29,13 +29,6 @@ def generate_launch_description():
         value_type=str,
     )
 
-    robot_state_publisher_node = Node(
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        condition=UnlessCondition(is_sim),
-        parameters=[{"robot_description": robot_description}],
-    )
-
     controller_manager = Node(
         package="controller_manager",
         executable="ros2_control_node",
@@ -75,7 +68,6 @@ def generate_launch_description():
     return LaunchDescription(
         [
             is_sim_arg,
-            robot_state_publisher_node,
             controller_manager,
             joint_state_broadcaster_spawner,
             arm_controller_spawner,
