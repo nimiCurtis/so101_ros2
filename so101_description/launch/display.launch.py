@@ -3,62 +3,53 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
+from launch.conditions import IfCondition
 from launch.substitutions import (
-    Command,
-    FindExecutable,
     LaunchConfiguration,
-    PathJoinSubstitution,
 )
 from launch_ros.actions import Node
-from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
     so101_description_share_dir = get_package_share_directory("so101_description")
 
-    model_arg = DeclareLaunchArgument(
-        name="model",
-        default_value=os.path.join(
-            so101_description_share_dir, "urdf", "so101_new_calib.urdf.xacro"
-        ),
-        description="Absolute path to the robot URDF/xacro file",
+    # Declare arguments
+    joint_states_gui_arg = DeclareLaunchArgument(
+        "joint_states_gui",
+        default_value="false",
+        description="Use joint_state_publisher_gui",
     )
 
-    robot_description = ParameterValue(
-        Command(
-            [
-                PathJoinSubstitution([FindExecutable(name="xacro")]),
-                " ",
-                LaunchConfiguration("model"),
-                " ",
-                "display:=true",  # or false if you want ros2_control enabled
-            ]
-        ),
-        value_type=str,
+    display_config_arg = DeclareLaunchArgument(
+        "display_config",
+        default_value=os.path.join(so101_description_share_dir, "rviz", "display.rviz"),
+        description="Path to the RViz display config file",
     )
 
-    robot_state_publisher = Node(
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        parameters=[{"robot_description": robot_description}],
-    )
+    joint_states_gui = LaunchConfiguration("joint_states_gui")
+    display_config = LaunchConfiguration("display_config")
 
-    joint_state_publisher_gui = Node(
+    # Only launch joint_state_publisher_gui if enabled
+    joint_state_publisher_gui_node = Node(
         package="joint_state_publisher_gui",
         executable="joint_state_publisher_gui",
+        condition=IfCondition(joint_states_gui),
     )
 
+    # RViz node with configurable display config
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",
         name="rviz2",
         output="screen",
-        arguments=[
-            "-d",
-            os.path.join(so101_description_share_dir, "rviz", "display.rviz"),
-        ],
+        arguments=["-d", display_config],
     )
 
     return LaunchDescription(
-        [model_arg, robot_state_publisher, joint_state_publisher_gui, rviz_node]
+        [
+            joint_states_gui_arg,
+            display_config_arg,
+            joint_state_publisher_gui_node,
+            rviz_node,
+        ]
     )
