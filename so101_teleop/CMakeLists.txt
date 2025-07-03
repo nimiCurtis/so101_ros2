@@ -88,6 +88,18 @@ install(
   DESTINATION lib/${PROJECT_NAME}
 )
 
+add_executable(servo_keyboard_input src/servo_keyboard_input.cpp)
+# target_link_libraries(servo_keyboard_input servo_keyboard_input)  # Use the component lib name here
+ament_target_dependencies(servo_keyboard_input ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
+install(
+  TARGETS
+    servo_keyboard_input
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+
+
 # Joy
 add_executable(${SERVO_JOY_EXEC} src/joystick_servo_node.cpp)
 target_link_libraries(${SERVO_JOY_EXEC} joystick_servo_component_lib)  # Use the component lib name here
