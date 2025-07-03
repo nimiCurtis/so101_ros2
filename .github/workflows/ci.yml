@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ros-tooling/setup-ros@v0.6
+        with:
+          required-ros-distributions: humble
+      - name: Install dependencies
+        shell: bash
+        run: rosdep install --from-paths . --ignore-src -r -y
+      - name: Build
+        shell: bash
+        run: colcon build --event-handlers console_direct+
+      - name: Test
+        shell: bash
+        run: colcon test
+      - name: Upload test results
+        shell: bash
+        run: colcon test-result --verbose
