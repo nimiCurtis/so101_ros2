@@ -4,9 +4,43 @@
 #include <termios.h>
 #include <unistd.h>
 #include <signal.h>
+#include <stdexcept>
 
 namespace moveit_servo
 {
+
+    class KeyboardReader
+    {
+    public:
+        KeyboardReader() : file_descriptor_(0)
+        {
+            tcgetattr(file_descriptor_, &cooked_);
+            struct termios raw;
+            memcpy(&raw, &cooked_, sizeof(struct termios));
+            raw.c_lflag &= ~(ICANON | ECHO);
+            raw.c_cc[VEOL] = 1;
+            raw.c_cc[VEOF] = 2;
+            tcsetattr(file_descriptor_, TCSANOW, &raw);
+        }
+
+        void readOne(char *c)
+        {
+            int rc = read(file_descriptor_, c, 1);
+            if (rc < 0)
+            {
+                throw std::runtime_error("read failed");
+            }
+        }
+
+        void shutdown()
+        {
+            tcsetattr(file_descriptor_, TCSANOW, &cooked_);
+        }
+
+    private:
+        int file_descriptor_;
+        struct termios cooked_;
+    };
 
     KeyboardServoComponent::KeyboardServoComponent(const rclcpp::NodeOptions &options)
         : Node("so101_keyboard_teleop", options),
@@ -33,24 +67,30 @@ namespace moveit_servo
 
     void KeyboardServoComponent::keyboardLoop()
     {
-        termios cooked, raw;
-        tcgetattr(0, &cooked);
-        raw = cooked;
-        raw.c_lflag &= ~(ICANON | ECHO);
-        tcsetattr(0, TCSANOW, &raw);
+        KeyboardReader input;
 
         puts("Reading from keyboard");
         puts("---------------------------");
         puts("Use arrow keys and the '.' and ';' keys to Cartesian jog");
         puts("Use 'W' to Cartesian jog in the world frame, and 'E' for the End-Effector frame");
-        puts("Use 1|2|3|4|5|6|7 keys to joint jog. 'R' to reverse the direction of jogging.");
+        puts("Use 1|2|3|4|5 keys to joint jog. 'R' to reverse the direction of jogging.");
         puts("'Q' to quit.");
+
         char c;
-        while (running_ && read(0, &c, 1) > 0 && rclcpp::ok())
+        while (running_ && rclcpp::ok())
         {
+            try
+            {
+                input.readOne(&c);
+            }
+            catch (const std::runtime_error &)
+            {
+                perror("read():");
+                break;
+            }
+
             auto twist = std::make_unique<geometry_msgs::msg::TwistStamped>();
             auto joint = std::make_unique<control_msgs::msg::JointJog>();
-
             bool send_twist = false, send_joint = false;
 
             switch (c)
@@ -58,36 +98,36 @@ namespace moveit_servo
             case 0x41:
                 twist->twist.linear.x = 1.0;
                 send_twist = true;
-                break; // UP
+                break;
             case 0x42:
                 twist->twist.linear.x = -1.0;
                 send_twist = true;
-                break; // DOWN
+                break;
             case 0x43:
                 twist->twist.linear.y = 1.0;
                 send_twist = true;
-                break; // RIGHT
+                break;
             case 0x44:
                 twist->twist.linear.y = -1.0;
                 send_twist = true;
-                break; // LEFT
+                break;
             case 0x2E:
                 twist->twist.linear.z = -1.0;
                 send_twist = true;
-                break; // .
+                break;
             case 0x3B:
                 twist->twist.linear.z = 1.0;
                 send_twist = true;
-                break; // ;
+                break;
             case 0x77:
                 frame_to_publish_ = "world";
-                break; // w
+                break;
             case 0x65:
                 frame_to_publish_ = "gripper";
-                break; // e
+                break;
             case 0x72:
                 joint_vel_cmd_ *= -1.0;
-                break; // r
+                break;
             case 0x31:
                 joint->joint_names.push_back("Rotation");
                 send_joint = true;
@@ -108,13 +148,9 @@ namespace moveit_servo
                 joint->joint_names.push_back("Wrist_Roll");
                 send_joint = true;
                 break;
-            // case 0x36:
-            //     joint->joint_names.push_back("Jaw");
-            //     send_joint = true;
-            //     break;
             case 0x71:
                 running_ = false;
-                break; // q
+                break;
             }
 
             if (send_twist)
@@ -132,7 +168,6 @@ namespace moveit_servo
             }
         }
 
-        tcsetattr(0, TCSANOW, &cooked);
         rclcpp::shutdown();
     }
 
