@@ -20,7 +20,10 @@ jobs:
           sudo apt-get install -y ros-humble-desktop
       - name: Update rosdep
         shell: bash
-        run: rosdep update
+        run: | 
+          sudo apt-get update
+          sudo apt-get install -y python3-rosdep
+          sudo rosdep init || true
       - name: Install dependencies
         shell: bash
         run: |
