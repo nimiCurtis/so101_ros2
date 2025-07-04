@@ -14,7 +14,11 @@ jobs:
       - uses: ros-tooling/setup-ros@v0.7
         with:
           required-ros-distributions: humble
+      - name: Update rosdep
+        shell: bash
+        run: rosdep update
       - name: Install dependencies
+        shell: bash
         run: |
           sudo apt-get update
           sudo apt-get install -y clang-format
