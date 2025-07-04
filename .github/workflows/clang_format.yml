@@ -28,9 +28,12 @@ jobs:
           sudo apt-get install -y clang-format
           rosdep install --from-paths . --ignore-src -r -y
       - name: Build
-        run: colcon build
+        run: |
+          source /opt/ros/humble/setup.bash
+          colcon build --event-handlers console_direct+
         env:
           BUILD_TESTING: '1'
       - name: Run clang-format
         run: colcon test
+
 
