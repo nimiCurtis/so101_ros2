@@ -4,7 +4,7 @@
 
   <name>so101_teleop</name>
   <version>0.0.0</version>
-  <description>TODO</description>
+  <description>Teleoperation nodes for controlling the SO101 manipulator via joystick or keyboard.</description>
 
   <maintainer email="nimicu21@gmail.com">nimiCurtis</maintainer>
   <author email="nimicu21@gmail.com">nimiCurtis</author>
