@@ -8,12 +8,14 @@ on:
 
 jobs:
   build_and_test_ros2:
-    runs_on: ubuntu-22.04
+    runs-on: ubuntu-22.04
     steps:
-      - uses: ros-tooling/setup-ros@v0.7
+      - name: Install ROS
+        uses: ros-tooling/setup-ros@v0.7
         with:
           required-ros-distributions: humble
-      - uses: ros-tooling/action-ros-ci@v0.4
+      - name: Build and run tests
+        uses: ros-tooling/action-ros-ci@v0.4
         with:
           target-ros2-distro: humble
 
