@@ -38,8 +38,13 @@
   <exec_depend>moveit_configs_utils</exec_depend>
   <exec_depend>launch_param_builder</exec_depend>
 
+  <test_depend>ament_clang_format</test_depend>
+
+  
   <export>
     <build_type>ament_cmake</build_type>
   </export>
+
+
 
 </package>

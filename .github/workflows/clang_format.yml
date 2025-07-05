@@ -32,6 +32,10 @@ jobs:
           sudo apt-get install -y clang-format
           pip install colcon-common-extensions ament-lint
           rosdep install --from-paths . --ignore-src -r -y
+      
+      - name: Install clang-format check tools
+        run: sudo apt-get install -y ros-humble-ament-clang-format
+        
       - name: Build
         run: |
           source /opt/ros/humble/setup.bash

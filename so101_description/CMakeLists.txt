@@ -37,7 +37,7 @@ install(
 
 if(BUILD_TESTING)
         find_package(ament_lint_auto REQUIRED)
-        find_package(ament_clang_format REQUIRED)
+        # find_package(ament_clang_format REQUIRED)
         ament_lint_auto_find_test_dependencies()
 endif()
 
