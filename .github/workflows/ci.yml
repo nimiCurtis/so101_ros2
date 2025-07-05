@@ -7,16 +7,27 @@ on:
     branches: [main, dev]
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-22.04
+  build_and_test_ros2:
+    runs_on: ubuntu-22.04
     steps:
-      - name: Checking out
-        uses: actions/checkout@v2.3.4
-      - name: Building and testing
-        uses: ichiro-its/ros2-ci@v1.0.0
+      - uses: ros-tooling/setup-ros@v0.7
         with:
-          ros2-distro: humble
-          apt-packages: ros-humble-control-msgs
+          required-ros-distributions: humble
+      - uses: ros-tooling/action-ros-ci@v0.4
+        with:
+          target-ros2-distro: humble
+
+# jobs:
+#   build-and-test:
+#     runs-on: ubuntu-22.04
+#     steps:
+#       - name: Checking out
+#         uses: actions/checkout@v2.3.4
+#       - name: Building and testing
+#         uses: ichiro-its/ros2-ci@v1.0.0
+#         with:
+#           ros2-distro: humble
+#           apt-packages: ros-humble-control-msgs ros-humble-control-toolbox
 
 
 # jobs:
