@@ -6,24 +6,14 @@ on:
   pull_request:
     branches: [main, dev]
 
-# Linters applicable to C++ packages
-ament_lint_cpp:
-  # Give each job a different name for better feedback
-  name: ament_${{ matrix.linter }}
-  runs-on: ubuntu-22.04
-  strategy:
-    # We want all linters to run even if one fails
-    fail-fast: false
-    matrix:
-      linter: [cppcheck, cpplint, uncrustify]
+jobs:
+  build-and-test:
+    runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v3
-    - uses: ros-tooling/setup-ros@v0.7
-      with:
-        required-ros-distributions: humble
-    - uses: ros-tooling/action-ros-lint@v0.1
-      with:
-        linter: ${{ matrix.linter }}
+      - name: Checking out
+        uses: actions/checkout@v2.3.4
+      - name: Building and testing
+        uses: ichiro-its/ros2-ci@v1.0.0
 
 
 # jobs:
