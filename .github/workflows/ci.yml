@@ -35,7 +35,7 @@ jobs:
       fail-fast: false
       matrix:
         linter: [cppcheck, cpplint, uncrustify]
-        pkg: [so101_teleop, so101_controller]
+        pkg: [so101_teleop]
     steps:
     - uses: actions/checkout@v3
     - uses: ros-tooling/setup-ros@v0.7
@@ -44,7 +44,7 @@ jobs:
     - uses: ros-tooling/action-ros-lint@v0.1
       with:
         linter: ${{ matrix.linter }}
-        package-name: ${{ matrix.pkg }}
+        package-name: so101_teleop
   # --------------------------------------------------
   # Job 3: Run slower build & test jobs ONLY if linting passes
   # --------------------------------------------------
