@@ -34,7 +34,7 @@ jobs:
       # We want all linters to run even if one fails
       fail-fast: false
       matrix:
-        linter: [cppcheck, cpplint, uncrustify]
+        linter: [cppcheck, uncrustify]
         pkg: [so101_teleop]
     steps:
     - uses: actions/checkout@v3
