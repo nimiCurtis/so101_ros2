@@ -36,26 +36,28 @@
 #include <std_srvs/srv/trigger.hpp>
 #include <thread>
 
-namespace moveit_servo {
+namespace moveit_servo
+{
 
-class JoyToServoComponent : public rclcpp::Node {
-   public:
-    explicit JoyToServoComponent(const rclcpp::NodeOptions& options);
+class JoyToServoComponent : public rclcpp::Node
+{
+public:
+  explicit JoyToServoComponent(const rclcpp::NodeOptions & options);
 
-    ~JoyToServoComponent() override;
+  ~JoyToServoComponent() override;
 
-   private:
-    void JoyCBLoop(const sensor_msgs::msg::Joy::ConstSharedPtr& msg);
+private:
+  void JoyCBLoop(const sensor_msgs::msg::Joy::ConstSharedPtr & msg);
 
-    rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_sub_;
-    rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_pub_;
-    rclcpp::Publisher<control_msgs::msg::JointJog>::SharedPtr joint_pub_;
-    rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr servo_start_client_;
+  rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_sub_;
+  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_pub_;
+  rclcpp::Publisher<control_msgs::msg::JointJog>::SharedPtr joint_pub_;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr servo_start_client_;
 
-    std::string frame_to_publish_;
-    double joint_vel_cmd_;
-    bool running_;
-    std::thread reader_thread_;
+  std::string frame_to_publish_;
+  double joint_vel_cmd_;
+  bool running_;
+  std::thread reader_thread_;
 };
 
 }  // namespace moveit_servo

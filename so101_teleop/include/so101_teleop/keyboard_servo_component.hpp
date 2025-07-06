@@ -30,25 +30,27 @@
 #include <std_srvs/srv/trigger.hpp>
 #include <thread>
 
-namespace moveit_servo {
+namespace moveit_servo
+{
 
-class KeyboardServoComponent : public rclcpp::Node {
-   public:
-    explicit KeyboardServoComponent(const rclcpp::NodeOptions& options);
+class KeyboardServoComponent : public rclcpp::Node
+{
+public:
+  explicit KeyboardServoComponent(const rclcpp::NodeOptions & options);
 
-    ~KeyboardServoComponent() override;
+  ~KeyboardServoComponent() override;
 
-   private:
-    void keyboardLoop();
+private:
+  void keyboardLoop();
 
-    rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_pub_;
-    rclcpp::Publisher<control_msgs::msg::JointJog>::SharedPtr joint_pub_;
-    rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr servo_start_client_;
+  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_pub_;
+  rclcpp::Publisher<control_msgs::msg::JointJog>::SharedPtr joint_pub_;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr servo_start_client_;
 
-    std::string frame_to_publish_;
-    double joint_vel_cmd_;
-    bool running_;
-    std::thread reader_thread_;
+  std::string frame_to_publish_;
+  double joint_vel_cmd_;
+  bool running_;
+  std::thread reader_thread_;
 };
 
 }  // namespace moveit_servo

@@ -19,7 +19,6 @@
 // THE SOFTWARE.
 
 
-
 #include <rclcpp/rclcpp.hpp>
 #include "so101_teleop/joystick_servo_component.hpp"
 
