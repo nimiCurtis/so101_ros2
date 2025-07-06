@@ -1,4 +1,4 @@
-name: CI
+name: CI Pipeline
 
 on:
   push:
@@ -7,23 +7,29 @@ on:
     branches: [main, dev]
 
 jobs:
-  build_and_test_ros2:
+  # --------------------------------------------------
+  # Job 1: Run fast pre-commit checks first
+  # --------------------------------------------------
+  lint:
     runs-on: ubuntu-22.04
     steps:
-      - name: Install ROS
-        uses: ros-tooling/setup-ros@v0.7
-        with:
-          required-ros-distributions: humble
-      - name: Build and run tests
-        uses: ros-tooling/action-ros-ci@v0.4
-        with:
-          target-ros2-distro: humble
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  # Linters applicable to C++ packages
+      - name: Set up Python
+        uses: actions/setup-python@v5
+
+      - name: Run pre-commit hooks
+        uses: pre-commit/action@v3.0.1
+        # This action runs 'pre-commit run --all-files'
+  
+  # --------------------------------------------------
+  # Job 2: Linters applicable to C++ packages
+  # --------------------------------------------------# 
   ament_lint_cpp:
     # Give each job a different name for better feedback
     name: ament_${{ matrix.linter }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       # We want all linters to run even if one fails
       fail-fast: false
@@ -35,36 +41,21 @@ jobs:
     - uses: ros-tooling/action-ros-lint@v0.1
       with:
         linter: ${{ matrix.linter }}
-# jobs:
-#   build-and-test:
-#     runs-on: ubuntu-22.04
-#     steps:
-#       - name: Checking out
-#         uses: actions/checkout@v2.3.4
-#       - name: Building and testing
-#         uses: ichiro-its/ros2-ci@v1.0.0
-#         with:
-#           ros2-distro: humble
-#           apt-packages: ros-humble-control-msgs ros-humble-control-toolbox
 
+  # --------------------------------------------------
+  # Job 3: Run slower build & test jobs ONLY if linting passes
+  # --------------------------------------------------
+  build-and-test:
+    # 'needs: lint' creates the chain. This job waits for 'lint' to succeed.
+    needs: lint
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install ROS
+        uses: ros-tooling/setup-ros@v0.7
+        with:
+          required-ros-distributions: humble
+      - name: Build and run tests
+        uses: ros-tooling/action-ros-ci@v0.4
+        with:
+          target-ros2-distro: humble
 
-# jobs:
-#   build:
-#     runs-on: ubuntu-22.04
-#     steps:
-#       - uses: actions/checkout@v3
-#       - uses: ros-tooling/setup-ros@v0.7
-#         with:
-#           required-ros-distributions: humble
-#       - name: Install dependencies
-#         shell: bash
-#         run: rosdep install --from-paths . --ignore-src -r -y
-#       - name: Build
-#         shell: bash
-#         run: colcon build --event-handlers console_direct+
-#       - name: Test
-#         shell: bash
-#         run: colcon test
-#       - name: Upload test results
-#         shell: bash
-#         run: colcon test-result --verbose
