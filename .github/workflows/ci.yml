@@ -49,8 +49,8 @@ jobs:
   # Job 3: Run slower build & test jobs ONLY if linting passes
   # --------------------------------------------------
   build-and-test:
-    # 'needs: lint' creates the chain. This job waits for 'lint' to succeed.
-    needs: lint
+    # 'needs: [lint, ament_lint_cpp]' creates the chain. This job waits for 'lint' and 'ament_lint_cpp' to succeed.
+    needs: [lint, ament_lint_cpp]
     runs-on: ubuntu-22.04
     steps:
       - name: Install ROS
