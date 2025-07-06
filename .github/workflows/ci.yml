@@ -36,6 +36,8 @@ jobs:
       matrix:
         linter: [cppcheck, uncrustify]
         pkg: [so101_teleop]
+    env:
+      AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS: "1"
     steps:
     - uses: actions/checkout@v3
     - uses: ros-tooling/setup-ros@v0.7
