@@ -224,6 +224,23 @@ bool convertJoyToCmd(const std::vector<float> &axes, const std::vector<int> &but
                      std::unique_ptr<geometry_msgs::msg::TwistStamped> &twist,
                      std::unique_ptr<control_msgs::msg::JointJog> &joint)
 {
+    // Give joint jogging priority because it is only buttons
+    // If any joint jog command is requested, we are only publishing joint commands
+    if (buttons[A] || buttons[B] || buttons[X] || buttons[Y] || axes[D_PAD_X] || axes[D_PAD_Y])
+    {
+        // Map the D_PAD to the proximal joints
+        joint->joint_names.push_back("Rotation");
+        joint->velocities.push_back(axes[D_PAD_X]);
+        joint->joint_names.push_back("Pitch");
+        joint->velocities.push_back(axes[D_PAD_Y]);
+
+        // Map the diamond to the distal joints
+        joint->joint_names.push_back("Wrist_Pitch");
+        joint->velocities.push_back(buttons[B] - buttons[X]);
+        joint->joint_names.push_back("Wrist_Roll");
+        joint->velocities.push_back(buttons[Y] - buttons[A]);
+        return false;
+    }
     twist->twist.linear.z = axes[LEFT_STICK_Y];
     twist->twist.linear.x = axes[LEFT_STICK_X];
 
