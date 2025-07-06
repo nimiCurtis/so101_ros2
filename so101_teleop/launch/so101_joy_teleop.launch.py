@@ -46,12 +46,12 @@ def generate_launch_description():
                 name="joy_node",
                 extra_arguments=[{"use_intra_process_comms": True}],
             ),
-            ComposableNode(
-                package="so101_teleop",
-                plugin="moveit_servo::JoyToServoComponent",
-                name="controller_to_servo_node",
-                extra_arguments=[{"use_intra_process_comms": True}],
-            ),
+            # ComposableNode(
+            #     package="so101_teleop",
+            #     plugin="moveit_servo::JoyToServoComponent",
+            #     name="controller_to_servo_node",
+            #     extra_arguments=[{"use_intra_process_comms": True}],
+            # ),
         ],
         output="screen",
     )
