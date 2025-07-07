@@ -15,8 +15,8 @@
   <exec_depend>moveit_ros_move_group</exec_depend>
   <exec_depend>so101_description</exec_depend>
 
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
+  <!-- <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend> -->
 
   <export>
     <build_type>ament_cmake</build_type>
