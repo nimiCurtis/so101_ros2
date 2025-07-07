@@ -18,14 +18,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-
 #include <rclcpp/rclcpp.hpp>
 #include "so101_teleop/joystick_servo_component.hpp"
 
-int main(int argc, char ** argv)
+int main(int argc, char **argv)
 {
-  rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<moveit_servo::JoyToServoComponent>(rclcpp::NodeOptions()));
+
+  auto joy_component = std::make_shared<moveit_servo::JoyToServoComponent>(rclcpp::NodeOptions());
+
+  rclcpp::executors::SingleThreadedExecutor exec;
+  exec.add_node(joy_component->get_node_base_interface());
+  exec.spin();
+
   rclcpp::shutdown();
   return 0;
 }
