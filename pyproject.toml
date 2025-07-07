@@ -4,10 +4,10 @@ fix = true
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]  # E: pycodestyle, F: pyflakes, W: warnings, I: isort
-ignore = ["E203", "E501"]      # optional ignores
+ignore = ["E203", "E501", "Q000"]
 
 [tool.ruff.format]
-quote-style = "double"
+quote-style = "preserve"
 indent-style = "space"
 line-ending = "lf"
 

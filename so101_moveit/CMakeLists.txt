@@ -11,9 +11,9 @@ find_package(ament_cmake REQUIRED)
 # further dependencies manually.
 # Install other directories
 install(
-	DIRECTORY launch config rviz
-	DESTINATION
-		share/${PROJECT_NAME}
+  DIRECTORY launch config rviz
+  DESTINATION
+    share/${PROJECT_NAME}
 )
 
 
