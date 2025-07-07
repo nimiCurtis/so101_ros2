@@ -21,7 +21,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include "so101_teleop/joystick_servo_component.hpp"
 
-int main(int argc, char **argv)
+int main(int argc, char ** argv)
 {
 
   auto joy_component = std::make_shared<moveit_servo::JoyToServoComponent>(rclcpp::NodeOptions());
