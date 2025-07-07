@@ -7,7 +7,7 @@ select = ["E", "F", "W", "I"]  # E: pycodestyle, F: pyflakes, W: warnings, I: is
 ignore = ["E203", "E501", "Q000"]
 
 [tool.ruff.format]
-quote-style = "preserve"
+quote-style = "single"
 indent-style = "space"
 line-ending = "lf"
 
