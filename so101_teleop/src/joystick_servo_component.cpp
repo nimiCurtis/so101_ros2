@@ -13,8 +13,8 @@
 const std::string JOY_TOPIC = "/joy";
 const std::string TWIST_TOPIC = "/servo_node/delta_twist_cmds";
 const std::string JOINT_TOPIC = "/servo_node/delta_joint_cmds";
-const std::string EEF_FRAME_ID = "gripper";
-const std::string BASE_FRAME_ID = "base";
+const std::string EEF_FRAME_ID = "gripper_link";
+const std::string BASE_FRAME_ID = "base_link";
 
 // Enums for button names -> axis/button array index
 // For XBOX 1 controller
@@ -118,13 +118,14 @@ namespace moveit_servo
 JoyToServoComponent::JoyToServoComponent(const rclcpp::NodeOptions & options)
 : Node("so101_joy_teleop", options),
   frame_to_publish_(
-    BASE_FRAME_ID),         // Initialize the frame to publish (e.g., "base" or "gripper")
-  joint_vel_cmd_(0.0),      // Initialize joint velocity command (from hpp)
-  running_(true)            // Initialize running flag for the joystick thread (from hpp)
+    BASE_FRAME_ID),          // Initialize the frame to publish (e.g., "base" or "gripper")
+  joint_vel_cmd_(0.0),       // Initialize joint velocity command (from hpp)
+  running_(true)             // Initialize running flag for the joystick thread (from hpp)
 {
   joy_sub_ = this->create_subscription<sensor_msgs::msg::Joy>(
     JOY_TOPIC, rclcpp::SystemDefaultsQoS(),
-    [this](const sensor_msgs::msg::Joy::ConstSharedPtr & msg) {return JoyCBLoop(msg);});
+    [this](const sensor_msgs::msg::Joy::ConstSharedPtr & msg)
+    {return JoyCBLoop(msg);});
 
   // Create a publisher for TwistStamped messages (for Cartesian jogging)
   twist_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>(
@@ -143,9 +144,9 @@ JoyToServoComponent::JoyToServoComponent(const rclcpp::NodeOptions & options)
 }
 
 /**
- * @brief Destructor for JoyToServoComponent.
- * Sets the running flag to false and joins the joystick reading thread to ensure proper shutdown.
- */
+   * @brief Destructor for JoyToServoComponent.
+   * Sets the running flag to false and joins the joystick reading thread to ensure proper shutdown.
+   */
 JoyToServoComponent::~JoyToServoComponent() {}
 
 void JoyToServoComponent::JoyCBLoop(const sensor_msgs::msg::Joy::ConstSharedPtr & msg)
@@ -171,7 +172,7 @@ void JoyToServoComponent::JoyCBLoop(const sensor_msgs::msg::Joy::ConstSharedPtr 
   }
 }
 
-}  // namespace moveit_servo
+} // namespace moveit_servo
 
 // Register the component with class_loader
 #include <rclcpp_components/register_node_macro.hpp>

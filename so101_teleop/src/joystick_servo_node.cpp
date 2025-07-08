@@ -23,6 +23,7 @@
 
 int main(int argc, char ** argv)
 {
+  rclcpp::init(argc, argv);
 
   auto joy_component = std::make_shared<moveit_servo::JoyToServoComponent>(rclcpp::NodeOptions());
 

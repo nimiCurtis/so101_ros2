@@ -1,70 +1,71 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro" name="so101_new_calib">
 
-    <transmission name="6_trans">
+    <transmission name="gripper_trans">
         <type>transmission_interface/SimpleTransmission</type>
-        <joint name="Jaw">
-        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        <joint name="gripper">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
         </joint>
         <actuator name="motor6">
-        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        <mechanicalReduction>1</mechanicalReduction>
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
         </actuator>
-    </transmission>
+      </transmission>
 
-    <transmission name="5_trans">
+    <transmission name="wrist_roll_trans">
         <type>transmission_interface/SimpleTransmission</type>
-        <joint name="Wrist_Roll">
-        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        <joint name="wrist_roll">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
         </joint>
         <actuator name="motor5">
-        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        <mechanicalReduction>1</mechanicalReduction>
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
         </actuator>
-    </transmission>
+      </transmission>
 
-    <transmission name="4_trans">
+    <transmission name="wrist_flex_trans">
         <type>transmission_interface/SimpleTransmission</type>
-        <joint name="Wrist_Pitch">
-        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        <joint name="wrist_flex">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
         </joint>
         <actuator name="motor4">
-        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        <mechanicalReduction>1</mechanicalReduction>
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
         </actuator>
-    </transmission>
+      </transmission>
+    
 
-    <transmission name="3_trans">
+    <transmission name="elbow_flex_trans">
         <type>transmission_interface/SimpleTransmission</type>
-        <joint name="Elbow">
-        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        <joint name="elbow_flex">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
         </joint>
         <actuator name="motor3">
-        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        <mechanicalReduction>1</mechanicalReduction>
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
         </actuator>
-    </transmission>
+      </transmission>
 
-    <transmission name="2_trans">
+    <transmission name="shoulder_lift_trans">
         <type>transmission_interface/SimpleTransmission</type>
-        <joint name="Pitch">
-        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        <joint name="shoulder_lift">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
         </joint>
         <actuator name="motor2">
-        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        <mechanicalReduction>1</mechanicalReduction>
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
         </actuator>
-    </transmission>
+      </transmission>
 
-    <transmission name="1_trans">
+    <transmission name="shoulder_pan_trans">
         <type>transmission_interface/SimpleTransmission</type>
-        <joint name="Rotation">
-        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        <joint name="shoulder_pan">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
         </joint>
         <actuator name="motor1">
-        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        <mechanicalReduction>1</mechanicalReduction>
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
         </actuator>
-    </transmission>
+      </transmission> 
 
 </robot>

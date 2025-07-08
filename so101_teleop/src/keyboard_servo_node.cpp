@@ -24,6 +24,8 @@
 int main(int argc, char ** argv)
 {
 
+  rclcpp::init(argc, argv);
+
   auto keyboard_component = std::make_shared<moveit_servo::KeyboardServoComponent>(
     rclcpp::NodeOptions());
 

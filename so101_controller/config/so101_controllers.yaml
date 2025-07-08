@@ -15,11 +15,11 @@ controller_manager:
 arm_controller:
   ros__parameters:
     joints:
-      - Rotation
-      - Pitch
-      - Elbow
-      - Wrist_Pitch
-      - Wrist_Roll
+      - shoulder_pan
+      - shoulder_lift
+      - elbow_flex
+      - wrist_flex
+      - wrist_roll
     command_interfaces:
       - position
     state_interfaces:
@@ -27,4 +27,4 @@ arm_controller:
       - velocity
 gripper_controller:
   ros__parameters:
-    joint: Jaw
+    joint: gripper

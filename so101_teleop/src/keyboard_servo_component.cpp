@@ -18,7 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-
 #include "so101_teleop/keyboard_servo_component.hpp"
 
 #include <moveit_msgs/msg/planning_scene.hpp>
@@ -65,7 +64,7 @@ private:
 
 KeyboardServoComponent::KeyboardServoComponent(const rclcpp::NodeOptions & options)
 : Node("so101_keyboard_teleop", options),
-  frame_to_publish_("base"),
+  frame_to_publish_("base_link"),
   joint_vel_cmd_(1.0),
   running_(true)
 {
@@ -140,32 +139,32 @@ void KeyboardServoComponent::keyboardLoop()
         send_twist = true;
         break;
       case 0x77:
-        frame_to_publish_ = "world";
+        frame_to_publish_ = "base_link";
         break;
       case 0x65:
-        frame_to_publish_ = "gripper";
+        frame_to_publish_ = "gripper_link";
         break;
       case 0x72:
         joint_vel_cmd_ *= -1.0;
         break;
       case 0x31:
-        joint->joint_names.push_back("Rotation");
+        joint->joint_names.push_back("shoulder_pan");
         send_joint = true;
         break;
       case 0x32:
-        joint->joint_names.push_back("Pitch");
+        joint->joint_names.push_back("shoulder_lift");
         send_joint = true;
         break;
       case 0x33:
-        joint->joint_names.push_back("Elbow");
+        joint->joint_names.push_back("elbow_flex");
         send_joint = true;
         break;
       case 0x34:
-        joint->joint_names.push_back("Wrist_Pitch");
+        joint->joint_names.push_back("wrist_flex");
         send_joint = true;
         break;
       case 0x35:
-        joint->joint_names.push_back("Wrist_Roll");
+        joint->joint_names.push_back("wrist_roll");
         send_joint = true;
         break;
       case 0x71:
