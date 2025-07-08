@@ -10,17 +10,16 @@ moveit_simple_controller_manager:
   arm_controller:
     type: FollowJointTrajectory
     joints:
-      - Rotation
-      - Pitch
-      - Elbow
-      - Wrist_Pitch
-      - Wrist_Roll
-      - Jaw
+      - shoulder_pan
+      - shoulder_lift
+      - elbow_flex
+      - wrist_flex
+      - wrist_roll
     action_ns: follow_joint_trajectory
     default: true
   gripper_controller:
     type: GripperCommand
     joints:
-      - Jaw
+      - gripper
     action_ns: gripper_cmd
     default: true

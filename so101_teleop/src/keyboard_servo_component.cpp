@@ -18,7 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-
 #include "so101_teleop/keyboard_servo_component.hpp"
 
 #include <moveit_msgs/msg/planning_scene.hpp>
@@ -30,91 +29,98 @@
 namespace moveit_servo
 {
 
-class KeyboardReader
-{
-public:
-  KeyboardReader()
-  : file_descriptor_(0)
+  class KeyboardReader
   {
-    tcgetattr(file_descriptor_, &cooked_);
-    struct termios raw;
-    memcpy(&raw, &cooked_, sizeof(struct termios));
-    raw.c_lflag &= ~(ICANON | ECHO);
-    raw.c_cc[VEOL] = 1;
-    raw.c_cc[VEOF] = 2;
-    tcsetattr(file_descriptor_, TCSANOW, &raw);
+  public:
+    KeyboardReader()
+        : file_descriptor_(0)
+    {
+      tcgetattr(file_descriptor_, &cooked_);
+      struct termios raw;
+      memcpy(&raw, &cooked_, sizeof(struct termios));
+      raw.c_lflag &= ~(ICANON | ECHO);
+      raw.c_cc[VEOL] = 1;
+      raw.c_cc[VEOF] = 2;
+      tcsetattr(file_descriptor_, TCSANOW, &raw);
+    }
+
+    void readOne(char *c)
+    {
+      int rc = read(file_descriptor_, c, 1);
+      if (rc < 0)
+      {
+        throw std::runtime_error("read failed");
+      }
+    }
+
+    void shutdown()
+    {
+      tcsetattr(file_descriptor_, TCSANOW, &cooked_);
+    }
+
+  private:
+    int file_descriptor_;
+    struct termios cooked_;
+  };
+
+  KeyboardServoComponent::KeyboardServoComponent(const rclcpp::NodeOptions &options)
+      : Node("so101_keyboard_teleop", options),
+        frame_to_publish_("base_link"),
+        joint_vel_cmd_(1.0),
+        running_(true)
+  {
+    twist_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>(
+        "/servo_node/delta_twist_cmds", 10);
+    joint_pub_ = this->create_publisher<control_msgs::msg::JointJog>(
+        "/servo_node/delta_joint_cmds",
+        10);
+
+    servo_start_client_ = this->create_client<std_srvs::srv::Trigger>("/servo_node/start_servo");
+    servo_start_client_->wait_for_service(std::chrono::seconds(1));
+    servo_start_client_->async_send_request(std::make_shared<std_srvs::srv::Trigger::Request>());
+
+    reader_thread_ = std::thread(&KeyboardServoComponent::keyboardLoop, this);
   }
 
-  void readOne(char * c)
+  KeyboardServoComponent::~KeyboardServoComponent()
   {
-    int rc = read(file_descriptor_, c, 1);
-    if (rc < 0) {
-      throw std::runtime_error("read failed");
+    running_ = false;
+    if (reader_thread_.joinable())
+    {
+      reader_thread_.join();
     }
   }
 
-  void shutdown()
+  void KeyboardServoComponent::keyboardLoop()
   {
-    tcsetattr(file_descriptor_, TCSANOW, &cooked_);
-  }
+    KeyboardReader input;
 
-private:
-  int file_descriptor_;
-  struct termios cooked_;
-};
+    puts("Reading from keyboard");
+    puts("---------------------------");
+    puts("Use arrow keys and the '.' and ';' keys to Cartesian jog");
+    puts("Use 'W' to Cartesian jog in the world frame, and 'E' for the End-Effector frame");
+    puts("Use 1|2|3|4|5 keys to joint jog. 'R' to reverse the direction of jogging.");
+    puts("'Q' to quit.");
 
-KeyboardServoComponent::KeyboardServoComponent(const rclcpp::NodeOptions & options)
-: Node("so101_keyboard_teleop", options),
-  frame_to_publish_("base"),
-  joint_vel_cmd_(1.0),
-  running_(true)
-{
-  twist_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>(
-    "/servo_node/delta_twist_cmds", 10);
-  joint_pub_ = this->create_publisher<control_msgs::msg::JointJog>(
-    "/servo_node/delta_joint_cmds",
-    10);
+    char c;
+    while (running_ && rclcpp::ok())
+    {
+      try
+      {
+        input.readOne(&c);
+      }
+      catch (const std::runtime_error &)
+      {
+        perror("read():");
+        break;
+      }
 
-  servo_start_client_ = this->create_client<std_srvs::srv::Trigger>("/servo_node/start_servo");
-  servo_start_client_->wait_for_service(std::chrono::seconds(1));
-  servo_start_client_->async_send_request(std::make_shared<std_srvs::srv::Trigger::Request>());
+      auto twist = std::make_unique<geometry_msgs::msg::TwistStamped>();
+      auto joint = std::make_unique<control_msgs::msg::JointJog>();
+      bool send_twist = false, send_joint = false;
 
-  reader_thread_ = std::thread(&KeyboardServoComponent::keyboardLoop, this);
-}
-
-KeyboardServoComponent::~KeyboardServoComponent()
-{
-  running_ = false;
-  if (reader_thread_.joinable()) {
-    reader_thread_.join();
-  }
-}
-
-void KeyboardServoComponent::keyboardLoop()
-{
-  KeyboardReader input;
-
-  puts("Reading from keyboard");
-  puts("---------------------------");
-  puts("Use arrow keys and the '.' and ';' keys to Cartesian jog");
-  puts("Use 'W' to Cartesian jog in the world frame, and 'E' for the End-Effector frame");
-  puts("Use 1|2|3|4|5 keys to joint jog. 'R' to reverse the direction of jogging.");
-  puts("'Q' to quit.");
-
-  char c;
-  while (running_ && rclcpp::ok()) {
-    try {
-      input.readOne(&c);
-    } catch (const std::runtime_error &) {
-      perror("read():");
-      break;
-    }
-
-    auto twist = std::make_unique<geometry_msgs::msg::TwistStamped>();
-    auto joint = std::make_unique<control_msgs::msg::JointJog>();
-    bool send_twist = false, send_joint = false;
-
-    switch (c) {
+      switch (c)
+      {
       case 0x41:
         twist->twist.linear.x = 1.0;
         send_twist = true;
@@ -140,53 +146,56 @@ void KeyboardServoComponent::keyboardLoop()
         send_twist = true;
         break;
       case 0x77:
-        frame_to_publish_ = "world";
+        frame_to_publish_ = "base_link";
         break;
       case 0x65:
-        frame_to_publish_ = "gripper";
+        frame_to_publish_ = "gripper_link";
         break;
       case 0x72:
         joint_vel_cmd_ *= -1.0;
         break;
       case 0x31:
-        joint->joint_names.push_back("Rotation");
+        joint->joint_names.push_back("shoulder_pan");
         send_joint = true;
         break;
       case 0x32:
-        joint->joint_names.push_back("Pitch");
+        joint->joint_names.push_back("shoulder_lift");
         send_joint = true;
         break;
       case 0x33:
-        joint->joint_names.push_back("Elbow");
+        joint->joint_names.push_back("elbow_flex");
         send_joint = true;
         break;
       case 0x34:
-        joint->joint_names.push_back("Wrist_Pitch");
+        joint->joint_names.push_back("wrist_flex");
         send_joint = true;
         break;
       case 0x35:
-        joint->joint_names.push_back("Wrist_Roll");
+        joint->joint_names.push_back("wrist_roll");
         send_joint = true;
         break;
       case 0x71:
         running_ = false;
         break;
+      }
+
+      if (send_twist)
+      {
+        twist->header.stamp = this->now();
+        twist->header.frame_id = frame_to_publish_;
+        twist_pub_->publish(std::move(twist));
+      }
+      else if (send_joint)
+      {
+        joint->velocities.push_back(joint_vel_cmd_);
+        joint->header.stamp = this->now();
+        joint->header.frame_id = frame_to_publish_;
+        joint_pub_->publish(std::move(joint));
+      }
     }
 
-    if (send_twist) {
-      twist->header.stamp = this->now();
-      twist->header.frame_id = frame_to_publish_;
-      twist_pub_->publish(std::move(twist));
-    } else if (send_joint) {
-      joint->velocities.push_back(joint_vel_cmd_);
-      joint->header.stamp = this->now();
-      joint->header.frame_id = frame_to_publish_;
-      joint_pub_->publish(std::move(joint));
-    }
+    rclcpp::shutdown();
   }
-
-  rclcpp::shutdown();
-}
 
 } // namespace moveit_servo
 

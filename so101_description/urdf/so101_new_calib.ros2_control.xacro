@@ -27,45 +27,45 @@
 
           </hardware>
 
-            <joint name="Rotation">
+            <joint name="shoulder_pan">
                 <command_interface name="position"/>
                 <state_interface name="position">
-                  <param name="initial_value">${initial_positions['Rotation']}</param>
+                  <param name="initial_value">${initial_positions['shoulder_pan']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <joint name="Pitch">
+            <joint name="shoulder_lift">
                 <command_interface name="position"/>
                 <state_interface name="position">
-                  <param name="initial_value">${initial_positions['Pitch']}</param>
+                  <param name="initial_value">${initial_positions['shoulder_lift']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <joint name="Elbow">
+            <joint name="elbow_flex">
                 <command_interface name="position"/>
                 <state_interface name="position">
-                  <param name="initial_value">${initial_positions['Elbow']}</param>
+                  <param name="initial_value">${initial_positions['elbow_flex']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <joint name="Wrist_Pitch">
+            <joint name="wrist_flex">
                 <command_interface name="position"/>
                 <state_interface name="position">
-                  <param name="initial_value">${initial_positions['Wrist_Pitch']}</param>
+                  <param name="initial_value">${initial_positions['wrist_flex']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <joint name="Wrist_Roll">
+            <joint name="wrist_roll">
                 <command_interface name="position"/>
                 <state_interface name="position">
-                  <param name="initial_value">${initial_positions['Wrist_Roll']}</param>
+                  <param name="initial_value">${initial_positions['wrist_roll']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <joint name="Jaw">
+            <joint name="gripper">
                 <command_interface name="position"/>
                 <state_interface name="position">
-                  <param name="initial_value">${initial_positions['Jaw']}</param>
+                  <param name="initial_value">${initial_positions['gripper']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
