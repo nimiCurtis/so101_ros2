@@ -21,13 +21,13 @@
 #include <rclcpp/rclcpp.hpp>
 #include "so101_teleop/keyboard_servo_component.hpp"
 
-int main(int argc, char **argv)
+int main(int argc, char ** argv)
 {
 
   rclcpp::init(argc, argv);
 
   auto keyboard_component = std::make_shared<moveit_servo::KeyboardServoComponent>(
-      rclcpp::NodeOptions());
+    rclcpp::NodeOptions());
 
   rclcpp::executors::SingleThreadedExecutor exec;
   exec.add_node(keyboard_component->get_node_base_interface());

@@ -21,7 +21,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include "so101_teleop/joystick_servo_component.hpp"
 
-int main(int argc, char **argv)
+int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
 

@@ -29,98 +29,91 @@
 namespace moveit_servo
 {
 
-  class KeyboardReader
+class KeyboardReader
+{
+public:
+  KeyboardReader()
+  : file_descriptor_(0)
   {
-  public:
-    KeyboardReader()
-        : file_descriptor_(0)
-    {
-      tcgetattr(file_descriptor_, &cooked_);
-      struct termios raw;
-      memcpy(&raw, &cooked_, sizeof(struct termios));
-      raw.c_lflag &= ~(ICANON | ECHO);
-      raw.c_cc[VEOL] = 1;
-      raw.c_cc[VEOF] = 2;
-      tcsetattr(file_descriptor_, TCSANOW, &raw);
-    }
-
-    void readOne(char *c)
-    {
-      int rc = read(file_descriptor_, c, 1);
-      if (rc < 0)
-      {
-        throw std::runtime_error("read failed");
-      }
-    }
-
-    void shutdown()
-    {
-      tcsetattr(file_descriptor_, TCSANOW, &cooked_);
-    }
-
-  private:
-    int file_descriptor_;
-    struct termios cooked_;
-  };
-
-  KeyboardServoComponent::KeyboardServoComponent(const rclcpp::NodeOptions &options)
-      : Node("so101_keyboard_teleop", options),
-        frame_to_publish_("base_link"),
-        joint_vel_cmd_(1.0),
-        running_(true)
-  {
-    twist_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>(
-        "/servo_node/delta_twist_cmds", 10);
-    joint_pub_ = this->create_publisher<control_msgs::msg::JointJog>(
-        "/servo_node/delta_joint_cmds",
-        10);
-
-    servo_start_client_ = this->create_client<std_srvs::srv::Trigger>("/servo_node/start_servo");
-    servo_start_client_->wait_for_service(std::chrono::seconds(1));
-    servo_start_client_->async_send_request(std::make_shared<std_srvs::srv::Trigger::Request>());
-
-    reader_thread_ = std::thread(&KeyboardServoComponent::keyboardLoop, this);
+    tcgetattr(file_descriptor_, &cooked_);
+    struct termios raw;
+    memcpy(&raw, &cooked_, sizeof(struct termios));
+    raw.c_lflag &= ~(ICANON | ECHO);
+    raw.c_cc[VEOL] = 1;
+    raw.c_cc[VEOF] = 2;
+    tcsetattr(file_descriptor_, TCSANOW, &raw);
   }
 
-  KeyboardServoComponent::~KeyboardServoComponent()
+  void readOne(char * c)
   {
-    running_ = false;
-    if (reader_thread_.joinable())
-    {
-      reader_thread_.join();
+    int rc = read(file_descriptor_, c, 1);
+    if (rc < 0) {
+      throw std::runtime_error("read failed");
     }
   }
 
-  void KeyboardServoComponent::keyboardLoop()
+  void shutdown()
   {
-    KeyboardReader input;
+    tcsetattr(file_descriptor_, TCSANOW, &cooked_);
+  }
 
-    puts("Reading from keyboard");
-    puts("---------------------------");
-    puts("Use arrow keys and the '.' and ';' keys to Cartesian jog");
-    puts("Use 'W' to Cartesian jog in the world frame, and 'E' for the End-Effector frame");
-    puts("Use 1|2|3|4|5 keys to joint jog. 'R' to reverse the direction of jogging.");
-    puts("'Q' to quit.");
+private:
+  int file_descriptor_;
+  struct termios cooked_;
+};
 
-    char c;
-    while (running_ && rclcpp::ok())
-    {
-      try
-      {
-        input.readOne(&c);
-      }
-      catch (const std::runtime_error &)
-      {
-        perror("read():");
-        break;
-      }
+KeyboardServoComponent::KeyboardServoComponent(const rclcpp::NodeOptions & options)
+: Node("so101_keyboard_teleop", options),
+  frame_to_publish_("base_link"),
+  joint_vel_cmd_(1.0),
+  running_(true)
+{
+  twist_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>(
+    "/servo_node/delta_twist_cmds", 10);
+  joint_pub_ = this->create_publisher<control_msgs::msg::JointJog>(
+    "/servo_node/delta_joint_cmds",
+    10);
 
-      auto twist = std::make_unique<geometry_msgs::msg::TwistStamped>();
-      auto joint = std::make_unique<control_msgs::msg::JointJog>();
-      bool send_twist = false, send_joint = false;
+  servo_start_client_ = this->create_client<std_srvs::srv::Trigger>("/servo_node/start_servo");
+  servo_start_client_->wait_for_service(std::chrono::seconds(1));
+  servo_start_client_->async_send_request(std::make_shared<std_srvs::srv::Trigger::Request>());
 
-      switch (c)
-      {
+  reader_thread_ = std::thread(&KeyboardServoComponent::keyboardLoop, this);
+}
+
+KeyboardServoComponent::~KeyboardServoComponent()
+{
+  running_ = false;
+  if (reader_thread_.joinable()) {
+    reader_thread_.join();
+  }
+}
+
+void KeyboardServoComponent::keyboardLoop()
+{
+  KeyboardReader input;
+
+  puts("Reading from keyboard");
+  puts("---------------------------");
+  puts("Use arrow keys and the '.' and ';' keys to Cartesian jog");
+  puts("Use 'W' to Cartesian jog in the world frame, and 'E' for the End-Effector frame");
+  puts("Use 1|2|3|4|5 keys to joint jog. 'R' to reverse the direction of jogging.");
+  puts("'Q' to quit.");
+
+  char c;
+  while (running_ && rclcpp::ok()) {
+    try {
+      input.readOne(&c);
+    } catch (const std::runtime_error &) {
+      perror("read():");
+      break;
+    }
+
+    auto twist = std::make_unique<geometry_msgs::msg::TwistStamped>();
+    auto joint = std::make_unique<control_msgs::msg::JointJog>();
+    bool send_twist = false, send_joint = false;
+
+    switch (c) {
       case 0x41:
         twist->twist.linear.x = 1.0;
         send_twist = true;
@@ -177,25 +170,22 @@ namespace moveit_servo
       case 0x71:
         running_ = false;
         break;
-      }
-
-      if (send_twist)
-      {
-        twist->header.stamp = this->now();
-        twist->header.frame_id = frame_to_publish_;
-        twist_pub_->publish(std::move(twist));
-      }
-      else if (send_joint)
-      {
-        joint->velocities.push_back(joint_vel_cmd_);
-        joint->header.stamp = this->now();
-        joint->header.frame_id = frame_to_publish_;
-        joint_pub_->publish(std::move(joint));
-      }
     }
 
-    rclcpp::shutdown();
+    if (send_twist) {
+      twist->header.stamp = this->now();
+      twist->header.frame_id = frame_to_publish_;
+      twist_pub_->publish(std::move(twist));
+    } else if (send_joint) {
+      joint->velocities.push_back(joint_vel_cmd_);
+      joint->header.stamp = this->now();
+      joint->header.frame_id = frame_to_publish_;
+      joint_pub_->publish(std::move(joint));
+    }
   }
+
+  rclcpp::shutdown();
+}
 
 } // namespace moveit_servo
 
