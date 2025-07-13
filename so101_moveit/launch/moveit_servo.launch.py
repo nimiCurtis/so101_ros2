@@ -82,7 +82,7 @@ def generate_launch_description():
     )
 
     # Load Servo YAML
-    servo_yaml = load_yaml("so101_teleop", "config/so101_servo_config.yaml")
+    servo_yaml = load_yaml("so101_moveit", "config/so101_servo_config.yaml")
     servo_params = {"moveit_servo": servo_yaml}
 
     # Launch the Servo node in a composable container
