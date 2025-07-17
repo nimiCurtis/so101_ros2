@@ -1,0 +1,198 @@
+#!usr/bin/env python3
+
+import sys
+
+# Manually append Conda site-packages to PYTHONPATH
+conda_site = '/home/nimrod/miniconda3/envs/lerobot/lib/python3.10/site-packages'
+if conda_site not in sys.path:
+    sys.path.append(conda_site)
+import math
+from pathlib import Path
+
+import rclpy
+from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
+from rclpy.executors import SingleThreadedExecutor
+from rclpy.node import Node
+from sensor_msgs.msg import JointState
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+
+from so101_ros2_bridge import (
+    CALIBRATION_BASE_DIR,  # defined in __init__.py of the same package
+)
+
+
+class SO101ROS2Bridge(Node):
+    # Joint names published in JointState message
+    JOINT_NAMES = [
+        'shoulder_pan',
+        'shoulder_lift',
+        'elbow_flex',
+        'wrist_flex',
+        'wrist_roll',
+        'gripper',
+    ]
+
+    def __init__(self):
+        super().__init__('so101_ros2_bridge')
+
+        # 1. Declare and read all ROS 2 parameters
+        params = self.read_parameters()
+
+        self.use_degrees = params["use_degrees"]
+
+        # 2. Convert the parameter dictionary to an SO101FollowerConfig
+        config = self.dict_to_so101config(params)
+
+        # 3. Initialize and connect to the robot
+        self.robot = SO101Follower(config)
+        self.robot.connect(calibrate=False)
+
+        if not self.robot.is_connected:
+            self.shutdown_hook()
+            self.get_logger().error(
+                "Failed to connect to so101 arm. Please check the connection."
+            )
+            rclpy.shutdown()  # Stop ROS immediately
+            sys.exit(1)  # Exit the node process
+
+        # 4. Setup publisher and timer callback for publishing joint states
+        self.joint_pub = self.create_publisher(JointState, 'joint_states', 10)
+        rate = params.get("publish_rate", 30.0)
+        self.timer = self.create_timer(1.0 / rate, self.publish_joint_states)
+
+        self.create_subscription(
+            JointTrajectory,
+            'joint_trajectory',  # replace with actual topic: e.g. '/so101_controller/joint_trajectory'
+            self.joint_trajectory_callback,
+            10,
+        )
+
+    def shutdown_hook(self):
+        """Called automatically during node shutdown to safely disconnect robot."""
+        try:
+            self.get_logger().info(
+                "Shutting down SO101ROS2Bridge, disconnecting robot..."
+            )
+            self.robot.disconnect()
+        except Exception as e:
+            self.get_logger().warn(f"Exception during robot disconnect: {e}")
+
+    def read_parameters(self) -> dict:
+        """Declare and fetch ROS 2 parameters, returning a structured dictionary."""
+        self.declare_parameter("port", "/dev/ttyACM1")
+        self.declare_parameter("id", "Tzili")
+        self.declare_parameter("calibration_dir", str(CALIBRATION_BASE_DIR))
+        self.declare_parameter("use_degrees", False)
+        self.declare_parameter("max_relative_target", 0)  # Safe default
+        self.declare_parameter("disable_torque_on_disconnect", True)
+        self.declare_parameter("publish_rate", 30.0)
+
+        max_relative_target = (
+            self.get_parameter("max_relative_target")
+            .get_parameter_value()
+            .integer_value
+        )
+        max_relative_target = max_relative_target if max_relative_target != 0 else None
+
+        return {
+            "port": self.get_parameter("port").get_parameter_value().string_value,
+            "id": self.get_parameter("id").get_parameter_value().string_value,
+            "calibration_dir": Path(
+                self.get_parameter("calibration_dir").get_parameter_value().string_value
+            ),
+            "use_degrees": (
+                self.get_parameter("use_degrees").get_parameter_value().bool_value
+            ),
+            "max_relative_target": max_relative_target,
+            "disable_torque_on_disconnect": (
+                self.get_parameter("disable_torque_on_disconnect")
+                .get_parameter_value()
+                .bool_value
+            ),
+            "publish_rate": (
+                self.get_parameter("publish_rate").get_parameter_value().double_value
+            ),
+        }
+
+    def dict_to_so101config(self, params: dict) -> SO101FollowerConfig:
+        """Convert parsed ROS params to a config object for the robot."""
+        return SO101FollowerConfig(
+            port=params["port"],
+            calibration_dir=params["calibration_dir"],
+            id=params["id"],
+            use_degrees=params["use_degrees"],
+            max_relative_target=params["max_relative_target"],
+            disable_torque_on_disconnect=params["disable_torque_on_disconnect"],
+        )
+
+    def publish_joint_states(self):
+        try:
+            obs = self.robot.get_observation()
+            msg = JointState()
+            msg.header.stamp = self.get_clock().now().to_msg()
+            msg.name = self.JOINT_NAMES
+
+            positions = []
+            for joint in self.JOINT_NAMES:
+
+                # Handle gripper separately: normalize 0–100 to a 0.0–1.0 opening ratio
+                if joint == "gripper":
+                    pos = ((obs.get(f"{joint}.pos", 0.0) - 10.0) / 100.0) * math.pi
+                else:
+                    pos = math.radians(obs.get(f"{joint}.pos", 0.0))
+                positions.append(pos)
+
+            msg.position = positions
+            self.joint_pub.publish(msg)
+
+        except Exception as e:
+            self.get_logger().error(f"Failed to publish joint states: {e}")
+
+    def joint_trajectory_callback(self, msg: JointTrajectory):
+        if not msg.points:
+            self.get_logger().warn("Received trajectory with no points.")
+            return
+
+        point: JointTrajectoryPoint = msg.points[
+            0
+        ]  # Only use the first point (for now)
+
+        # Map joint positions from radians to normalized values
+        action = {}
+        for joint_name, position in zip(msg.joint_names, point.positions):
+            if joint_name not in self.JOINT_NAMES:
+                self.get_logger().warn(f"Ignoring unknown joint: {joint_name}")
+                continue
+            action[joint_name] = self.radians_to_normalized(joint_name, position)
+
+        try:
+            actual_action = self.robot.send_action(action)
+            self.get_logger().debug(f"Sent action: {actual_action}")
+        except Exception as e:
+            self.get_logger().error(f"Failed to send action: {e}")
+
+    def radians_to_normalized(self, joint_name: str, rad: float) -> float:
+        """Convert joint position from radians to the normalized motor unit."""
+        if joint_name == "gripper":
+            return (rad / math.pi) * 100.0 + 10.0
+        else:
+            deg = math.degrees(rad)
+            return deg
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = SO101ROS2Bridge()
+    executor = SingleThreadedExecutor()
+    executor.add_node(node)
+
+    try:
+        executor.spin()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        # ✅ Safely disconnect robot before shutting down ROS
+        node.shutdown_hook()
+        node.destroy_node()
+        executor.shutdown()
+        rclpy.try_shutdown()
