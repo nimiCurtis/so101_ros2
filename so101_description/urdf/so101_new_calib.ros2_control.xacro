@@ -20,15 +20,7 @@
             </xacro:if>
 
             <xacro:if value="$(eval mode == 'real')">
-              <!-- <plugin>so101_hardware/So101System</plugin> 
-              <param name="serial_port">/dev/ttyUSB0</param>
-              <param name="baudrate">115200</param> -->
-              <plugin>topic_based_ros2_control/TopicBasedSystem</plugin>
-              <!-- ✅ Command topic: used to receive JointTrajectory commands -->
-              <param name="joint_commands_topic">/so101_command</param>
-
-              <!-- ✅ State topic: used to publish JointState messages -->
-              <param name="joint_states_topic">/so101/joint_states</param>
+              <plugin>so101_hardware_interface/So101HardwareBridge</plugin>
             </xacro:if>
 
           </hardware>

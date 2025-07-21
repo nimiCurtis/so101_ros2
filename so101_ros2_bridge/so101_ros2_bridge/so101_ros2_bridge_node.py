@@ -1,5 +1,26 @@
 #!/usr/bin/env python3
 
+# Copyright 2025 nimiCurtis
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+
 import sys
 
 # Manually append Conda site-packages to PYTHONPATH
@@ -11,13 +32,11 @@ import math
 from pathlib import Path
 
 import rclpy
-from control_msgs.action import FollowJointTrajectory
 from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
-from rclpy.action import ActionServer, CancelResponse, GoalResponse
 from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
-from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+from std_msgs.msg import Float64MultiArray  # Import message type for commands
 
 from so101_ros2_bridge import CALIBRATION_BASE_DIR  # defined in __init__.py
 
@@ -47,25 +66,22 @@ class SO101ROS2Bridge(Node):
             rclpy.shutdown()
             sys.exit(1)
 
-        self.joint_pub = self.create_publisher(JointState, '/joint_states', 10)
+        self.joint_pub = self.create_publisher(JointState, '/joint_states_raw', 10)
         rate = params.get("publish_rate", 30.0)
         self.timer = self.create_timer(1.0 / rate, self.publish_joint_states)
 
-        # FollowJointTrajectory Action Server
-        self.action_server = ActionServer(
-            self,
-            FollowJointTrajectory,
-            '/arm_controller/follow_joint_trajectory',
-            execute_callback=self.execute_trajectory_callback,
-            goal_callback=self.goal_callback,
-            cancel_callback=self.cancel_callback,
+        # Subscribe to commands from the ros2_control hardware interface bridge
+        self.create_subscription(
+            Float64MultiArray,
+            '/joint_commands',  # This topic should match the publisher in the C++ bridge
+            self.command_callback,
+            10,
         )
 
     def shutdown_hook(self):
         try:
             self.get_logger().info("Shutting down, disconnecting robot...")
             self.robot.disconnect()
-            self.action_server.destroy()
         except Exception as e:
             self.get_logger().warn(f"Exception during shutdown: {e}")
 
@@ -124,6 +140,7 @@ class SO101ROS2Bridge(Node):
             positions = []
             for joint in self.JOINT_NAMES:
                 if joint == "gripper":
+                    # Normalize gripper position to be within [0, pi] for MoveIt
                     pos = ((obs.get(f"{joint}.pos", 0.0) - 10.0) / 100.0) * math.pi
                 else:
                     pos = math.radians(obs.get(f"{joint}.pos", 0.0))
@@ -133,48 +150,38 @@ class SO101ROS2Bridge(Node):
         except Exception as e:
             self.get_logger().error(f"Failed to publish joint states: {e}")
 
-    def goal_callback(self, goal_request):
-        self.get_logger().info("Received FollowJointTrajectory goal")
-        return GoalResponse.ACCEPT
+    def command_callback(self, msg: Float64MultiArray):
+        """
+        Receives joint command goals in radians and sends them to the robot.
+        """
+        if len(msg.data) != len(self.JOINT_NAMES):
+            self.get_logger().error(
+                f"Received command with {len(msg.data)} joints, but expected {len(self.JOINT_NAMES)}."
+            )
+            return
 
-    def cancel_callback(self, goal_handle):
-        self.get_logger().info("Cancel request received")
-        return CancelResponse.ACCEPT
+        target_positions = {}
+        for i, joint_name in enumerate(self.JOINT_NAMES):
+            # Convert the incoming radian command to the format the robot expects (degrees or normalized)
+            target_positions[joint_name] = self.radians_to_normalized(
+                joint_name, msg.data[i]
+            )
 
-    async def execute_trajectory_callback(self, goal_handle):
-        self.get_logger().info("Executing trajectory...")
-        trajectory = goal_handle.request.trajectory
-        joint_names = trajectory.joint_names
-
-        for point in trajectory.points:
-            positions = point.positions
-            action = {}
-            for joint_name, position in zip(joint_names, positions):
-                if joint_name in self.JOINT_NAMES:
-                    action[joint_name] = self.radians_to_normalized(
-                        joint_name, position
-                    )
-
-            try:
-                print(action)
-                self.robot.send_action(action)
-            except Exception as e:
-                self.get_logger().error(f"Failed to send action: {e}")
-                goal_handle.abort()
-                return FollowJointTrajectory.Result()
-
-            # ✅ Correct sleep based on duration
-            duration = point.time_from_start.sec + point.time_from_start.nanosec * 1e-9
-            await asyncio.sleep(duration)
-
-        goal_handle.succeed()
-        self.get_logger().info("Trajectory execution complete")
-        return FollowJointTrajectory.Result()
+        try:
+            # Assuming the library has a method like `set_target_positions`
+            self.robot.send_action(target_positions)
+        except Exception as e:
+            self.get_logger().error(f"Failed to send commands to robot: {e}")
 
     def radians_to_normalized(self, joint_name: str, rad: float) -> float:
+        """
+        Converts a command in radians from MoveIt to the format expected by the SO101 API.
+        """
         if joint_name == "gripper":
+            # Convert radian command [0, pi] to the robot's expected gripper range [10, ~110]
             return (rad / math.pi) * 100.0 + 10.0
         else:
+            # Convert radians to degrees for all other joints
             return math.degrees(rad)
 
 
@@ -192,3 +199,7 @@ def main(args=None):
         node.destroy_node()
         executor.shutdown()
         rclpy.try_shutdown()
+
+
+if __name__ == '__main__':
+    main()

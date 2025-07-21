@@ -1,27 +1,40 @@
 # MoveIt uses this configuration for controller management
-
 moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager
 
+# MoveIt-specific controller configuration
+# For use with moveit_simple_controller_manager
 moveit_simple_controller_manager:
-  controller_names:
-    - arm_controller
-    # - gripper_controller
+  ros__parameters:
+    # A list of controller names that MoveIt can use
+    controller_names:
+      - arm_controller
+      - gripper_controller
 
-  arm_controller:
-    type: FollowJointTrajectory
-    joints:
-      - shoulder_pan
-      - shoulder_lift
-      - elbow_flex
-      - wrist_flex
-      - wrist_roll
-      - gripper
+    # For each controller, specify its properties.
+    # The name here MUST match a controller name from the list above.
+    arm_controller:
+      # The type of action interface provided by the controller
+      type: FollowJointTrajectory
+      # The namespace of the action (controller_name/action_name)
+      action_ns: follow_joint_trajectory
+      # Set this controller as the default for the joints it manages
+      default: true
+      # The list of joints this controller manages
+      joints:
+        - shoulder_pan
+        - shoulder_lift
+        - elbow_flex
+        - wrist_flex
+        - wrist_roll
 
-    action_ns: follow_joint_trajectory
-    default: true
-  # gripper_controller:
-  #   type: GripperCommand
-  #   joints:
-  #     - gripper
-  #   action_ns: gripper_cmd
-  #   default: true
+    gripper_controller:
+      # The GripperCommand action interface is provided by position_controllers/GripperActionController
+      type: GripperCommand
+      # The namespace of the action
+      action_ns: gripper_cmd
+      # Set this controller as the default for the joints it manages
+      default: true
+      # The joint this controller manages
+      joints:
+        - gripper
+

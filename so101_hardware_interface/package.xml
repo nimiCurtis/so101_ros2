@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>so101_hardware_interface</name>
+  <version>0.1.0</version>
+  <description>ros2_control hardware interface for the SO101 robot.</description>
+  <maintainer email="nimicu21@gmail.com">nimrod</maintainer>
+  <license>TODO: License declaration</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- ROS2 Control Dependencies -->
+  <depend>rclcpp</depend>
+  <depend>rclcpp_lifecycle</depend>
+  <depend>hardware_interface</depend>
+  <depend>pluginlib</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+    <!-- This tag exports the plugin definition file -->
+    <hardware_interface plugin_description_file="so101_hardware_bridge_plugins.xml"/>
+  </export>
+</package>

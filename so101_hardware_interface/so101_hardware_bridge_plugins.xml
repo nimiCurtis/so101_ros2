@@ -1,0 +1,10 @@
+<library path="so101_hardware_bridge">
+    <class name="so101_hardware_interface/So101HardwareBridge"
+           type="so101_hardware_interface::So101HardwareBridge"
+           base_class_type="hardware_interface::SystemInterface">
+      <description>
+        A ros2_control hardware interface bridge that communicates with a Python hardware node for the SO101 robot.
+      </description>
+    </class>
+</library>
+  
