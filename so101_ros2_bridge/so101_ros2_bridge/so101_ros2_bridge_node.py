@@ -78,6 +78,9 @@ class SO101ROS2Bridge(Node):
             10,
         )
 
+        self.last_positions = None
+        self.last_time = None
+
     def shutdown_hook(self):
         try:
             self.get_logger().info("Shutting down, disconnecting robot...")
@@ -133,6 +136,7 @@ class SO101ROS2Bridge(Node):
 
     def publish_joint_states(self):
         try:
+            current_time = self.get_clock().now()
             obs = self.robot.get_observation()
             msg = JointState()
             msg.header.stamp = self.get_clock().now().to_msg()
@@ -145,8 +149,29 @@ class SO101ROS2Bridge(Node):
                 else:
                     pos = math.radians(obs.get(f"{joint}.pos", 0.0))
                 positions.append(pos)
+
+            # Velocity calculation
+            velocities = [0.0] * len(self.JOINT_NAMES)
+            # On the first run, last_positions will be None, so velocities will be zero.
+            if self.last_positions is not None:
+                # Calculate time delta in seconds
+                dt = (current_time - self.last_time).nanoseconds / 1e9
+                # Avoid division by zero if the time delta is too small
+                if dt > 0:
+                    for i in range(len(self.JOINT_NAMES)):
+                        velocities[i] = (positions[i] - self.last_positions[i]) / dt
+
+            # Prepare msg
             msg.position = positions
+            msg.velocity = velocities
+
+            # Publish
             self.joint_pub.publish(msg)
+
+            # Store the current state for the next iteration's calculation
+            self.last_positions = positions
+            self.last_time = current_time
+
         except Exception as e:
             self.get_logger().error(f"Failed to publish joint states: {e}")
 
