@@ -1,19 +1,32 @@
 # This config file is used by ros2_control
 controller_manager:
   ros__parameters:
-    update_rate: 30  # Hz
+    update_rate: 20  # Hz
 
     arm_controller:
       type: joint_trajectory_controller/JointTrajectoryController
+    #   # joints:
+    #   #   - shoulder_pan
+    #   #   - shoulder_lift
+    #   #   - elbow_flex
+    #   #   - wrist_flex
+    #   #   - wrist_roll
+    #   # command_interfaces:
+    #   #   - position
+    #   # state_interfaces:
+    #   #   - position
+    #   #   - velocity
 
     gripper_controller:
       type: position_controllers/GripperActionController
+    #   # joint: gripper
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
 arm_controller:
   ros__parameters:
+    type: joint_trajectory_controller/JointTrajectoryController
     joints:
       - shoulder_pan
       - shoulder_lift
@@ -25,6 +38,8 @@ arm_controller:
     state_interfaces:
       - position
       - velocity
+      
 gripper_controller:
   ros__parameters:
+    type: position_controllers/GripperActionController
     joint: gripper

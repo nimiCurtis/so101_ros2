@@ -24,8 +24,9 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch.actions import DeclareLaunchArgument, LogInfo, TimerAction
+from launch.conditions import IfCondition
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
 from moveit_configs_utils import MoveItConfigsBuilder
 
@@ -33,8 +34,9 @@ from moveit_configs_utils import MoveItConfigsBuilder
 def generate_launch_description():
 
     use_sim = LaunchConfiguration("use_sim")
+    display = LaunchConfiguration("display")
 
-    use_sim_arg = DeclareLaunchArgument("use_sim", default_value="False")
+    display_config = LaunchConfiguration("display_config")
 
     robot_description_share_dir = get_package_share_directory("so101_description")
     robot_description_f = os.path.join(
@@ -52,6 +54,7 @@ def generate_launch_description():
         .robot_description_semantic(file_path=srdf_f)
         .trajectory_execution(file_path=moveit_controllers_f)
         .joint_limits(file_path=joint_limits_f)
+        .planning_pipelines(pipelines=["ompl", "pilz_industrial_motion_planner"])
         .to_moveit_configs()
     )
 
@@ -67,4 +70,25 @@ def generate_launch_description():
         arguments=["--ros-args", "--log-level", "info"],
     )
 
-    return LaunchDescription([use_sim_arg, move_group_node])
+    rviz_parameters = [
+        moveit_config.joint_limits,
+        moveit_config.robot_description_kinematics,
+        moveit_config.planning_pipelines,
+        {"use_sim_time": use_sim},
+    ]
+
+    # RViz node with configurable display config
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        name="rviz2",
+        output="screen",
+        arguments=["-d", display_config],
+        parameters=rviz_parameters,
+    )
+
+    delayed_display = TimerAction(
+        period=5.0, actions=[rviz_node], condition=IfCondition(display)
+    )
+
+    return LaunchDescription([move_group_node, delayed_display])

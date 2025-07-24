@@ -15,7 +15,6 @@
         <joint name="elbow_flex"/>
         <joint name="wrist_flex"/>
         <joint name="wrist_roll"/>
-        <!-- <joint name="gripper"/> -->
     </group>
 
     <group name="gripper">

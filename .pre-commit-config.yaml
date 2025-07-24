@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.3
+    rev: v0.12.4
     hooks:
       - id: ruff
         args: ["--fix"]
@@ -21,7 +21,7 @@ repos:
     hooks:
       - id: fix-tabs-in-cmakelists
         name: Fix tabs in CMakeLists.txt
-        entry: bash -c 'sed -i "s/\t/  /g" "$@"'
+        entry: bash -c 'for file in "$@"; do sed -i"" -e "s/\t/  /g" "$file"; done'
         language: system
         types: [text]
         files: ^.*CMakeLists\.txt$

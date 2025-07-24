@@ -11,3 +11,5 @@ install_manifest.txt
 docs_output
 docs_build
 __pycache__/
+
+bag/

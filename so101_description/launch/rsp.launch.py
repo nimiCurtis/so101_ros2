@@ -37,29 +37,6 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
 
-    so101_description_share_dir = get_package_share_directory("so101_description")
-
-    # Declare arguments
-    mode_arg = DeclareLaunchArgument(
-        name="mode",
-        default_value="real",
-        description="Execution mode: gazebo / isaac / real",
-    )
-
-    model_arg = DeclareLaunchArgument(
-        name="model",
-        default_value=os.path.join(
-            so101_description_share_dir, "urdf", "so101_new_calib.urdf.xacro"
-        ),
-        description="Absolute path to the robot URDF/xacro file",
-    )
-
-    use_sim_arg = DeclareLaunchArgument(
-        name="use_sim",
-        default_value="false",
-        description="Use simulation time (true for sim environments)",
-    )
-
     # Launch configurations
     model = LaunchConfiguration("model")
     mode = LaunchConfiguration("mode")
@@ -90,9 +67,6 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
-            model_arg,
-            mode_arg,
-            use_sim_arg,
             robot_state_publisher_node,
         ]
     )

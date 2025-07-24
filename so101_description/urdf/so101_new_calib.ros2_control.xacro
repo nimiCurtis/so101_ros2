@@ -15,14 +15,12 @@
               <param name="joint_states_topic">/isaac_joint_states</param>
             </xacro:if>
 
-            <!-- <xacro:if value="$(eval mode == 'gazebo')"> -->
+            <xacro:if value="$(eval mode == 'gazebo')">
             <plugin>ign_ros2_control/IgnitionSystem</plugin> 
-            <!-- </xacro:if> -->
+            </xacro:if>
 
             <xacro:if value="$(eval mode == 'real')">
-              <plugin>so101_hardware/So101System</plugin> 
-              <param name="serial_port">/dev/ttyUSB0</param>
-              <param name="baudrate">115200</param>
+              <plugin>so101_hardware_interface/So101HardwareBridge</plugin>
             </xacro:if>
 
           </hardware>
