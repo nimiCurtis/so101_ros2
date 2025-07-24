@@ -28,6 +28,8 @@ conda_site = '/home/nimrod/miniconda3/envs/lerobot/lib/python3.10/site-packages'
 if conda_site not in sys.path:
     sys.path.append(conda_site)
 import math
+import threading
+import time
 from pathlib import Path
 
 import rclpy
@@ -56,14 +58,11 @@ class SO101ROS2Bridge(Node):
         self.use_degrees = params["use_degrees"]
         config = self.dict_to_so101config(params)
 
-        self.robot = SO101Follower(config)
-        self.robot.connect(calibrate=False)
-
-        if not self.robot.is_connected:
-            self.shutdown_hook()
-            self.get_logger().error("Failed to connect to so101 arm.")
-            rclpy.shutdown()
-            sys.exit(1)
+        # Initialize watchdog at the background
+        self._is_alive = True
+        self._watchdog_interval = 0.01  # 100 hz whatchdog
+        self._timeout = 5.0
+        self._alive_thread = threading.Thread(target=self._alive, daemon=True)
 
         self.joint_pub = self.create_publisher(JointState, '/joint_states_raw', 10)
         rate = params.get("publish_rate", 30.0)
@@ -77,13 +76,63 @@ class SO101ROS2Bridge(Node):
             10,
         )
 
-        self.last_positions = None
-        self.last_time = None
+        # Initialize robot
+        self.robot = SO101Follower(config)
+        try:
+            self.robot.connect(calibrate=False)
+        except Exception as e:
+            raise RuntimeError(f"Failed to connect to SO101 robot: {e}") from e
+
+        # Start alive
+        self._alive_thread.start()
+
+    def _alive(self):
+        """
+        Watchdog thread running at a fixed rate. Monitors rclpy.ok() and ROS time.
+        Triggers shutdown if ROS crashes or time stops progressing.
+        """
+        interval = self._watchdog_interval
+        next_tick = time.monotonic()
+
+        while self._is_alive:
+            # Check ROS system state
+            if not rclpy.ok():
+                self.get_logger().error(
+                    "ROS shutdown detected (rclpy.ok() == False). Triggering shutdown."
+                )
+                self.shutdown_hook()
+                rclpy.try_shutdown()
+                break
+
+            # Check time progress
+            now = self.get_clock().now()
+            elapsed = (now - self.last_time).nanoseconds / 1e9
+            if elapsed > self._timeout:
+                self.get_logger().error(
+                    f"ROS time not updating for {elapsed:.1f}s — triggering shutdown."
+                )
+                self.shutdown_hook()
+                rclpy.try_shutdown()
+                break
+
+            # Sleep until next tick
+            next_tick += interval
+            sleep_time = max(0.0, next_tick - time.monotonic())
+            time.sleep(sleep_time)
 
     def shutdown_hook(self):
+        if not self._is_alive:
+            return  # Prevent double cleanup
+
+        self._is_alive = False
         try:
             self.get_logger().info("Shutting down, disconnecting robot...")
-            self.robot.disconnect()
+            if hasattr(self, 'robot'):
+                (
+                    self.robot.disconnect()
+                    if self.robot.is_connected
+                    else self.get_logger().warn("Robot is already disconnected")
+                )
         except Exception as e:
             self.get_logger().warn(f"Exception during shutdown: {e}")
 

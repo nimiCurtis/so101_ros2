@@ -20,7 +20,8 @@
 
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import RegisterEventHandler, Shutdown
+from launch.event_handlers import OnProcessExit
 from launch.substitutions import (
     LaunchConfiguration,
     PathJoinSubstitution,
@@ -59,6 +60,11 @@ def generate_launch_description():
         parameters=[config_path],
     )
 
+    # Kill launch if bridge_node crashes
+    node_monitor = RegisterEventHandler(
+        OnProcessExit(target_action=so101_bridge_node, on_exit=[Shutdown()])
+    )
+
     return LaunchDescription(
-        [so101_bridge_node]  # expose the 'type' arg to command line
+        [so101_bridge_node, node_monitor]  # expose the 'type' arg to command line
     )
