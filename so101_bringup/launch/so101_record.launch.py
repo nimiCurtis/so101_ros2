@@ -19,46 +19,27 @@
 # THE SOFTWARE.
 
 
+import os
+
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import (
-    LaunchConfiguration,
-    PathJoinSubstitution,
-    TextSubstitution,
-)
 from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
+    # Path
+    bringup_pkg = get_package_share_directory('so101_bringup')
 
-    robot_type = LaunchConfiguration("type")
+    # Get the path to the YAML file
+    config_file_path = os.path.join(bringup_pkg, 'config', 'so101_sdr.yaml')
 
-    # Use PathJoinSubstitution to build the path dynamically at launch time
-    config_path = PathJoinSubstitution(
-        [
-            FindPackageShare("so101_ros2_bridge"),
-            "config",
-            [
-                TextSubstitution(text='so101_'),
-                robot_type,
-                TextSubstitution(text='_params.yaml'),
-            ],
-        ]
-    )
-
-    so101_bridge_node = Node(
-        package='so101_ros2_bridge',
-        executable='so101_ros2_bridge_node',
-        name=[
-            TextSubstitution(text='so101_'),
-            robot_type,
-            TextSubstitution(text='_interface'),
-        ],
+    # Create the node action
+    sdr_node = Node(
+        package='system_data_recorder',
+        executable='system_data_recorder',
+        name='sdr',
         output='screen',
-        parameters=[config_path],
+        parameters=[config_file_path],
     )
 
-    return LaunchDescription(
-        [so101_bridge_node]  # expose the 'type' arg to command line
-    )
+    return LaunchDescription([sdr_node])

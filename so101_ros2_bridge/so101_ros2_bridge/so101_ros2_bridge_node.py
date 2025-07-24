@@ -27,7 +27,6 @@ import sys
 conda_site = '/home/nimrod/miniconda3/envs/lerobot/lib/python3.10/site-packages'
 if conda_site not in sys.path:
     sys.path.append(conda_site)
-import asyncio  # make sure this is at the top
 import math
 from pathlib import Path
 
@@ -186,21 +185,20 @@ class SO101ROS2Bridge(Node):
             return
 
         target_positions = {}
-        for i, joint_name in enumerate(self.JOINT_NAMES):
+        for i, joint in enumerate(self.JOINT_NAMES):
             # Convert the incoming radian command to the format the robot expects (degrees or normalized)
-            target_positions[joint_name] = self.radians_to_normalized(
-                joint_name, msg.data[i]
+            target_positions[f"{joint}.pos"] = self.radians_to_normalized(
+                joint, msg.data[i]
             )
 
         try:
-            # Assuming the library has a method like `set_target_positions`
             self.robot.send_action(target_positions)
         except Exception as e:
             self.get_logger().error(f"Failed to send commands to robot: {e}")
 
     def radians_to_normalized(self, joint_name: str, rad: float) -> float:
         """
-        Converts a command in radians from MoveIt to the format expected by the SO101 API.
+        converts a command in radians from MoveIt to the format expected by the SO101 API.
         """
         if joint_name == "gripper":
             # Convert radian command [0, pi] to the robot's expected gripper range [10, ~110]

@@ -21,21 +21,12 @@
 # SOFTWARE.
 
 from launch import LaunchDescription
+from launch.actions import RegisterEventHandler, TimerAction
+from launch.event_handlers import OnProcessExit
 from launch_ros.actions import Node
 
 
 def generate_launch_description():
-
-    joint_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            "joint_state_broadcaster",
-            "--controller-manager",
-            "/controller_manager",
-        ],
-        output="screen",
-    )
 
     arm_controller_spawner = Node(
         package="controller_manager",
@@ -51,10 +42,30 @@ def generate_launch_description():
         output="screen",
     )
 
+    joint_state_broadcaster_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "joint_state_broadcaster",
+            "--controller-manager",
+            "/controller_manager",
+        ],
+        output="screen",
+    )
+
+    delayed_joint_state_broadcaster_spawner = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=arm_controller_spawner,
+            on_exit=[
+                TimerAction(period=1.0, actions=[joint_state_broadcaster_spawner])
+            ],
+        )
+    )
+
     return LaunchDescription(
         [
-            joint_state_broadcaster_spawner,
             arm_controller_spawner,
             gripper_controller_spawner,
+            delayed_joint_state_broadcaster_spawner,
         ]
     )

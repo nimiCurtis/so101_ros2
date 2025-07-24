@@ -19,46 +19,41 @@
 # THE SOFTWARE.
 
 
+import os
+
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import (
-    LaunchConfiguration,
-    PathJoinSubstitution,
-    TextSubstitution,
-)
-from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
 
-    robot_type = LaunchConfiguration("type")
+    # Paths
+    sim_pkg = get_package_share_directory("so101_sim")
+    controller_pkg = get_package_share_directory("so101_controller")
 
-    # Use PathJoinSubstitution to build the path dynamically at launch time
-    config_path = PathJoinSubstitution(
-        [
-            FindPackageShare("so101_ros2_bridge"),
-            "config",
-            [
-                TextSubstitution(text='so101_'),
-                robot_type,
-                TextSubstitution(text='_params.yaml'),
-            ],
-        ]
+    model = LaunchConfiguration("model")
+
+    # Include gazebo simulation
+    gazebo_sim_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(sim_pkg, "launch", "so101_sim_gazebo.launch.py")
+        ),
+        launch_arguments={"model": model}.items(),
     )
 
-    so101_bridge_node = Node(
-        package='so101_ros2_bridge',
-        executable='so101_ros2_bridge_node',
-        name=[
-            TextSubstitution(text='so101_'),
-            robot_type,
-            TextSubstitution(text='_interface'),
-        ],
-        output='screen',
-        parameters=[config_path],
+    # Include controller spawners
+    spawn_controllers_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(controller_pkg, "launch", "so101_controllers.launch.py")
+        )
     )
 
     return LaunchDescription(
-        [so101_bridge_node]  # expose the 'type' arg to command line
+        [
+            gazebo_sim_launch,
+            spawn_controllers_launch,
+        ]
     )
