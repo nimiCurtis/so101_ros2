@@ -1,0 +1,67 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  # --------------------------------------------------
+  # Job 1: Run fast pre-commit checks first
+  # --------------------------------------------------
+  lint:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Run pre-commit hooks
+        uses: pre-commit/action@v3.0.1
+        # This action runs 'pre-commit run --all-files'
+  
+  # --------------------------------------------------
+  # Job 2: Linters applicable to C++ packages
+  # --------------------------------------------------# 
+  ament_lint_cpp:
+    # Give each job a different name for better feedback
+    name: ament_${{ matrix.linter }}
+    runs-on: ubuntu-22.04
+    strategy:
+      # We want all linters to run even if one fails
+      fail-fast: false
+      matrix:
+        linter: [cppcheck, uncrustify]
+        pkg: [so101_teleop]
+    env:
+      AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS: "1"
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ros-tooling/setup-ros@v0.7
+      with:
+            required-ros-distributions: humble
+    - uses: ros-tooling/action-ros-lint@v0.1
+      with:
+        linter: ${{ matrix.linter }}
+        package-name: so101_teleop
+  # --------------------------------------------------
+  # Job 3: Run slower build & test jobs ONLY if linting passes
+  # --------------------------------------------------
+  build-and-test:
+    # 'needs: [lint, ament_lint_cpp]' creates the chain. This job waits for 'lint' and 'ament_lint_cpp' to succeed.
+    needs: [lint, ament_lint_cpp]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install ROS
+        uses: ros-tooling/setup-ros@v0.7
+        with:
+          required-ros-distributions: humble
+      - name: Build and run tests
+        uses: ros-tooling/action-ros-ci@v0.4
+        with:
+          target-ros2-distro: humble
+

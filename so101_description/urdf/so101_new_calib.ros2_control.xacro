@@ -15,57 +15,55 @@
               <param name="joint_states_topic">/isaac_joint_states</param>
             </xacro:if>
 
-            <!-- <xacro:if value="$(eval mode == 'gazebo')"> -->
+            <xacro:if value="$(eval mode == 'gazebo')">
             <plugin>ign_ros2_control/IgnitionSystem</plugin> 
-            <!-- </xacro:if> -->
+            </xacro:if>
 
             <xacro:if value="$(eval mode == 'real')">
-              <plugin>so101_hardware/So101System</plugin> 
-              <param name="serial_port">/dev/ttyUSB0</param>
-              <param name="baudrate">115200</param>
+              <plugin>so101_hardware_interface/So101HardwareBridge</plugin>
             </xacro:if>
 
           </hardware>
 
-            <joint name="Rotation">
+            <joint name="shoulder_pan">
                 <command_interface name="position"/>
                 <state_interface name="position">
-                  <param name="initial_value">${initial_positions['Rotation']}</param>
+                  <param name="initial_value">${initial_positions['shoulder_pan']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <joint name="Pitch">
+            <joint name="shoulder_lift">
                 <command_interface name="position"/>
                 <state_interface name="position">
-                  <param name="initial_value">${initial_positions['Pitch']}</param>
+                  <param name="initial_value">${initial_positions['shoulder_lift']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <joint name="Elbow">
+            <joint name="elbow_flex">
                 <command_interface name="position"/>
                 <state_interface name="position">
-                  <param name="initial_value">${initial_positions['Elbow']}</param>
+                  <param name="initial_value">${initial_positions['elbow_flex']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <joint name="Wrist_Pitch">
+            <joint name="wrist_flex">
                 <command_interface name="position"/>
                 <state_interface name="position">
-                  <param name="initial_value">${initial_positions['Wrist_Pitch']}</param>
+                  <param name="initial_value">${initial_positions['wrist_flex']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <joint name="Wrist_Roll">
+            <joint name="wrist_roll">
                 <command_interface name="position"/>
                 <state_interface name="position">
-                  <param name="initial_value">${initial_positions['Wrist_Roll']}</param>
+                  <param name="initial_value">${initial_positions['wrist_roll']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
-            <joint name="Jaw">
+            <joint name="gripper">
                 <command_interface name="position"/>
                 <state_interface name="position">
-                  <param name="initial_value">${initial_positions['Jaw']}</param>
+                  <param name="initial_value">${initial_positions['gripper']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>

@@ -4,7 +4,7 @@
 
   <name>so101_sim</name>
   <version>0.0.0</version>
-  <description>TODO</description>
+  <description>Gazebo simulation environment for the SO101 manipulator.</description>
 
   <maintainer email="nimicu21@gmail.com">nimiCurtis</maintainer>
   <!-- <author email="nimicu21@gmail.com">nimiCurtis</author> -->
@@ -27,11 +27,12 @@
 
   <exec_depend>ros2launch</exec_depend>
 
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
-  
+  <!-- <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend> -->
+
   <export>
     <build_type>ament_cmake</build_type>
   </export>
+
 
 </package>

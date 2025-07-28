@@ -1,3 +1,25 @@
+# MIT License
+#
+# Copyright (c) 2025 nimiCurtis
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 import os
 from pathlib import Path
 
@@ -14,21 +36,14 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    so101_description_share_dir = get_package_share_directory("so101_description")
 
-    # Declare model argument
-    model_arg = DeclareLaunchArgument(
-        name="model",
-        default_value=os.path.join(
-            so101_description_share_dir, "urdf", "so101_new_calib.urdf.xacro"
-        ),
-        description="Absolute path to the robot URDF/xacro file",
-    )
+    # Paths
+    description_pkg = get_package_share_directory("so101_description")
 
     # Set Gazebo resource path
     gazebo_resource_path = SetEnvironmentVariable(
         name="GZ_SIM_RESOURCE_PATH",
-        value=[str(Path(so101_description_share_dir).parent.resolve())],
+        value=[str(Path(description_pkg).parent.resolve())],
     )
 
     model = LaunchConfiguration("model")
@@ -36,7 +51,7 @@ def generate_launch_description():
     # Include RSP with sim settings
     rsp_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(so101_description_share_dir, "launch", "rsp.launch.py")
+            os.path.join(description_pkg, "launch", "rsp.launch.py")
         ),
         launch_arguments={
             "model": model,
@@ -72,7 +87,6 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
-            model_arg,
             gazebo_resource_path,
             rsp_launch,
             gazebo_launch,
