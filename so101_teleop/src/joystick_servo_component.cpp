@@ -20,28 +20,28 @@ const std::string BASE_FRAME_ID = "base_link";
 // For XBOX 1 controller
 enum Axis
 {
-  LEFT_STICK_X = 0,
-  LEFT_STICK_Y = 1,
-  LEFT_TRIGGER = 2,
-  RIGHT_STICK_X = 3,
-  RIGHT_STICK_Y = 4,
-  RIGHT_TRIGGER = 5,
-  D_PAD_X = 6,
-  D_PAD_Y = 7
+    LEFT_STICK_X = 0,
+    LEFT_STICK_Y = 1,
+    LEFT_TRIGGER = 2,
+    RIGHT_STICK_X = 3,
+    RIGHT_STICK_Y = 4,
+    RIGHT_TRIGGER = 5,
+    D_PAD_X = 6,
+    D_PAD_Y = 7
 };
 enum Button
 {
-  A = 0,
-  B = 1,
-  X = 2,
-  Y = 3,
-  LEFT_BUMPER = 4,
-  RIGHT_BUMPER = 5,
-  CHANGE_VIEW = 6,
-  MENU = 7,
-  HOME = 8,
-  LEFT_STICK_CLICK = 9,
-  RIGHT_STICK_CLICK = 10
+    A = 0,
+    B = 1,
+    X = 2,
+    Y = 3,
+    LEFT_BUMPER = 4,
+    RIGHT_BUMPER = 5,
+    CHANGE_VIEW = 6,
+    MENU = 7,
+    HOME = 8,
+    LEFT_STICK_CLICK = 9,
+    RIGHT_STICK_CLICK = 10
 };
 
 // Some axes have offsets (e.g. the default trigger position is 1.0 not 0)
@@ -59,40 +59,42 @@ std::map<Button, double> BUTTON_DEFAULTS;
  * @return return true if you want to publish a Twist, false if you want to publish a JointJog
  */
 bool convertJoyToCmd(
-  const std::vector<float> & axes, const std::vector<int> & buttons,
-  std::unique_ptr<geometry_msgs::msg::TwistStamped> & twist,
-  std::unique_ptr<control_msgs::msg::JointJog> & joint)
+    const std::vector<float> &axes, const std::vector<int> &buttons,
+    std::unique_ptr<geometry_msgs::msg::TwistStamped> &twist,
+    std::unique_ptr<control_msgs::msg::JointJog> &joint)
 {
     // Give joint jogging priority because it is only buttons
     // If any joint jog command is requested, we are only publishing joint commands
     if (buttons[A] || buttons[B] || buttons[X] || buttons[Y] || axes[D_PAD_X] || axes[D_PAD_Y])
     {
         // Map the D_PAD to the proximal joints
-        joint->joint_names.push_back("Rotation");
+        joint->joint_names.push_back("shoulder_pan");
         joint->velocities.push_back(axes[D_PAD_X]);
-        joint->joint_names.push_back("Pitch");
+        joint->joint_names.push_back("shoulder_lift");
         joint->velocities.push_back(axes[D_PAD_Y]);
 
         // Map the diamond to the distal joints
-        joint->joint_names.push_back("Wrist_Pitch");
+        joint->joint_names.push_back("elbow_flex");
         joint->velocities.push_back(buttons[B] - buttons[X]);
-        joint->joint_names.push_back("Wrist_Roll");
+        joint->joint_names.push_back("wrist_flex");
         joint->velocities.push_back(buttons[Y] - buttons[A]);
+        joint->joint_names.push_back("wrist_roll");
+        joint->velocities.push_back(0.);
         return false;
     }
     twist->twist.linear.z = axes[LEFT_STICK_Y];
     twist->twist.linear.x = axes[LEFT_STICK_X];
 
-  double lin_y_right = 0.5 * (axes[RIGHT_TRIGGER] - AXIS_DEFAULTS.at(RIGHT_TRIGGER));
-  double lin_y_left = -0.5 * (axes[LEFT_TRIGGER] - AXIS_DEFAULTS.at(LEFT_TRIGGER));
-  twist->twist.linear.y = lin_y_right + lin_y_left;
+    double lin_y_right = 0.5 * (axes[RIGHT_TRIGGER] - AXIS_DEFAULTS.at(RIGHT_TRIGGER));
+    double lin_y_left = -0.5 * (axes[LEFT_TRIGGER] - AXIS_DEFAULTS.at(LEFT_TRIGGER));
+    twist->twist.linear.y = lin_y_right + lin_y_left;
 
-  twist->twist.angular.y = axes[RIGHT_STICK_X];
-  twist->twist.angular.x = axes[RIGHT_STICK_Y];
+    twist->twist.angular.y = axes[RIGHT_STICK_X];
+    twist->twist.angular.x = axes[RIGHT_STICK_Y];
 
-  double roll_positive = -1 * buttons[RIGHT_BUMPER];
-  double roll_negative = (buttons[LEFT_BUMPER]);
-  twist->twist.angular.z = roll_positive + roll_negative;
+    double roll_positive = -1 * buttons[RIGHT_BUMPER];
+    double roll_negative = (buttons[LEFT_BUMPER]);
+    twist->twist.angular.z = roll_positive + roll_negative;
 
     return true;
 }
@@ -102,7 +104,7 @@ bool convertJoyToCmd(
  * @param frame_name Set the command frame to this
  * @param buttons The vector of discrete controller button values
  */
-void updateCmdFrame(std::string & frame_name, const std::vector<int> & buttons)
+void updateCmdFrame(std::string &frame_name, const std::vector<int> &buttons)
 {
     if (buttons.size() > CHANGE_VIEW && buttons[CHANGE_VIEW] && frame_name == EEF_FRAME_ID)
     {
@@ -147,11 +149,11 @@ namespace moveit_servo
         }
     }
 
-/**
-   * @brief Destructor for JoyToServoComponent.
-   * Sets the running flag to false and joins the joystick reading thread to ensure proper shutdown.
-   */
-JoyToServoComponent::~JoyToServoComponent() {}
+    /**
+     * @brief Destructor for JoyToServoComponent.
+     * Sets the running flag to false and joins the joystick reading thread to ensure proper shutdown.
+     */
+    JoyToServoComponent::~JoyToServoComponent() {}
 
     void JoyToServoComponent::JoyCBLoop(const sensor_msgs::msg::Joy::ConstSharedPtr &msg)
     {
@@ -160,8 +162,8 @@ JoyToServoComponent::~JoyToServoComponent() {}
         auto twist_msg = std::make_unique<geometry_msgs::msg::TwistStamped>();
         auto joint_msg = std::make_unique<control_msgs::msg::JointJog>();
 
-  // This call updates the frame for twist commands
-  updateCmdFrame(frame_to_publish_, msg->buttons);
+        // This call updates the frame for twist commands
+        updateCmdFrame(frame_to_publish_, msg->buttons);
 
         if (convertJoyToCmd(msg->axes, msg->buttons, twist_msg, joint_msg))
         {
@@ -176,6 +178,9 @@ JoyToServoComponent::~JoyToServoComponent() {}
         }
         else
         {
+            RCLCPP_INFO(this->get_logger(), "Publishing joint velocity command with %zu velocities in frame: %s",
+                        joint_msg->velocities.size(), frame_to_publish_.c_str());
+
             joint_msg->header.stamp = this->now();
             joint_msg->header.frame_id = frame_to_publish_;
             joint_pub_->publish(std::move(joint_msg));
