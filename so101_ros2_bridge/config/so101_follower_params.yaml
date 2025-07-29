@@ -7,3 +7,4 @@ so101_ros2_bridge:
     # max_relative_target: 10 # default is none
     disable_torque_on_disconnect: true
     publish_rate: 30.0
+
