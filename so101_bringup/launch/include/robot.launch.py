@@ -73,11 +73,19 @@ def generate_launch_description():
         )
     )
 
+    delayed_controller_manager = TimerAction(
+        period=3.0, actions=[controller_manager_launch]
+    )
+
+    delayed_spawn_controllers = TimerAction(
+        period=6.0, actions=[spawn_controllers_launch]
+    )
+
     return LaunchDescription(
         [
             rsp_launch,
             robot_launch,
-            controller_manager_launch,
-            spawn_controllers_launch,
+            delayed_controller_manager,
+            delayed_spawn_controllers,
         ]
     )

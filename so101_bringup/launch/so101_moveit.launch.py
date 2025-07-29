@@ -73,7 +73,7 @@ def generate_launch_description():
     display = LaunchConfiguration("display")
     model = LaunchConfiguration("model")
     display_config = LaunchConfiguration("display_config")
-    robot_type = LaunchConfiguration("robot_type")
+    robot_type = LaunchConfiguration("type")
 
     # --- Conditionally include Gazebo sim if mode == gazebo ---
     sim_gazebo_launch = IncludeLaunchDescription(
@@ -90,7 +90,7 @@ def generate_launch_description():
     # --- Conditionally include Real Ros2 Robot Brodge if mode == real ---
     robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(bringup_pkg, "launch", "robot.launch.py")
+            os.path.join(bringup_pkg, "launch", "include", "robot.launch.py")
         ),
         launch_arguments={"type": robot_type, "model": model}.items(),
         condition=IfCondition(EqualsSubstitution(mode, "real")),

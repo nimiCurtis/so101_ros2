@@ -53,19 +53,10 @@ def generate_launch_description():
         output="screen",
     )
 
-    delayed_joint_state_broadcaster_spawner = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=arm_controller_spawner,
-            on_exit=[
-                TimerAction(period=1.0, actions=[joint_state_broadcaster_spawner])
-            ],
-        )
-    )
-
     return LaunchDescription(
         [
+            joint_state_broadcaster_spawner,
             arm_controller_spawner,
             gripper_controller_spawner,
-            delayed_joint_state_broadcaster_spawner,
         ]
     )

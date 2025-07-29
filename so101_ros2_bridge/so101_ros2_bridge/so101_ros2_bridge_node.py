@@ -62,7 +62,7 @@ class SO101ROS2Bridge(Node):
         self._is_alive = True
         self._watchdog_interval = 0.01  # 100 hz whatchdog
         self._timeout = 5.0
-        # self._alive_thread = threading.Thread(target=self._alive, daemon=True)
+        self._alive_thread = threading.Thread(target=self._alive, daemon=True)
 
         self.joint_pub = self.create_publisher(JointState, '/joint_states_raw', 10)
         rate = params.get("publish_rate", 30.0)
@@ -87,41 +87,41 @@ class SO101ROS2Bridge(Node):
         self.last_time = self.get_clock().now()
 
         # Start alive
-        # self._alive_thread.start()
+        self._alive_thread.start()
 
-    # def _alive(self):
-    #     """
-    #     Watchdog thread running at a fixed rate. Monitors rclpy.ok() and ROS time.
-    #     Triggers shutdown if ROS crashes or time stops progressing.
-    #     """
-    #     interval = self._watchdog_interval
-    #     next_tick = time.monotonic()
+    def _alive(self):
+        """
+        Watchdog thread running at a fixed rate. Monitors rclpy.ok() and ROS time.
+        Triggers shutdown if ROS crashes or time stops progressing.
+        """
+        interval = self._watchdog_interval
+        next_tick = time.monotonic()
 
-    #     while self._is_alive:
-    #         # Check ROS system state
-    #         if not rclpy.ok():
-    #             self.get_logger().error(
-    #                 "ROS shutdown detected (rclpy.ok() == False). Triggering shutdown."
-    #             )
-    #             self.shutdown_hook()
-    #             rclpy.try_shutdown()
-    #             break
+        while self._is_alive:
+            # Check ROS system state
+            if not rclpy.ok():
+                self.get_logger().error(
+                    "ROS shutdown detected (rclpy.ok() == False). Triggering shutdown."
+                )
+                self.shutdown_hook()
+                rclpy.try_shutdown()
+                break
 
-    #         # Check time progress
-    #         now = self.get_clock().now()
-    #         elapsed = (now - self.last_time).nanoseconds / 1e9
-    #         if elapsed > self._timeout:
-    #             self.get_logger().error(
-    #                 f"ROS time not updating for {elapsed:.1f}s — triggering shutdown."
-    #             )
-    #             self.shutdown_hook()
-    #             rclpy.try_shutdown()
-    #             break
+            # Check time progress
+            now = self.get_clock().now()
+            elapsed = (now - self.last_time).nanoseconds / 1e9
+            if elapsed > self._timeout:
+                self.get_logger().error(
+                    f"ROS time not updating for {elapsed:.1f}s — triggering shutdown."
+                )
+                self.shutdown_hook()
+                rclpy.try_shutdown()
+                break
 
-    #         # Sleep until next tick
-    #         next_tick += interval
-    #         sleep_time = max(0.0, next_tick - time.monotonic())
-    #         time.sleep(sleep_time)
+            # Sleep until next tick
+            next_tick += interval
+            sleep_time = max(0.0, next_tick - time.monotonic())
+            time.sleep(sleep_time)
 
     def shutdown_hook(self):
         if not self._is_alive:
