@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Copyright 2025 nimiCurtis
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,12 +22,31 @@
 
 import os
 import sys
-from pathlib import Path
 
-from ament_index_python.packages import get_package_share_directory
+conda_site = '/home/nimrod/miniconda3/envs/lerobot/lib/python3.10/site-packages'
+if conda_site not in sys.path:
+    sys.path.append(conda_site)
+import rclpy
+from rclpy.executors import SingleThreadedExecutor
 
-# Path to the pkg share directory
-PACKAGE_DIR = Path(get_package_share_directory("so101_ros2_bridge"))
+from so101_ros2_bridge.bridge.bridge import FollowerBridge
 
-# Default calibration path relative to this package
-CALIBRATION_BASE_DIR = PACKAGE_DIR / "config" / "calibration"
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = FollowerBridge()
+    executor = SingleThreadedExecutor()
+    executor.add_node(node)
+    try:
+        executor.spin()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.shutdown_hook()
+        node.destroy_node()
+        executor.shutdown()
+        rclpy.try_shutdown()
+
+
+if __name__ == '__main__':
+    main()

@@ -1,4 +1,4 @@
-so101_ros2_bridge:
+so101_follower_ros2_bridge:
   ros__parameters:
     port: "/dev/ttyACM1"
     id: "Tzili"

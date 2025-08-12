@@ -21,28 +21,24 @@
 # THE SOFTWARE.
 
 
-import sys
-
-# Manually append Conda site-packages to PYTHONPATH
-conda_site = '/home/nimrod/miniconda3/envs/lerobot/lib/python3.10/site-packages'
-if conda_site not in sys.path:
-    sys.path.append(conda_site)
 import math
 import threading
 import time
+from abc import ABC, abstractmethod
 from pathlib import Path
 
 import rclpy
-from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
-from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Float64MultiArray  # Import message type for commands
 
+# from .registry import ROBOT_FACTORY_REGISTRY
 from so101_ros2_bridge import CALIBRATION_BASE_DIR  # defined in __init__.py
+from so101_ros2_bridge.bridge import build
+from so101_ros2_bridge.bridge.registry import ROBOT_FACTORY_REGISTRY
 
 
-class SO101ROS2Bridge(Node):
+class SO101ROS2Bridge(Node, ABC):
     JOINT_NAMES = [
         'shoulder_pan',
         'shoulder_lift',
@@ -52,11 +48,11 @@ class SO101ROS2Bridge(Node):
         'gripper',
     ]
 
-    def __init__(self):
-        super().__init__('so101_ros2_bridge')
+    def __init__(self, node_name='so101_ros2_bridge'):
+        super().__init__(node_name)
         params = self.read_parameters()
         self.use_degrees = params["use_degrees"]
-        config = self.dict_to_so101config(params)
+        # config = self.dict_to_so101config(params)
 
         # Initialize watchdog at the background
         self._is_alive = True
@@ -68,16 +64,21 @@ class SO101ROS2Bridge(Node):
         rate = params.get("publish_rate", 30.0)
         self.timer = self.create_timer(1.0 / rate, self.publish_joint_states)
 
-        # Subscribe to commands from the ros2_control hardware interface bridge
-        self.create_subscription(
-            Float64MultiArray,
-            '/joint_commands',  # This topic should match the publisher in the C++ bridge
-            self.command_callback,
-            10,
-        )
+        # Register the robot type in the factory registry
+        if not ROBOT_FACTORY_REGISTRY:
+            raise RuntimeError(
+                "ROBOT_FACTORY_REGISTRY is empty. Ensure robot types are registered."
+            )
+
+        self.declare_parameter("robot_type", "follower")
+        robot_type = self.get_parameter("robot_type").get_parameter_value().string_value
+        factory_fn = ROBOT_FACTORY_REGISTRY.get(robot_type)
+        if factory_fn is None:
+            raise ValueError(f"Robot type '{robot_type}' not registered.")
 
         # Initialize robot
-        self.robot = SO101Follower(config)
+        self.robot = factory_fn(params)
+
         try:
             self.robot.connect(calibrate=False)
         except Exception as e:
@@ -88,6 +89,11 @@ class SO101ROS2Bridge(Node):
 
         # Start alive
         self._alive_thread.start()
+
+    @abstractmethod
+    def read_parameters(self) -> dict:
+        """Reads parameters from the ROS2 parameter server."""
+        pass
 
     def _alive(self):
         """
@@ -139,52 +145,6 @@ class SO101ROS2Bridge(Node):
         except Exception as e:
             self.get_logger().warn(f"Exception during shutdown: {e}")
 
-    def read_parameters(self) -> dict:
-        self.declare_parameter("port", "/dev/ttyACM1")
-        self.declare_parameter("id", "Tzili")
-        self.declare_parameter("calibration_dir", str(CALIBRATION_BASE_DIR))
-        self.declare_parameter("use_degrees", False)
-        self.declare_parameter("max_relative_target", 0)
-        self.declare_parameter("disable_torque_on_disconnect", True)
-        self.declare_parameter("publish_rate", 30.0)
-
-        max_relative_target = (
-            self.get_parameter("max_relative_target")
-            .get_parameter_value()
-            .integer_value
-        )
-        max_relative_target = max_relative_target if max_relative_target != 0 else None
-
-        return {
-            "port": self.get_parameter("port").get_parameter_value().string_value,
-            "id": self.get_parameter("id").get_parameter_value().string_value,
-            "calibration_dir": Path(
-                self.get_parameter("calibration_dir").get_parameter_value().string_value
-            ),
-            "use_degrees": (
-                self.get_parameter("use_degrees").get_parameter_value().bool_value
-            ),
-            "max_relative_target": max_relative_target,
-            "disable_torque_on_disconnect": (
-                self.get_parameter("disable_torque_on_disconnect")
-                .get_parameter_value()
-                .bool_value
-            ),
-            "publish_rate": (
-                self.get_parameter("publish_rate").get_parameter_value().double_value
-            ),
-        }
-
-    def dict_to_so101config(self, params: dict) -> SO101FollowerConfig:
-        return SO101FollowerConfig(
-            port=params["port"],
-            calibration_dir=params["calibration_dir"],
-            id=params["id"],
-            use_degrees=params["use_degrees"],
-            max_relative_target=params["max_relative_target"],
-            disable_torque_on_disconnect=params["disable_torque_on_disconnect"],
-        )
-
     def publish_joint_states(self):
         try:
             current_time = self.get_clock().now()
@@ -226,6 +186,68 @@ class SO101ROS2Bridge(Node):
         except Exception as e:
             self.get_logger().error(f"Failed to publish joint states: {e}")
 
+    def radians_to_normalized(self, joint_name: str, rad: float) -> float:
+        """
+        converts a command in radians from MoveIt to the format expected by the SO101 API.
+        """
+        if joint_name == "gripper":
+            # Convert radian command [0, pi] to the robot's expected gripper range [10, ~110]
+            return (rad / math.pi) * 100.0 + 10.0
+        else:
+            # Convert radians to degrees for all other joints
+            return math.degrees(rad)
+
+
+class FollowerBridge(SO101ROS2Bridge):
+
+    def __init__(self):
+        super().__init__("so101_follower_ros2_bridge")
+
+        # Subscribe to commands from the ros2_control hardware interface bridge
+        self.create_subscription(
+            Float64MultiArray,
+            '/joint_commands',  # This topic should match the publisher in the C++ bridge
+            self.command_callback,
+            10,
+        )
+        self.get_logger().info("SO101 Follower ROS2 Bridge initialized.")
+
+    def read_parameters(self) -> dict:
+        self.declare_parameter("port", "/dev/ttyACM1")
+        self.declare_parameter("id", "Tzili")
+        self.declare_parameter("calibration_dir", str(CALIBRATION_BASE_DIR))
+        self.declare_parameter("use_degrees", True)
+        self.declare_parameter("max_relative_target", 0)
+        self.declare_parameter("disable_torque_on_disconnect", True)
+        self.declare_parameter("publish_rate", 30.0)
+
+        max_relative_target = (
+            self.get_parameter("max_relative_target")
+            .get_parameter_value()
+            .integer_value
+        )
+        max_relative_target = max_relative_target if max_relative_target != 0 else None
+
+        return {
+            "port": self.get_parameter("port").get_parameter_value().string_value,
+            "id": self.get_parameter("id").get_parameter_value().string_value,
+            "calibration_dir": Path(
+                self.get_parameter("calibration_dir").get_parameter_value().string_value
+            ),
+            "use_degrees": (
+                self.get_parameter("use_degrees").get_parameter_value().bool_value
+            ),
+            "max_relative_target": max_relative_target,
+            "disable_torque_on_disconnect": (
+                self.get_parameter("disable_torque_on_disconnect")
+                .get_parameter_value()
+                .bool_value
+            ),
+            "publish_rate": (
+                self.get_parameter("publish_rate").get_parameter_value().double_value
+            ),
+        }
+
     def command_callback(self, msg: Float64MultiArray):
         """
         Receives joint command goals in radians and sends them to the robot.
@@ -249,33 +271,31 @@ class SO101ROS2Bridge(Node):
         except Exception as e:
             self.get_logger().error(f"Failed to send commands to robot: {e}")
 
-    def radians_to_normalized(self, joint_name: str, rad: float) -> float:
-        """
-        converts a command in radians from MoveIt to the format expected by the SO101 API.
-        """
-        if joint_name == "gripper":
-            # Convert radian command [0, pi] to the robot's expected gripper range [10, ~110]
-            return (rad / math.pi) * 100.0 + 10.0
-        else:
-            # Convert radians to degrees for all other joints
-            return math.degrees(rad)
 
+class LeaderBridge(SO101ROS2Bridge):
 
-def main(args=None):
-    rclpy.init(args=args)
-    node = SO101ROS2Bridge()
-    executor = SingleThreadedExecutor()
-    executor.add_node(node)
-    try:
-        executor.spin()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        node.shutdown_hook()
-        node.destroy_node()
-        executor.shutdown()
-        rclpy.try_shutdown()
+    def __init__(self):
+        super().__init__("so101_leader_ros2_bridge")
 
+        self.get_logger().info("SO101 Leader ROS2 Bridge initialized.")
 
-if __name__ == '__main__':
-    main()
+    def read_parameters(self) -> dict:
+        self.declare_parameter("port", "/dev/ttyACM0")
+        self.declare_parameter("id", "Gili")
+        self.declare_parameter("calibration_dir", str(CALIBRATION_BASE_DIR))
+        self.declare_parameter("use_degrees", True)
+        self.declare_parameter("publish_rate", 30.0)
+
+        return {
+            "port": self.get_parameter("port").get_parameter_value().string_value,
+            "id": self.get_parameter("id").get_parameter_value().string_value,
+            "calibration_dir": Path(
+                self.get_parameter("calibration_dir").get_parameter_value().string_value
+            ),
+            "use_degrees": (
+                self.get_parameter("use_degrees").get_parameter_value().bool_value
+            ),
+            "publish_rate": (
+                self.get_parameter("publish_rate").get_parameter_value().double_value
+            ),
+        }

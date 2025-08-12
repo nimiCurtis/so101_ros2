@@ -28,12 +28,13 @@ setup(
     zip_safe=True,
     maintainer='nimrod',
     maintainer_email='nimicu21@gmail.com',
-    description='ROS 2 bridge for SO101 robot to publish joint states',
-    license='MIT',  # <-- Change if using a different license
+    description='ROS 2 bridge for SO101 robot',
+    license='MIT',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'so101_ros2_bridge_node = so101_ros2_bridge.so101_ros2_bridge_node:main',
+            'follower_ros2_node = so101_ros2_bridge.follower_ros2_node:main',
+            'leader_ros2_node = so101_ros2_bridge.leader_ros2_node:main',
         ],
     },
 )

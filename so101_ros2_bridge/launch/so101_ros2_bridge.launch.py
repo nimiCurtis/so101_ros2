@@ -50,7 +50,10 @@ def generate_launch_description():
 
     so101_bridge_node = Node(
         package='so101_ros2_bridge',
-        executable='so101_ros2_bridge_node',
+        executable=[
+            robot_type,
+            TextSubstitution(text='_ros2_node'),
+        ],
         name=[
             TextSubstitution(text='so101_'),
             robot_type,
