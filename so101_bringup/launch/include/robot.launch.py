@@ -63,7 +63,8 @@ def generate_launch_description():
     controller_manager_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(controller_pkg, "launch", "controller_manager.launch.py")
-        )
+        ),
+        launch_arguments={"type": robot_type}.items(),
     )
 
     # Include controller spawners

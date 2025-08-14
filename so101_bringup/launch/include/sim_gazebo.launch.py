@@ -35,6 +35,7 @@ def generate_launch_description():
     controller_pkg = get_package_share_directory("so101_controller")
 
     model = LaunchConfiguration("model")
+    robot_type = LaunchConfiguration("type")
 
     # Include gazebo simulation
     gazebo_sim_launch = IncludeLaunchDescription(
@@ -48,7 +49,8 @@ def generate_launch_description():
     spawn_controllers_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(controller_pkg, "launch", "so101_controllers.launch.py")
-        )
+        ),
+        launch_arguments={"type": robot_type}.items(),
     )
 
     return LaunchDescription(

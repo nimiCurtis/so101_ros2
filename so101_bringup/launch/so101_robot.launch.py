@@ -39,7 +39,6 @@ def generate_launch_description():
 
     # Launch description lists
     args = []
-    launch = []
     groups = []
 
     # Paths
@@ -89,7 +88,6 @@ def generate_launch_description():
         ),
         launch_arguments={"type": robot_type, "model": model}.items(),
     )
-    launch.append(robot_launch)
 
     # Include display.launch.py
     display_launch = IncludeLaunchDescription(
@@ -101,12 +99,10 @@ def generate_launch_description():
             "display_config": display_config,
         }.items(),
     )
-    launch.append(display_launch)
 
     delayed_display = TimerAction(
         period=3.0, actions=[display_launch], condition=IfCondition(display)
     )
-    launch.append(delayed_display)
 
     groups.append(
         GroupAction(
