@@ -23,13 +23,24 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
+from launch.actions import (
+    DeclareLaunchArgument,
+    GroupAction,
+    IncludeLaunchDescription,
+    TimerAction,
+)
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch_ros.actions import PushRosNamespace
 
 
 def generate_launch_description():
+
+    # Launch description lists
+    args = []
+    launch = []
+    groups = []
 
     # Paths
     bringup_pkg = get_package_share_directory("so101_bringup")
@@ -41,6 +52,7 @@ def generate_launch_description():
         default_value="follower",
         description="Robot type: follower / leader",
     )
+    args.append(robot_type_arg)
 
     display_config_arg = DeclareLaunchArgument(
         "display_config",
@@ -50,15 +62,20 @@ def generate_launch_description():
             "display.rviz",
         ),
     )
+    args.append(display_config_arg)
+
     display_arg = DeclareLaunchArgument(
         "display", default_value="false", description="Launch RViz or not"
     )
+    args.append(display_arg)
+
     model_arg = DeclareLaunchArgument(
         "model",
         default_value=os.path.join(
             description_pkg, "urdf", "so101_new_calib.urdf.xacro"
         ),
     )
+    args.append(model_arg)
 
     model = LaunchConfiguration("model")
     robot_type = LaunchConfiguration("type")
@@ -72,6 +89,7 @@ def generate_launch_description():
         ),
         launch_arguments={"type": robot_type, "model": model}.items(),
     )
+    launch.append(robot_launch)
 
     # Include display.launch.py
     display_launch = IncludeLaunchDescription(
@@ -83,18 +101,21 @@ def generate_launch_description():
             "display_config": display_config,
         }.items(),
     )
+    launch.append(display_launch)
 
     delayed_display = TimerAction(
         period=3.0, actions=[display_launch], condition=IfCondition(display)
     )
+    launch.append(delayed_display)
 
-    return LaunchDescription(
-        [
-            model_arg,
-            robot_type_arg,
-            display_arg,
-            display_config_arg,
-            robot_launch,
-            delayed_display,
-        ]
+    groups.append(
+        GroupAction(
+            [
+                PushRosNamespace(robot_type),
+                robot_launch,
+                delayed_display,
+            ]
+        )
     )
+
+    return LaunchDescription(args + groups)

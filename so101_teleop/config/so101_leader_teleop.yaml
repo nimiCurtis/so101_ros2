@@ -1,0 +1,5 @@
+# Parameters for the LeaderTeleopComponent
+leader_teleop_component:
+  ros__parameters:
+    leader_joint_states_topic: "/leader/joint_states"
+    follower_trajectory_topic: "/follower/arm_controller/joint_trajectory"

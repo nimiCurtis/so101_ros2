@@ -34,7 +34,6 @@ from std_msgs.msg import Float64MultiArray  # Import message type for commands
 
 # from .registry import ROBOT_FACTORY_REGISTRY
 from so101_ros2_bridge import CALIBRATION_BASE_DIR  # defined in __init__.py
-from so101_ros2_bridge.bridge import build
 from so101_ros2_bridge.bridge.registry import ROBOT_FACTORY_REGISTRY
 
 
@@ -60,7 +59,7 @@ class SO101ROS2Bridge(Node, ABC):
         self._timeout = 5.0
         self._alive_thread = threading.Thread(target=self._alive, daemon=True)
 
-        self.joint_pub = self.create_publisher(JointState, '/joint_states_raw', 10)
+        self.joint_pub = self.create_publisher(JointState, 'joint_states_raw', 10)
         rate = params.get("publish_rate", 30.0)
         self.timer = self.create_timer(1.0 / rate, self.publish_joint_states)
 
@@ -206,7 +205,7 @@ class FollowerBridge(SO101ROS2Bridge):
         # Subscribe to commands from the ros2_control hardware interface bridge
         self.create_subscription(
             Float64MultiArray,
-            '/joint_commands',  # This topic should match the publisher in the C++ bridge
+            'joint_commands',  # This topic should match the publisher in the C++ bridge
             self.command_callback,
             10,
         )

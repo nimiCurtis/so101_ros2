@@ -24,10 +24,12 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from launch.substitutions import LaunchConfiguration, TextSubstitution
 from launch_ros.actions import Node
 
 
 def generate_launch_description():
+    robot_type = LaunchConfiguration("type")
 
     controller_manager_node = Node(
         package="controller_manager",
@@ -40,8 +42,10 @@ def generate_launch_description():
             ),
         ],
         remappings=[
-            ("~/robot_description", "/robot_description"),
+            ("~/robot_description", "robot_description"),
         ],
+        output="screen",
+        namespace=robot_type,
     )
 
     return LaunchDescription(

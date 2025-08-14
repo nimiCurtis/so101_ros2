@@ -48,6 +48,11 @@ set(SERVO_KEYBOARD_EXEC keyboard_servo_node)
 set(SERVO_JOY_INPUT_LIB joystick_servo_component_lib)
 set(SERVO_JOY_EXEC joy_servo_node)
 
+
+# Leader
+set(LEADER_TELEOP_LIB leader_teleop_component_lib)
+set(LEADER_TELEOP_EXEC leader_teleop_node)
+
 include_directories(
   include
 )
@@ -70,6 +75,11 @@ add_library(${SERVO_JOY_INPUT_LIB} SHARED src/joystick_servo_component.cpp)
 ament_target_dependencies(${SERVO_JOY_INPUT_LIB} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 rclcpp_components_register_nodes(${SERVO_JOY_INPUT_LIB} "moveit_servo::JoyToServoComponent")
 
+
+# Leader
+add_library(${LEADER_TELEOP_LIB} SHARED src/leader_teleop_component.cpp)
+ament_target_dependencies(${LEADER_TELEOP_LIB} ${THIS_PACKAGE_INCLUDE_DEPENDS})
+rclcpp_components_register_nodes(${LEADER_TELEOP_LIB} "so101_teleop::LeaderTeleopComponent")
 
 ######################
 ## Executable Nodes ##
@@ -112,6 +122,19 @@ install(
 )
 
 
+
+# Leader
+add_executable(${LEADER_TELEOP_EXEC} src/leader_teleop_node.cpp)
+target_link_libraries(${LEADER_TELEOP_EXEC} ${LEADER_TELEOP_LIB})
+ament_target_dependencies(${LEADER_TELEOP_EXEC} ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
+install(
+  TARGETS
+    ${LEADER_TELEOP_EXEC}
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+
 #############
 ## Install ##
 #############
@@ -121,6 +144,7 @@ install(
   TARGETS
     ${SERVO_KEYBOARD_INPUT_LIB} # Keyboard
     ${SERVO_JOY_INPUT_LIB}      # Joy
+    ${LEADER_TELEOP_LIB}        # Leader
   EXPORT export_${PROJECT_NAME}
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
@@ -132,7 +156,7 @@ install(
 # Install include, launch, config directories
 install(DIRECTORY include/ DESTINATION include)
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
-# install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
 
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})

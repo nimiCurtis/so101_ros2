@@ -26,13 +26,7 @@ import sys
 import rclpy
 from rclpy.executors import SingleThreadedExecutor
 
-conda_site = '/home/nimrod/miniconda3/envs/lerobot/lib/python3.10/site-packages'
-if conda_site not in sys.path:
-    sys.path.append(conda_site)
-# from so101_ros2_bridge.utils import ensure_conda_site_packages_from_env
-# ensure_conda_site_packages_from_env()
-
-from so101_ros2_bridge.bridge.bridge import LeaderBridge
+from so101_ros2_bridge.bridge import LeaderBridge
 
 
 def main(args=None):

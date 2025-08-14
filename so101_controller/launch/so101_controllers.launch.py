@@ -23,23 +23,27 @@
 from launch import LaunchDescription
 from launch.actions import RegisterEventHandler, TimerAction
 from launch.event_handlers import OnProcessExit
+from launch.substitutions import LaunchConfiguration, TextSubstitution
 from launch_ros.actions import Node
 
 
 def generate_launch_description():
+    robot_type = LaunchConfiguration("type")
 
     arm_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["arm_controller", "--controller-manager", "/controller_manager"],
+        arguments=["arm_controller", "--controller-manager", "controller_manager"],
         output="screen",
+        namespace=robot_type,
     )
 
     gripper_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["gripper_controller", "--controller-manager", "/controller_manager"],
+        arguments=["gripper_controller", "--controller-manager", "controller_manager"],
         output="screen",
+        namespace=robot_type,
     )
 
     joint_state_broadcaster_spawner = Node(
@@ -48,9 +52,10 @@ def generate_launch_description():
         arguments=[
             "joint_state_broadcaster",
             "--controller-manager",
-            "/controller_manager",
+            "controller_manager",
         ],
         output="screen",
+        namespace=robot_type,
     )
 
     return LaunchDescription(

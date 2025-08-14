@@ -1,15 +1,11 @@
 import os
 import sys
-
-conda_site = '/home/nimrod/miniconda3/envs/lerobot/lib/python3.10/site-packages'
-if conda_site not in sys.path:
-    sys.path.append(conda_site)
-
-# from so101_ros2_bridge.utils import ensure_conda_site_packages_from_env
-# ensure_conda_site_packages_from_env()
-
 from pathlib import Path
 
+# Ensure the conda site-packages directory is in the system path
+from so101_ros2_bridge.utils import ensure_conda_site_packages_from_env
+
+ensure_conda_site_packages_from_env()
 from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
 from lerobot.teleoperators.so101_leader import SO101Leader, SO101LeaderConfig
 

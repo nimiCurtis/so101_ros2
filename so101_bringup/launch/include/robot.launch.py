@@ -70,7 +70,8 @@ def generate_launch_description():
     spawn_controllers_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(controller_pkg, "launch", "so101_controllers.launch.py")
-        )
+        ),
+        launch_arguments={"type": robot_type}.items(),
     )
 
     delayed_controller_manager = TimerAction(

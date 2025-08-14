@@ -23,13 +23,10 @@
 import os
 import sys
 
-conda_site = '/home/nimrod/miniconda3/envs/lerobot/lib/python3.10/site-packages'
-if conda_site not in sys.path:
-    sys.path.append(conda_site)
 import rclpy
 from rclpy.executors import SingleThreadedExecutor
 
-from so101_ros2_bridge.bridge.bridge import FollowerBridge
+from so101_ros2_bridge.bridge import FollowerBridge
 
 
 def main(args=None):
