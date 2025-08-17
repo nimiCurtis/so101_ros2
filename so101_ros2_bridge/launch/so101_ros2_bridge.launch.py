@@ -19,8 +19,10 @@
 # THE SOFTWARE.
 
 
+import os
+
 from launch import LaunchDescription
-from launch.actions import RegisterEventHandler, Shutdown
+from launch.actions import DeclareLaunchArgument, RegisterEventHandler, Shutdown
 from launch.event_handlers import OnProcessExit
 from launch.substitutions import (
     LaunchConfiguration,
@@ -33,21 +35,29 @@ from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
 
+    # Declare the 'type' argument so it can be set from the command line
+    # type_arg = DeclareLaunchArgument(
+    #     "type",
+    #     default_value="leader",
+    #     description="The type of the robot bridge to launch (leader or follower)."
+    # )
+
     robot_type = LaunchConfiguration("type")
 
-    # Use PathJoinSubstitution to build the path dynamically at launch time
+    # Use PathJoinSubstitution to build the path to the config file dynamically
     config_path = PathJoinSubstitution(
         [
             FindPackageShare("so101_ros2_bridge"),
             "config",
             [
-                TextSubstitution(text='so101_'),
+                TextSubstitution(text="so101_"),
                 robot_type,
-                TextSubstitution(text='_params.yaml'),
+                TextSubstitution(text="_params.yaml"),
             ],
         ]
     )
 
+    # Define the node, dynamically setting the executable, name, and parameters
     so101_bridge_node = Node(
         package='so101_ros2_bridge',
         executable=[
@@ -60,14 +70,33 @@ def generate_launch_description():
             TextSubstitution(text='_interface'),
         ],
         output='screen',
-        parameters=[config_path],
+        parameters=[
+            config_path,
+            # Pass the robot_type as a ROS parameter named 'type'
+            {"type": robot_type},
+        ],
+        namespace=robot_type,
     )
 
-    # Kill launch if bridge_node crashes
-    node_monitor = RegisterEventHandler(
-        OnProcessExit(target_action=so101_bridge_node, on_exit=[Shutdown()])
-    )
+    # This event handler will now only shut down the launch script if the node
+    # crashes (exits with a non-zero code). A clean exit (Ctrl+C) will be ignored.
+    # node_monitor = RegisterEventHandler(
+    #     OnProcessExit(
+    #         target_action=so101_bridge_node,
+    #         on_exit=[
+    #             Shutdown(
+    #                 reason=f"Node '{so101_bridge_node.name}' crashed, shutting down launch."
+    #             )
+    #         ],
+    #         # This condition ensures the shutdown only happens on a crash
+    #         # condition=lambda event: event.returncode != 0,
+    #     )
+    # )
 
     return LaunchDescription(
-        [so101_bridge_node, node_monitor]  # expose the 'type' arg to command line
+        [
+            # type_arg,
+            so101_bridge_node,
+            # node_monitor,
+        ]
     )

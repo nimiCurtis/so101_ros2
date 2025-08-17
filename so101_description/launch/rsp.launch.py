@@ -41,6 +41,7 @@ def generate_launch_description():
     model = LaunchConfiguration("model")
     mode = LaunchConfiguration("mode")
     use_sim = LaunchConfiguration("use_sim")
+    robot_type = LaunchConfiguration("type")
 
     robot_description = ParameterValue(
         Command(
@@ -63,6 +64,7 @@ def generate_launch_description():
             {"robot_description": robot_description},
             {"use_sim_time": use_sim},
         ],
+        namespace=robot_type,
     )
 
     return LaunchDescription(

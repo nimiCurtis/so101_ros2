@@ -25,7 +25,7 @@
 /**
  * @brief Main function to run the LeaderTeleopComponent as a standalone node.
  */
-int main(int argc, char **argv)
+int main(int argc, char ** argv)
 {
   // Initialize ROS 2
   rclcpp::init(argc, argv);

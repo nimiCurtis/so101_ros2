@@ -158,6 +158,75 @@ Visualization Manager:
                         {}
       Update Interval: 0
       Value: true
+    - Alpha: 0.30000001192092896
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /leader/robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gripper_frame_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        gripper_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lower_arm_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        moving_jaw_so101_v1_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        shoulder_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        upper_arm_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        world:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        wrist_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
+      Name: RobotModel
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -204,7 +273,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 1.0838134288787842
+      Distance: 0.7550440430641174
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -219,10 +288,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.1503976285457611
+      Pitch: 0.21539762616157532
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.9222218990325928
+      Yaw: 0.9672220945358276
     Saved: ~
 Window Geometry:
   Displays:

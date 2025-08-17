@@ -5,8 +5,9 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /Status1
       Splitter Ratio: 0.5
-    Tree Height: 555
+    Tree Height: 730
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -56,7 +57,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /robot_description
+        Value: /follower/robot_description
       Enabled: true
       Links:
         All Links Enabled: true
@@ -157,6 +158,75 @@ Visualization Manager:
                         {}
       Update Interval: 0
       Value: true
+    - Alpha: 0.30000001192092896
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /leader/robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gripper_frame_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        gripper_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lower_arm_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        moving_jaw_so101_v1_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        shoulder_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        upper_arm_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        world:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        wrist_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
+      Name: RobotModel
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
     - Class: rviz_default_plugins/Image
       Enabled: true
       Max Value: 1
@@ -169,7 +239,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /cam_front/image_raw
+        Value: /follower/cam_front/image_raw
       Value: true
   Enabled: true
   Global Options:
@@ -217,25 +287,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 1.0838134288787842
+      Distance: 0.7550440430641174
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.06557341665029526
-        Y: -0.2298176884651184
-        Z: 0.07510055601596832
+        X: -0.05197179690003395
+        Y: -0.17379288375377655
+        Z: 0.0651438981294632
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.2703980505466461
+      Pitch: 0.21539762616157532
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.1472210884094238
+      Yaw: 0.9672220945358276
     Saved: ~
 Window Geometry:
   Displays:
@@ -245,7 +315,7 @@ Window Geometry:
   Hide Right Dock: true
   Image:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000041a000006eefc0200000009fb0000001200530065006c0065006300740069006f006e00000001e10000009b000000b000fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000006e000003230000018200fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d006100670065010000039d000003bf0000004a00ffffff000000010000010f000002b0fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d000002b00000013200fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e1000001970000000300000f000000005afc0100000002fb0000000800540069006d0065010000000000000f000000058100fffffffb0000000800540069006d0065010000000000000450000000000000000000000ada000006ee00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000034f000006eefc0200000009fb0000001200530065006c0065006300740069006f006e00000001e10000009b000000b000fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000006e000003d20000018200fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d006100670065010000044c000003100000004a00ffffff000000010000010f000002b0fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d000002b00000013200fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e1000001970000000300000f000000005afc0100000002fb0000000800540069006d0065010000000000000f000000058100fffffffb0000000800540069006d0065010000000000000450000000000000000000000ba5000006ee00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:

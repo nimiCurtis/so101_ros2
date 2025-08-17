@@ -82,7 +82,10 @@ def get_camera_configs(
             name = cam.get('name')
             relative_param_path = cam.get('param_path')
             full_param_path = Path(USB_CAM_DIR, 'config', relative_param_path)
-            cameras.append(CameraConfig(name=name, param_path=full_param_path))
+            namespace = cam.get('namespace', None)
+            cameras.append(
+                CameraConfig(name=name, param_path=full_param_path, namespace=namespace)
+            )
     else:
         raise RuntimeError(f"No valid 'cameras' list found in {config_file}")
 

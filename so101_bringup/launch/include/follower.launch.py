@@ -27,6 +27,7 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, Time
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch_ros.actions import PushRosNamespace
 
 
 def generate_launch_description():
@@ -37,7 +38,6 @@ def generate_launch_description():
     description_pkg = get_package_share_directory("so101_description")
 
     model = LaunchConfiguration("model")
-    robot_type = LaunchConfiguration("type")
 
     # Include RSP with sim settings
     rsp_launch = IncludeLaunchDescription(
@@ -48,6 +48,7 @@ def generate_launch_description():
             "model": model,
             "mode": "real",
             "use_sim": "false",
+            "type": "follower",
         }.items(),
     )
 
@@ -56,7 +57,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(robot_ros2_bridge_pkg, "launch", "so101_ros2_bridge.launch.py")
         ),
-        launch_arguments={"type": robot_type}.items(),
+        launch_arguments={"type": "follower"}.items(),
     )
 
     # Include controller manger
@@ -64,7 +65,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(controller_pkg, "launch", "controller_manager.launch.py")
         ),
-        launch_arguments={"type": robot_type}.items(),
+        launch_arguments={"type": "follower"}.items(),
     )
 
     # Include controller spawners
@@ -72,7 +73,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(controller_pkg, "launch", "so101_controllers.launch.py")
         ),
-        launch_arguments={"type": robot_type}.items(),
+        launch_arguments={"type": "follower"}.items(),
     )
 
     delayed_controller_manager = TimerAction(

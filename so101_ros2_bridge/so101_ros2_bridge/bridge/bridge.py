@@ -32,6 +32,13 @@ from rclpy.node import Node
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Float64MultiArray  # Import message type for commands
 
+# Ensure the conda site-packages directory is in the system path
+from so101_ros2_bridge.utils import ensure_conda_site_packages_from_env
+
+ensure_conda_site_packages_from_env()
+from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
+from lerobot.teleoperators.so101_leader import SO101Leader, SO101LeaderConfig
+
 # from .registry import ROBOT_FACTORY_REGISTRY
 from so101_ros2_bridge import CALIBRATION_BASE_DIR  # defined in __init__.py
 from so101_ros2_bridge.bridge.registry import ROBOT_FACTORY_REGISTRY
@@ -69,8 +76,11 @@ class SO101ROS2Bridge(Node, ABC):
                 "ROBOT_FACTORY_REGISTRY is empty. Ensure robot types are registered."
             )
 
-        self.declare_parameter("robot_type", "follower")
-        robot_type = self.get_parameter("robot_type").get_parameter_value().string_value
+        self.declare_parameter("type", "follower")
+        robot_type = self.get_parameter("type").get_parameter_value().string_value
+        self.get_logger().info(
+            f"Initializing SO101 ROS2 Bridge for robot type: {robot_type}"
+        )
         factory_fn = ROBOT_FACTORY_REGISTRY.get(robot_type)
         if factory_fn is None:
             raise ValueError(f"Robot type '{robot_type}' not registered.")
@@ -93,6 +103,55 @@ class SO101ROS2Bridge(Node, ABC):
     def read_parameters(self) -> dict:
         """Reads parameters from the ROS2 parameter server."""
         pass
+
+    @abstractmethod
+    def get_joints_states(self) -> dict:
+        """
+        Returns the current joint states as a dictionary.
+        This method should be implemented by subclasses to return the robot's joint states.
+        """
+        pass
+
+    def publish_joint_states(self):
+        try:
+            current_time = self.get_clock().now()
+            obs = self.get_joints_states()
+            msg = JointState()
+            msg.header.stamp = self.get_clock().now().to_msg()
+            msg.name = self.JOINT_NAMES
+            positions = []
+            for joint in self.JOINT_NAMES:
+                if joint == "gripper":
+                    # Normalize gripper position to be within [0, pi] for MoveIt
+                    pos = ((obs.get(f"{joint}.pos", 0.0) - 10.0) / 100.0) * math.pi
+                else:
+                    pos = math.radians(obs.get(f"{joint}.pos", 0.0))
+                positions.append(pos)
+
+            # Velocity calculation
+            velocities = [0.0] * len(self.JOINT_NAMES)
+            # On the first run, last_positions will be None, so velocities will be zero.
+            if self.last_positions is not None:
+                # Calculate time delta in seconds
+                dt = (current_time - self.last_time).nanoseconds / 1e9
+                # Avoid division by zero if the time delta is too small
+                if dt > 0:
+                    for i in range(len(self.JOINT_NAMES)):
+                        velocities[i] = (positions[i] - self.last_positions[i]) / dt
+
+            # Prepare msg
+            msg.position = positions
+            msg.velocity = velocities
+
+            # Publish
+            self.joint_pub.publish(msg)
+
+            # Store the current state for the next iteration's calculation
+            self.last_positions = positions
+            self.last_time = current_time
+
+        except Exception as e:
+            self.get_logger().error(f"Failed to publish joint states: {e}")
 
     def _alive(self):
         """
@@ -144,47 +203,6 @@ class SO101ROS2Bridge(Node, ABC):
         except Exception as e:
             self.get_logger().warn(f"Exception during shutdown: {e}")
 
-    def publish_joint_states(self):
-        try:
-            current_time = self.get_clock().now()
-            obs = self.robot.get_observation()
-            msg = JointState()
-            msg.header.stamp = self.get_clock().now().to_msg()
-            msg.name = self.JOINT_NAMES
-            positions = []
-            for joint in self.JOINT_NAMES:
-                if joint == "gripper":
-                    # Normalize gripper position to be within [0, pi] for MoveIt
-                    pos = ((obs.get(f"{joint}.pos", 0.0) - 10.0) / 100.0) * math.pi
-                else:
-                    pos = math.radians(obs.get(f"{joint}.pos", 0.0))
-                positions.append(pos)
-
-            # Velocity calculation
-            velocities = [0.0] * len(self.JOINT_NAMES)
-            # On the first run, last_positions will be None, so velocities will be zero.
-            if self.last_positions is not None:
-                # Calculate time delta in seconds
-                dt = (current_time - self.last_time).nanoseconds / 1e9
-                # Avoid division by zero if the time delta is too small
-                if dt > 0:
-                    for i in range(len(self.JOINT_NAMES)):
-                        velocities[i] = (positions[i] - self.last_positions[i]) / dt
-
-            # Prepare msg
-            msg.position = positions
-            msg.velocity = velocities
-
-            # Publish
-            self.joint_pub.publish(msg)
-
-            # Store the current state for the next iteration's calculation
-            self.last_positions = positions
-            self.last_time = current_time
-
-        except Exception as e:
-            self.get_logger().error(f"Failed to publish joint states: {e}")
-
     def radians_to_normalized(self, joint_name: str, rad: float) -> float:
         """
         converts a command in radians from MoveIt to the format expected by the SO101 API.
@@ -202,6 +220,11 @@ class FollowerBridge(SO101ROS2Bridge):
     def __init__(self):
         super().__init__("so101_follower_ros2_bridge")
 
+        # Type hint of the robot
+        if not isinstance(self.robot, SO101Follower):
+            raise TypeError(
+                f"Expected robot type SO101Follower, got {type(self.robot).__name__}"
+            )
         # Subscribe to commands from the ros2_control hardware interface bridge
         self.create_subscription(
             Float64MultiArray,
@@ -247,6 +270,13 @@ class FollowerBridge(SO101ROS2Bridge):
             ),
         }
 
+    def get_joints_states(self) -> dict:
+        """
+        Returns the current joint states as a dictionary.
+        This method should be implemented by subclasses to return the robot's joint states.
+        """
+        return self.robot.get_observation()
+
     def command_callback(self, msg: Float64MultiArray):
         """
         Receives joint command goals in radians and sends them to the robot.
@@ -276,6 +306,11 @@ class LeaderBridge(SO101ROS2Bridge):
     def __init__(self):
         super().__init__("so101_leader_ros2_bridge")
 
+        # Type hint of the robot
+        if not isinstance(self.robot, SO101Leader):
+            raise TypeError(
+                f"Expected robot type SO101Leader, got {type(self.robot).__name__}"
+            )
         self.get_logger().info("SO101 Leader ROS2 Bridge initialized.")
 
     def read_parameters(self) -> dict:
@@ -298,3 +333,10 @@ class LeaderBridge(SO101ROS2Bridge):
                 self.get_parameter("publish_rate").get_parameter_value().double_value
             ),
         }
+
+    def get_joints_states(self) -> dict:
+        """
+        Returns the current joint states as a dictionary.
+        This method should be implemented by subclasses to return the robot's joint states.
+        """
+        return self.robot.get_action()

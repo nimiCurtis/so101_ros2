@@ -54,6 +54,8 @@ def generate_launch_description():
             "model": model,
             "mode": mode,
             "joint_states_gui": use_joint_states_gui,
+            "type": "follower",
+            "use_sim": "false",
         }.items(),
     )
 

@@ -6,6 +6,11 @@
         <!-- ROS 2 Humble -->
         <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
             <parameters>$(find so101_controller)/config/so101_controllers.yaml</parameters>
+            <!-- <controller_manager_name>follower/controller_manager</controller_manager_name> -->
+            <ros>
+                <namespace>follower</namespace>
+                <remapping>/robot_description:=/follower/robot_description</remapping>
+            </ros>
         </plugin>
     </gazebo>
 

@@ -1,3 +1,4 @@
 cameras:
   - name: cam_front
-    param_path: so101_usb_cam_front.yaml 
+    param_path: so101_usb_cam_front.yaml
+    namespace: follower

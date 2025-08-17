@@ -1,7 +1,7 @@
 so101_leader_ros2_bridge:
   ros__parameters:
-    port: "/dev/ttyACM1"
-    id: "Tzili"
+    port: "/dev/ttyACM0"
+    id: "Gili"
     # calibration_dir: <abs path to your calibration dir>
     use_degrees: true
     # max_relative_target: 10 # default is none

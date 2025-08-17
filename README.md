@@ -15,9 +15,9 @@ environment for testing and development.
 
 ## Dependencies
 
-- ROS2 Humble [ Link to the official installation ]
-- Gazebo fortress-ignition [installtion guide]
-- RMW cyclonedds [ installation ]
+- ROS2 Humble 
+- Gazebo fortress-ignition 
+- RMW cyclonedds
 
 ---
 
@@ -40,7 +40,7 @@ source install/setup.bash
 To visualise the robot description run:
 
 ```bash
-ros2 launch so101_description display.launch.py
+ros2 launch so101_description display_robot.launch.py
 ```
 
 Launch the simulation environment with:
@@ -65,3 +65,17 @@ Formatting and linting are handled with
 Install the hooks with `pre-commit install` so the checks run automatically
 before each commit. The CI executes `pre-commit` on pushes and pull requests
 to the `main` and `dev` branches.
+
+---
+
+## TODO
+
+- [ ] Go over movieit code and refactor
+- [ ] Fix teleoperate with gazebo
+- [ ] Add teleoperate functionalities with joy (and keyboard?)
+- [ ] Add integration with isaacSim/Lab
+- [ ] Add gripper control using teleop ( joint controller / or using action server)
+- [ ] Clean code and refactoring
+- [ ] Add externals (sdr pkg)
+- [ ] Add Docs with sphyncs
+- [ ] Improve readme and check installation process

@@ -29,7 +29,7 @@ from launch.actions import (
     IncludeLaunchDescription,
     TimerAction,
 )
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, LaunchConfigurationEquals
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import PushRosNamespace
@@ -39,7 +39,7 @@ def generate_launch_description():
 
     # Launch description lists
     args = []
-    groups = []
+    actions = []
 
     # Paths
     bringup_pkg = get_package_share_directory("so101_bringup")
@@ -84,10 +84,9 @@ def generate_launch_description():
     # Launch leader
     leader_robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(bringup_pkg, "launch", "include", "robot.launch.py")
+            os.path.join(bringup_pkg, "launch", "include", "leader.launch.py")
         ),
         launch_arguments={
-            "type": "leader",
             "model": model,
             # CORRECTED: Use PythonExpression to conditionally set the value
             "use_sim_time": PythonExpression(
@@ -95,26 +94,44 @@ def generate_launch_description():
             ),
         }.items(),
     )
+    delayed_leader_robot_launch = TimerAction(period=2.0, actions=[leader_robot_launch])
+    actions.append(delayed_leader_robot_launch)
 
     # Launch follower
     # Include follower robot launch if mode == "real"
     # Include sim_gazebo.launch if mode == "gazebo"
     follower_robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(bringup_pkg, "launch", "include", "robot.launch.py")
+            os.path.join(bringup_pkg, "launch", "include", "follower.launch.py")
         ),
-        launch_arguments={"type": "follower", "model": model}.items(),
-        condition=IfCondition(PythonExpression(["'", mode, "' == 'real'"])),
+        launch_arguments={
+            "model": model,
+        }.items(),
+        condition=LaunchConfigurationEquals("mode", "real"),
     )
+    actions.append(follower_robot_launch)
+
+    # Include cameras
+    cameras_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(bringup_pkg, "launch", "include", "camera.launch.py")
+        ),
+        condition=LaunchConfigurationEquals("mode", "real"),
+    )
+    actions.append(cameras_launch)
 
     # Include sim_gazebo.launch if mode == "gazebo"
-    follower_sim_gazebo_launch = IncludeLaunchDescription(
+    sim_gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(bringup_pkg, "launch", "include", "sim_gazebo.launch.py")
         ),
-        launch_arguments={"model": model}.items(),
-        condition=IfCondition(PythonExpression(["'", mode, "' == 'gazebo'"])),
+        launch_arguments={
+            "model": model,
+            "display_config": display_config,  ## Not in use
+        }.items(),
+        condition=LaunchConfigurationEquals("mode", "gazebo"),
     )
+    actions.append(sim_gazebo_launch)
 
     # Include display.launch.py
     display_launch = IncludeLaunchDescription(
@@ -127,8 +144,9 @@ def generate_launch_description():
         }.items(),
     )
     delayed_display = TimerAction(
-        period=3.0, actions=[display_launch], condition=IfCondition(display)
+        period=5.0, actions=[display_launch], condition=IfCondition(display)
     )
+    actions.append(delayed_display)
 
     # Include leader teleop
     teleop_launch = IncludeLaunchDescription(
@@ -140,35 +158,11 @@ def generate_launch_description():
             )
         ),
         launch_arguments={
-            "mode": LaunchConfiguration("mode"),
+            "mode": mode,
         }.items(),
     )
 
-    # Prepare groups
-    groups.append(
-        GroupAction(
-            [
-                PushRosNamespace("leader"),
-                leader_robot_launch,
-            ]
-        )
-    )
-    groups.append(
-        GroupAction(
-            [
-                PushRosNamespace("follower"),
-                follower_robot_launch,
-                follower_sim_gazebo_launch,
-            ]
-        )
-    )
-    groups.append(
-        GroupAction(
-            [
-                teleop_launch,
-                delayed_display,
-            ]
-        )
-    )
+    delayed_teleop_launch = TimerAction(period=15.0, actions=[teleop_launch])
+    actions.append(delayed_teleop_launch)
 
-    return LaunchDescription(args + groups)
+    return LaunchDescription(args + actions)

@@ -46,20 +46,6 @@ def generate_launch_description():
         value=[str(Path(description_pkg).parent.resolve())],
     )
 
-    model = LaunchConfiguration("model")
-
-    # Include RSP with sim settings
-    rsp_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(description_pkg, "launch", "rsp.launch.py")
-        ),
-        launch_arguments={
-            "model": model,
-            "mode": "gazebo",
-            "use_sim": "true",
-        }.items(),
-    )
-
     # Launch Gazebo simulation
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -75,7 +61,7 @@ def generate_launch_description():
         package="ros_gz_sim",
         executable="create",
         output="screen",
-        arguments=["-topic", "robot_description", "-name", "so101_new_calib"],
+        arguments=["-topic", "follower/robot_description", "-name", "so101_new_calib"],
     )
 
     # Bridge simulation clock
@@ -88,7 +74,6 @@ def generate_launch_description():
     return LaunchDescription(
         [
             gazebo_resource_path,
-            rsp_launch,
             gazebo_launch,
             gazebo_spawn_entity,
             gazebo_ros2_bridge,

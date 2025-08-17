@@ -31,6 +31,9 @@ from launch.substitutions import LaunchConfiguration, PythonExpression
 
 def generate_launch_description():
 
+    args = []
+    actions = []
+
     # Paths
     description_pkg = get_package_share_directory("so101_description")
     bringup_pkg = get_package_share_directory("so101_bringup")
@@ -44,15 +47,20 @@ def generate_launch_description():
             "display.rviz",
         ),
     )
+    args.append(display_config_arg)
+
     display_arg = DeclareLaunchArgument(
         "display", default_value="false", description="Launch RViz or not"
     )
+    args.append(display_arg)
+
     model_arg = DeclareLaunchArgument(
         "model",
         default_value=os.path.join(
             description_pkg, "urdf", "so101_new_calib.urdf.xacro"
         ),
     )
+    args.append(model_arg)
 
     model = LaunchConfiguration("model")
     display_config = LaunchConfiguration("display_config")
@@ -68,6 +76,7 @@ def generate_launch_description():
             "display_config": display_config,  ## Not in use
         }.items(),
     )
+    actions.append(sim_gazebo_launch)
 
     # Include display.launch.py
     display_launch = IncludeLaunchDescription(
@@ -83,7 +92,6 @@ def generate_launch_description():
     delayed_display = TimerAction(
         period=3.0, actions=[display_launch], condition=IfCondition(display)
     )
+    actions.append(delayed_display)
 
-    return LaunchDescription(
-        [model_arg, display_arg, display_config_arg, sim_gazebo_launch, delayed_display]
-    )
+    return LaunchDescription(args + actions)

@@ -23,18 +23,17 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import PushRosNamespace
 
 
 def generate_launch_description():
 
-    actions = []
-
     # Paths
-    sim_pkg = get_package_share_directory("so101_sim")
+    robot_ros2_bridge_pkg = get_package_share_directory("so101_ros2_bridge")
     controller_pkg = get_package_share_directory("so101_controller")
     description_pkg = get_package_share_directory("so101_description")
 
@@ -47,29 +46,48 @@ def generate_launch_description():
         ),
         launch_arguments={
             "model": model,
-            "mode": "gazebo",
-            "use_sim": "true",
-            "type": "follower",
+            "mode": "real",
+            "use_sim": "false",  # TODO: change to ifcondition depend on mode argument
+            "type": "leader",
         }.items(),
     )
-    actions.append(rsp_launch)
 
-    # Include gazebo simulation
-    gazebo_sim_launch = IncludeLaunchDescription(
+    # Include robot ros2 bridge
+    robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(sim_pkg, "launch", "so101_sim_gazebo.launch.py")
+            os.path.join(robot_ros2_bridge_pkg, "launch", "so101_ros2_bridge.launch.py")
         ),
-        launch_arguments={"model": model}.items(),
+        launch_arguments={"type": "leader"}.items(),
     )
-    actions.append(gazebo_sim_launch)
+    # Include controller manger
+    controller_manager_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(controller_pkg, "launch", "controller_manager.launch.py")
+        ),
+        launch_arguments={"type": "leader"}.items(),
+    )
 
     # Include controller spawners
     spawn_controllers_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(controller_pkg, "launch", "so101_controllers.launch.py")
         ),
-        launch_arguments={"type": "follower"}.items(),
+        launch_arguments={"type": "leader"}.items(),
     )
-    actions.append(spawn_controllers_launch)
 
-    return LaunchDescription([*actions])
+    delayed_controller_manager = TimerAction(
+        period=3.0, actions=[controller_manager_launch]
+    )
+
+    delayed_spawn_controllers = TimerAction(
+        period=6.0, actions=[spawn_controllers_launch]
+    )
+
+    return LaunchDescription(
+        [
+            rsp_launch,
+            robot_launch,
+            delayed_controller_manager,
+            delayed_spawn_controllers,
+        ]
+    )
