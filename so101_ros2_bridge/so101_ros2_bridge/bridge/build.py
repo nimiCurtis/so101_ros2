@@ -19,8 +19,6 @@
 # THE SOFTWARE.
 
 
-import os
-import sys
 from pathlib import Path
 
 # Ensure the conda site-packages directory is in the system path

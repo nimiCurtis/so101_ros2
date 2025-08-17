@@ -15,8 +15,8 @@ environment for testing and development.
 
 ## Dependencies
 
-- ROS2 Humble 
-- Gazebo fortress-ignition 
+- ROS2 Humble
+- Gazebo fortress-ignition
 - RMW cyclonedds
 
 ---
@@ -68,14 +68,14 @@ to the `main` and `dev` branches.
 
 ---
 
-## TODO
+## TODO:
 
-- [ ] Go over movieit code and refactor
-- [ ] Fix teleoperate with gazebo
-- [ ] Add teleoperate functionalities with joy (and keyboard?)
-- [ ] Add integration with isaacSim/Lab
 - [ ] Add gripper control using teleop ( joint controller / or using action server)
+- [ ] Go over movieit code and refactor
 - [ ] Clean code and refactoring
+- [ ] Add integration with isaacSim/Lab
 - [ ] Add externals (sdr pkg)
 - [ ] Add Docs with sphyncs
 - [ ] Improve readme and check installation process
+- [ ] Fix teleoperate with gazebo
+- [ ] Add teleoperate functionalities with joy (and keyboard?)

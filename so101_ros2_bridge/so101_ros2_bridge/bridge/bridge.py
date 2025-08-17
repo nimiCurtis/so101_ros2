@@ -36,8 +36,8 @@ from std_msgs.msg import Float64MultiArray  # Import message type for commands
 from so101_ros2_bridge.utils import ensure_conda_site_packages_from_env
 
 ensure_conda_site_packages_from_env()
-from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
-from lerobot.teleoperators.so101_leader import SO101Leader, SO101LeaderConfig
+from lerobot.robots.so101_follower import SO101Follower
+from lerobot.teleoperators.so101_leader import SO101Leader
 
 # from .registry import ROBOT_FACTORY_REGISTRY
 from so101_ros2_bridge import CALIBRATION_BASE_DIR  # defined in __init__.py
@@ -102,7 +102,6 @@ class SO101ROS2Bridge(Node, ABC):
     @abstractmethod
     def read_parameters(self) -> dict:
         """Reads parameters from the ROS2 parameter server."""
-        pass
 
     @abstractmethod
     def get_joints_states(self) -> dict:
@@ -110,7 +109,6 @@ class SO101ROS2Bridge(Node, ABC):
         Returns the current joint states as a dictionary.
         This method should be implemented by subclasses to return the robot's joint states.
         """
-        pass
 
     def publish_joint_states(self):
         try:
@@ -296,7 +294,6 @@ class FollowerBridge(SO101ROS2Bridge):
 
         try:
             self.robot.send_action(target_positions)
-            pass
         except Exception as e:
             self.get_logger().error(f"Failed to send commands to robot: {e}")
 

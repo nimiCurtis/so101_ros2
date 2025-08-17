@@ -19,11 +19,7 @@
 # THE SOFTWARE.
 
 
-import os
-
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, RegisterEventHandler, Shutdown
-from launch.event_handlers import OnProcessExit
 from launch.substitutions import (
     LaunchConfiguration,
     PathJoinSubstitution,
