@@ -24,16 +24,16 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.conditions import IfCondition
+from launch.conditions import LaunchConfigurationEquals
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import (
-    EqualsSubstitution,
-    LaunchConfiguration,
-    PythonExpression,
-)
+from launch.substitutions import LaunchConfiguration, PythonExpression
 
 
 def generate_launch_description():
+
+    # Launch description lists
+    args = []
+    actions = []
 
     # --- Paths ---
     bringup_pkg = get_package_share_directory("so101_bringup")
@@ -46,62 +46,78 @@ def generate_launch_description():
         default_value="follower",
         description="Robot type: follower / leader",
     )
+    args.append(robot_type_arg)
 
     display_config_arg = DeclareLaunchArgument(
         "display_config",
         default_value=os.path.join(
-            get_package_share_directory("so101_moveit"),
+            moveit_pkg,
             "rviz",
             "moveit.rviz",
         ),
     )
+    args.append(display_config_arg)
+
     mode_arg = DeclareLaunchArgument(
         "mode", default_value="real", description="System mode: gazebo / real / sim"
     )
+    args.append(mode_arg)
+
     display_arg = DeclareLaunchArgument(
         "display", default_value="false", description="Launch RViz or not"
     )
+    args.append(display_arg)
+
     model_arg = DeclareLaunchArgument(
         "model",
         default_value=os.path.join(
             description_pkg, "urdf", "so101_new_calib.urdf.xacro"
         ),
     )
+    args.append(model_arg)
 
     # --- LaunchConfigurations ---
     mode = LaunchConfiguration("mode")
     display = LaunchConfiguration("display")
     model = LaunchConfiguration("model")
     display_config = LaunchConfiguration("display_config")
-    robot_type = LaunchConfiguration("type")
+    LaunchConfiguration("type")
 
-    # --- Conditionally include Gazebo sim if mode == gazebo ---
+    # Launch follower
+    # Include follower robot launch if mode == "real"
+    # Include sim_gazebo.launch if mode == "gazebo"
+    follower_robot_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(bringup_pkg, "launch", "include", "follower.launch.py")
+        ),
+        launch_arguments={
+            "model": model,
+        }.items(),
+        condition=LaunchConfigurationEquals("mode", "real"),
+    )
+    actions.append(follower_robot_launch)
+
+    # Include sim_gazebo.launch if mode == "gazebo"
     sim_gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(bringup_pkg, "launch", "include", "sim_gazebo.launch.py")
         ),
-        condition=IfCondition(EqualsSubstitution(mode, "gazebo")),
         launch_arguments={
             "model": model,
             "display_config": display_config,  ## Not in use
         }.items(),
+        condition=LaunchConfigurationEquals("mode", "gazebo"),
     )
-
-    # --- Conditionally include Real Ros2 Robot Brodge if mode == real ---
-    robot_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(bringup_pkg, "launch", "include", "robot.launch.py")
-        ),
-        launch_arguments={"type": robot_type, "model": model}.items(),
-        condition=IfCondition(EqualsSubstitution(mode, "real")),
-    )
+    actions.append(sim_gazebo_launch)
 
     # Include cameras
     cameras_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(bringup_pkg, "launch", "include", "camera.launch.py")
         ),
+        condition=LaunchConfigurationEquals("mode", "real"),
     )
+    actions.append(cameras_launch)
 
     # --- Always include MoveIt launch file ---
     moveit_launch = IncludeLaunchDescription(
@@ -116,17 +132,6 @@ def generate_launch_description():
             ),  # evaluates to "true"/"false"
         }.items(),
     )
+    actions.append(moveit_launch)
 
-    return LaunchDescription(
-        [
-            robot_type_arg,
-            mode_arg,
-            display_arg,
-            display_config_arg,
-            model_arg,
-            sim_gazebo_launch,
-            robot_launch,
-            cameras_launch,
-            moveit_launch,
-        ]
-    )
+    return LaunchDescription(args + actions)

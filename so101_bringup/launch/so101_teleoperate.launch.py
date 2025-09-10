@@ -38,6 +38,7 @@ def generate_launch_description():
     # Paths
     bringup_pkg = get_package_share_directory("so101_bringup")
     description_pkg = get_package_share_directory("so101_description")
+    teleop_pkg = get_package_share_directory("so101_teleop")
 
     # --- Declare arguments ---
     display_config_arg = DeclareLaunchArgument(
@@ -146,7 +147,7 @@ def generate_launch_description():
     teleop_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
-                get_package_share_directory("so101_teleop"),
+                teleop_pkg,
                 "launch",
                 "so101_leader_teleop.launch.py",
             )
