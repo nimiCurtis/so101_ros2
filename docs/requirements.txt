@@ -1,0 +1,2 @@
+# docs/requirements.txt
+sphinx-rtd-theme
