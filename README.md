@@ -75,7 +75,6 @@ to the `main` and `dev` branches.
 - [ ] Clean code and refactoring
 - [ ] Add integration with isaacSim/Lab
 - [ ] Add externals (sdr pkg)
-- [ ] Add Docs with sphyncs
 - [ ] Improve readme and check installation process
 - [ ] Fix teleoperate with gazebo
 - [ ] Add teleoperate functionalities with joy (and keyboard?)

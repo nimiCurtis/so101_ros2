@@ -40,14 +40,6 @@ def generate_launch_description():
     moveit_pkg = get_package_share_directory("so101_moveit")
     description_pkg = get_package_share_directory("so101_description")
 
-    # --- Declare arguments ---
-    robot_type_arg = DeclareLaunchArgument(
-        "type",
-        default_value="follower",
-        description="Robot type: follower / leader",
-    )
-    args.append(robot_type_arg)
-
     display_config_arg = DeclareLaunchArgument(
         "display_config",
         default_value=os.path.join(
@@ -81,7 +73,6 @@ def generate_launch_description():
     display = LaunchConfiguration("display")
     model = LaunchConfiguration("model")
     display_config = LaunchConfiguration("display_config")
-    LaunchConfiguration("type")
 
     # Launch follower
     # Include follower robot launch if mode == "real"
