@@ -45,7 +45,7 @@ def generate_launch_description():
         default_value=os.path.join(
             description_pkg,
             "rviz",
-            "display.rviz",
+            "robot_display_with_cameras.rviz",
         ),
     )
     args.append(display_config_arg)
