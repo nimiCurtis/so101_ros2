@@ -123,7 +123,7 @@ namespace so101_teleop
       point.positions.push_back(msg->position[i]);
     }
 
-    point.time_from_start = rclcpp::Duration(std::chrono::milliseconds(200));
+    point.time_from_start = rclcpp::Duration(std::chrono::milliseconds(3));
     trajectory_msg->points.push_back(point);
     trajectory_pub_->publish(std::move(trajectory_msg));
 

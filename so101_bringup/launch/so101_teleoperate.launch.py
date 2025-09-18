@@ -82,14 +82,12 @@ def generate_launch_description():
         ),
         launch_arguments={
             "model": model,
-            # CORRECTED: Use PythonExpression to conditionally set the value
             "use_sim_time": PythonExpression(
                 ["'true' if '", mode, "' == 'gazebo' else 'false'"]
             ),
         }.items(),
     )
-    delayed_leader_robot_launch = TimerAction(period=2.0, actions=[leader_robot_launch])
-    actions.append(delayed_leader_robot_launch)
+    actions.append(leader_robot_launch)
 
     # Launch follower
     # Include follower robot launch if mode == "real"

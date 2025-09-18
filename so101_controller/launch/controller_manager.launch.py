@@ -46,6 +46,8 @@ def generate_launch_description():
         ],
         output="screen",
         namespace=robot_type,
+        # Add log level arguments to reduce verbosity of gripper controller for the follower
+        arguments=['--ros-args', '--log-level', 'follower.gripper_controller:=warn'],
     )
 
     return LaunchDescription(
