@@ -40,15 +40,6 @@ endforeach()
 find_package(moveit_common REQUIRED)
 moveit_package()
 
-# Keyboard
-set(SERVO_KEYBOARD_INPUT_LIB keyboard_servo_component_lib)
-set(SERVO_KEYBOARD_EXEC keyboard_servo_node)
-
-# Joy
-set(SERVO_JOY_INPUT_LIB joystick_servo_component_lib)
-set(SERVO_JOY_EXEC joy_servo_node)
-
-
 # Leader
 set(LEADER_TELEOP_LIB leader_teleop_component_lib)
 set(LEADER_TELEOP_EXEC leader_teleop_node)
@@ -64,18 +55,6 @@ include_directories(
 # Add and export library to run as a ROS node component, and receive commands via topics
 # Add executable for using a controller
 
-# Keyboard
-add_library(${SERVO_KEYBOARD_INPUT_LIB} SHARED src/keyboard_servo_component.cpp)
-ament_target_dependencies(${SERVO_KEYBOARD_INPUT_LIB} ${THIS_PACKAGE_INCLUDE_DEPENDS})
-rclcpp_components_register_nodes(${SERVO_KEYBOARD_INPUT_LIB} "moveit_servo::KeyboardServoComponent")
-
-
-# Joy
-add_library(${SERVO_JOY_INPUT_LIB} SHARED src/joystick_servo_component.cpp)
-ament_target_dependencies(${SERVO_JOY_INPUT_LIB} ${THIS_PACKAGE_INCLUDE_DEPENDS})
-rclcpp_components_register_nodes(${SERVO_JOY_INPUT_LIB} "moveit_servo::JoyToServoComponent")
-
-
 # Leader
 add_library(${LEADER_TELEOP_LIB} SHARED src/leader_teleop_component.cpp)
 ament_target_dependencies(${LEADER_TELEOP_LIB} ${THIS_PACKAGE_INCLUDE_DEPENDS})
@@ -86,42 +65,6 @@ rclcpp_components_register_nodes(${LEADER_TELEOP_LIB} "so101_teleop::LeaderTeleo
 ######################
 
 # Executable that wraps the component
-
-# Keyboard
-add_executable(${SERVO_KEYBOARD_EXEC} src/keyboard_servo_node.cpp)
-target_link_libraries(${SERVO_KEYBOARD_EXEC} keyboard_servo_component_lib)  # Use the component lib name here
-ament_target_dependencies(${SERVO_KEYBOARD_EXEC} ${THIS_PACKAGE_INCLUDE_DEPENDS})
-
-install(
-  TARGETS
-    ${SERVO_KEYBOARD_EXEC}
-  DESTINATION lib/${PROJECT_NAME}
-)
-
-add_executable(servo_keyboard_input src/servo_keyboard_input.cpp)
-# target_link_libraries(servo_keyboard_input servo_keyboard_input)  # Use the component lib name here
-ament_target_dependencies(servo_keyboard_input ${THIS_PACKAGE_INCLUDE_DEPENDS})
-
-install(
-  TARGETS
-    servo_keyboard_input
-  DESTINATION lib/${PROJECT_NAME}
-)
-
-
-
-# Joy
-add_executable(${SERVO_JOY_EXEC} src/joystick_servo_node.cpp)
-target_link_libraries(${SERVO_JOY_EXEC} joystick_servo_component_lib)  # Use the component lib name here
-ament_target_dependencies(${SERVO_JOY_EXEC} ${THIS_PACKAGE_INCLUDE_DEPENDS})
-
-install(
-  TARGETS
-    ${SERVO_JOY_EXEC}
-  DESTINATION lib/${PROJECT_NAME}
-)
-
-
 
 # Leader
 add_executable(${LEADER_TELEOP_EXEC} src/leader_teleop_node.cpp)
@@ -142,8 +85,6 @@ install(
 # Components
 install(
   TARGETS
-    ${SERVO_KEYBOARD_INPUT_LIB} # Keyboard
-    ${SERVO_JOY_INPUT_LIB}      # Joy
     ${LEADER_TELEOP_LIB}        # Leader
   EXPORT export_${PROJECT_NAME}
   LIBRARY DESTINATION lib

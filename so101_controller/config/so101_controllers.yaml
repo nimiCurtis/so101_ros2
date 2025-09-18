@@ -50,7 +50,7 @@
         - elbow_flex
         - wrist_flex
         - wrist_roll
-        # - gripper
+        - gripper
 
       interfaces:
         - position
