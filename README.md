@@ -70,11 +70,8 @@ to the `main` and `dev` branches.
 
 ## TODO:
 
-- [ ] Add gripper control using teleop ( joint controller / or using action server)
-- [ ] Go over movieit code and refactor
+- [ ] Go over movieit code and refactor (NO PLANNING LIBRARY LOADED issue)
 - [ ] Clean code and refactoring
 - [ ] Add integration with isaacSim/Lab
-- [ ] Add externals (sdr pkg)
 - [ ] Improve readme and check installation process
 - [ ] Fix teleoperate with gazebo
-- [ ] Add teleoperate functionalities with joy (and keyboard?)
