@@ -1,0 +1,3 @@
+[submodule "ros2_externals/system_data_recorder"]
+	path = ros2_externals/system_data_recorder
+	url = https://github.com/nimiCurtis/system_data_recorder
