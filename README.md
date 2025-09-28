@@ -27,9 +27,12 @@ Clone this repository into the `src` folder of your ROS 2 workspace and build
 with `colcon`:
 
 ```bash
-cd ~/ros2_ws
+mkdir -p ~/ros2_ws/src
+cd ~/ros2_ws/src
+git clone --recurse-submodules git@github.com:nimiCurtis/so101_ros2.git
+cd ..
 rosdep install --from-paths src --ignore-src -r -y
-colcon build 
+colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
 source install/setup.bash
 ```
 
@@ -46,7 +49,7 @@ ros2 launch so101_description display_robot.launch.py
 Launch the simulation environment with:
 
 ```bash
-ros2 launch so101_sim so101_sim_gazebo.launch.py
+ros2 launch so101_bringup so101_sim_gazebo.launch.py
 ```
 
 ---
