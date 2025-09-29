@@ -15,26 +15,75 @@ environment for testing and development.
 
 ## Dependencies
 
-- ROS2 Humble
-- Gazebo fortress-ignition
-- RMW cyclonedds
+- ROS2 Humble from the [Official Link](https://docs.ros.org/en/humble/Installation.html)
 
 ---
 
-## Build
+## Setup Lerobot
 
-Clone this repository into the `src` folder of your ROS 2 workspace and build
-with `colcon`:
+This docs assumed that your SO101 is already assembled and all motors ids and boudrates are set.
+
+#### Env Setup
+
+Follow the instructions in the [Official Link](https://huggingface.co/docs/lerobot/installation) for installing the lerobot python environment (Install from source is recommended)
+
+You might need to give access to the USB ports by running:
 
 ```bash
-mkdir -p ~/ros2_ws/src
-cd ~/ros2_ws/src
-git clone --recurse-submodules git@github.com:nimiCurtis/so101_ros2.git
-cd ..
-rosdep install --from-paths src --ignore-src -r -y
-colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
-source install/setup.bash
+sudo usermod -aG dialout $USER
 ```
+
+Or:
+
+```bash
+sudo chmod 666 /dev/ttyACM0
+sudo chmod 666 /dev/ttyACM1
+```
+
+Check lerobot env is activated:
+
+```bash
+conda activate lerobot
+```
+
+Then Connect the robots and try finding their ports by:
+
+```bash
+lerobot-find-port
+```
+
+#### Calibrate
+
+Check out [this link](https://huggingface.co/docs/lerobot/so101?calibrate_follower=Command#configure-the-motors) and skip to the *Calibrate* section to calibrate your leader/follower arms correctly and save the calibration files in a known directoy.
+
+#### Validate installation and calibration
+
+Try this tutorial from the [official link](https://huggingface.co/docs/lerobot/il_robots) to check env and robots are configured correctly.
+
+## Build so101_ros2
+
+Once you can teleoperate so101 leader-follower properly it is time to bridge to ros2 workspace.
+
+1. Clone this repository into the `src` folder of your ROS 2 workspace and build
+with `colcon`:
+
+    ```bash
+    mkdir -p ~/ros2_ws/src
+    cd ~/ros2_ws/src
+    git clone --recurse-submodules git@github.com:nimiCurtis/so101_ros2.git
+    cd ..
+    rosdep install --from-paths src --ignore-src -r -y
+    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
+    source install/setup.bash
+    ```
+
+2. Because lerebot env is managed by conda package manager, a workaround to compile the ros2 workspace and utilize the lerobot virtual env is to make a symbolic link between lerobot env to ros2_ws by:
+
+    ```bash
+    export LEROBOT_SRC="~/dev/lerobot/lerobot/src/lerobot"
+    export SO101BRIDGE_INSTALL_SITE_PACKAGES="~/ros2_ws/install/so101_ros2_bridge/lib/python3.10/site-packages/lerobot"
+    ln -s $LEROBOT_SRC $SO101BRIDGE_INSTALL_SITE_PACKAGES
+    ```
 
 ---
 
