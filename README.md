@@ -80,8 +80,8 @@ with `colcon`:
 2. Because lerebot env is managed by conda package manager, a workaround to compile the ros2 workspace and utilize the lerobot virtual env is to make a symbolic link between lerobot env to ros2_ws by:
 
     ```bash
-    export LEROBOT_SRC="~/dev/lerobot/lerobot/src/lerobot"
-    export SO101BRIDGE_INSTALL_SITE_PACKAGES="~/ros2_ws/install/so101_ros2_bridge/lib/python3.10/site-packages/lerobot"
+    export LEROBOT_SRC="<your path to lerobot pkg>/src/lerobot"
+    export SO101BRIDGE_INSTALL_SITE_PACKAGES="<your path to ros2_ws>/install/so101_ros2_bridge/lib/python3.10/site-packages/lerobot"
     ln -s $LEROBOT_SRC $SO101BRIDGE_INSTALL_SITE_PACKAGES
     ```
 
