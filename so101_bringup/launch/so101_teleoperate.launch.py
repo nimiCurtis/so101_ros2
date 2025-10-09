@@ -66,7 +66,7 @@ def generate_launch_description():
     mode_arg = DeclareLaunchArgument(
         "mode",
         default_value="real",
-        description="Execution mode: real, gazebo",
+        description="Execution mode: real, gazebo, isaac",
     )
     args.append(mode_arg)
 
@@ -124,6 +124,19 @@ def generate_launch_description():
         condition=LaunchConfigurationEquals("mode", "gazebo"),
     )
     actions.append(sim_gazebo_launch)
+
+    # Include sim_gazebo.launch if mode == "gazebo"
+    sim_isaac_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(bringup_pkg, "launch", "include", "sim_isaac.launch.py")
+        ),
+        launch_arguments={
+            "model": model,
+            "display_config": display_config,
+        }.items(),
+        condition=LaunchConfigurationEquals("mode", "isaac"),
+    )
+    actions.append(sim_isaac_launch)
 
     # Include display.launch.py
     display_launch = IncludeLaunchDescription(
