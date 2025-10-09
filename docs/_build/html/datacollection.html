@@ -86,11 +86,21 @@
 <h2>System Data Recorder<a class="headerlink" href="#system-data-recorder" title="Link to this heading"></a></h2>
 <p>The repository provides <code class="docutils literal notranslate"><span class="pre">so101_bringup/launch/so101_record.launch.py</span></code> to start
 the <code class="docutils literal notranslate"><span class="pre">system_data_recorder</span></code> node with a preconfigured parameter file. Launching
-it will record the topics listed in the configuration while mirroring the output
-into the configured destination directory:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ros2</span> <span class="n">launch</span> <span class="n">so101_bringup</span> <span class="n">so101_record</span><span class="o">.</span><span class="n">launch</span><span class="o">.</span><span class="n">py</span>
-</pre></div>
-</div>
+the bring-up prepares the lifecycle node; use the ROS 2 lifecycle CLI to control
+recording sessions while teleoperation is running in another terminal.</p>
+<ol class="arabic">
+<li><p>Start the recorder node:</p>
+<p>ros2 launch so101_bringup so101_record.launch.py</p>
+</li>
+<li><p>Configure and activate the node to begin recording:</p>
+<p>ros2 lifecycle set /sdr configure
+ros2 lifecycle set /sdr activate</p>
+</li>
+<li><p>When the demonstration is complete, stop and cleanly shut down the recorder:</p>
+<p>ros2 lifecycle set /sdr deactivate
+ros2 lifecycle set /sdr shutdown</p>
+</li>
+</ol>
 </section>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading"></a></h2>
@@ -100,6 +110,9 @@ The default setup writes bag files prefixed with <code class="docutils literal n
 Extend the <code class="docutils literal notranslate"><span class="pre">topic_names</span></code> and <code class="docutils literal notranslate"><span class="pre">topic_types</span></code> arrays to capture additional
 datasets and adjust the <code class="docutils literal notranslate"><span class="pre">max_file_size</span></code> limit to control bag splitting during
 long sessions.</p>
+<p>Recorded bags are copied into <code class="docutils literal notranslate"><span class="pre">copy_destination</span></code> after the session. Use
+<code class="docutils literal notranslate"><span class="pre">ros2</span> <span class="pre">bag</span> <span class="pre">info</span> <span class="pre">&lt;bag_path&gt;</span></code> to inspect their contents before converting them
+for downstream imitation learning pipelines.</p>
 </section>
 </section>
 

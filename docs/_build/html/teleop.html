@@ -50,9 +50,10 @@
 <li class="toctree-l1"><a class="reference internal" href="bringup.html">Bring-up</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ros2controlarch.html">ROS 2 Control Architecture</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Teleoperation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#launching">Launching</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#component-overview">Component overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#parameters">Parameters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#launching">Launching</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="datacollection.html">Data collection</a></li>
@@ -84,6 +85,38 @@
              
   <section id="teleoperation">
 <h1>Teleoperation<a class="headerlink" href="#teleoperation" title="Link to this heading"></a></h1>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Complete the Lerobot calibration workflow and ensure the resulting JSON files
+are referenced by the leader and follower parameter files (see <a class="reference internal" href="setup.html"><span class="doc">Setup</span></a>).</p></li>
+<li><p>Source the workspace and export <code class="docutils literal notranslate"><span class="pre">LECONDA_SITE_PACKAGES</span></code> in every terminal
+that launches bridge components.</p></li>
+<li><p>Configure the front camera parameter file with the correct <code class="docutils literal notranslate"><span class="pre">video_device</span></code> if
+you want the image stream in RViz during real teleoperation.</p></li>
+</ul>
+</section>
+<section id="launching">
+<h2>Launching<a class="headerlink" href="#launching" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">so101_bringup/launch/so101_teleoperate.launch.py</span></code> orchestrates a complete
+teleoperation session. It brings up the leader stack immediately, waits for the
+follower to connect, optionally starts RViz and finally loads the teleoperation
+component inside a multithreaded container.</p>
+<p>To run against the physical robots and show RViz, use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ros2</span> <span class="n">launch</span> <span class="n">so101_bringup</span> <span class="n">so101_teleoperate</span><span class="o">.</span><span class="n">launch</span><span class="o">.</span><span class="n">py</span> <span class="n">mode</span><span class="o">:=</span><span class="n">real</span> <span class="n">display</span><span class="o">:=</span><span class="n">true</span>
+</pre></div>
+</div>
+<p>The launch file emits helpful log messages while connecting to the hardware.
+Common issues include missing calibration files or incorrect serial port names.</p>
+<p>To exercise the workflow in Gazebo without hardware, switch the mode:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ros2</span> <span class="n">launch</span> <span class="n">so101_bringup</span> <span class="n">so101_teleoperate</span><span class="o">.</span><span class="n">launch</span><span class="o">.</span><span class="n">py</span> <span class="n">mode</span><span class="o">:=</span><span class="n">gazebo</span> <span class="n">display</span><span class="o">:=</span><span class="n">true</span>
+</pre></div>
+</div>
+<p>This path boots the simulated follower using ros2_control controllers so that
+the teleoperation component can publish to the same interfaces as on the real
+robot. The leader bridge still runs locally, letting you practice demonstrations
+with the leader arm alone.</p>
+</section>
 <section id="component-overview">
 <h2>Component overview<a class="headerlink" href="#component-overview" title="Link to this heading"></a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">so101_teleop</span></code> package provides the <code class="docutils literal notranslate"><span class="pre">LeaderTeleopComponent</span></code> ROS 2
@@ -99,20 +132,6 @@ continuous stream.</p>
 The <code class="docutils literal notranslate"><span class="pre">leader_joint_states_topic</span></code> selects the input topic (<code class="docutils literal notranslate"><span class="pre">/leader/joint_states</span></code>
 by default) and <code class="docutils literal notranslate"><span class="pre">follower_trajectory_topic</span></code> configures the target controller
 interface (<code class="docutils literal notranslate"><span class="pre">/follower/arm_controller/joint_trajectory</span></code> by default).</p>
-</section>
-<section id="launching">
-<h2>Launching<a class="headerlink" href="#launching" title="Link to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">so101_bringup/launch/so101_teleoperate.launch.py</span></code> orchestrates a complete
-teleoperation session. It brings up the leader stack first, optionally the
-follower hardware, and finally loads the teleoperation component inside a
-multithreaded component container. Use the <code class="docutils literal notranslate"><span class="pre">mode</span></code> argument to switch between
-real hardware and Gazebo simulation:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ros2</span> <span class="n">launch</span> <span class="n">so101_bringup</span> <span class="n">so101_teleoperate</span><span class="o">.</span><span class="n">launch</span><span class="o">.</span><span class="n">py</span> <span class="n">mode</span><span class="o">:=</span><span class="n">real</span>
-</pre></div>
-</div>
-<p>When <code class="docutils literal notranslate"><span class="pre">mode:=gazebo</span></code> the launch file skips the follower hardware bring-up and
-runs with simulated time while still attaching the teleoperation component to the
-leader bridge output.</p>
 </section>
 </section>
 

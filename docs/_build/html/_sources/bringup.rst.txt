@@ -1,37 +1,43 @@
 Bring-up
 ========
 
-Real hardware
--------------
-Use ``so101_bringup/launch/so101_robot.launch.py`` to start either the follower
-or leader hardware stack. The launch file exposes the ``type`` argument to pick
-the robot role and forwards the ``model`` and ``display`` options to the
-underlying description launch files. For example, to start the follower arm with
-RViz::
+Teleoperation bring-up (real hardware)
+--------------------------------------
+``so101_bringup/launch/so101_teleoperate.launch.py`` is the primary entry point
+for running both arms in tandem. It launches the leader bridge first, waits for
+the follower bridge to connect, starts cameras when in real mode and optionally
+opens RViz after the controllers are ready::
 
-   ros2 launch so101_bringup so101_robot.launch.py type:=follower display:=true
+   ros2 launch so101_bringup so101_teleoperate.launch.py mode:=real display:=true
 
-When ``type:=follower`` is selected the launch file loads
-``include/follower.launch.py`` which in turn brings up the robot state publisher
-for the real hardware, the Python bridge node and the ros2_control controller
-manager with timed spawners for the arm and gripper controllers. Selecting
-``type:=leader`` activates the analogous stack defined in
-``include/leader.launch.py``.
+Internally the launch file reuses ``include/leader.launch.py`` and
+``include/follower.launch.py`` for the hardware bring-up, plus
+``include/camera.launch.py`` when cameras are enabled. The teleoperation
+component is injected into a multithreaded container once both bridges publish
+joint states. Use the ``display_config`` argument to select a custom RViz
+configuration if desired.
 
-The ``display_config`` argument may be used to pick a custom RViz configuration
-and ``model`` can be set to an alternative URDF if needed. For setups with
-cameras, ``so101_robot_with_cameras.launch.py`` extends the bring-up with the USB
-camera pipeline before optionally launching RViz.
+Standalone arm bring-up
+-----------------------
+When you only need one arm, ``so101_bringup/launch/so101_robot.launch.py`` can
+start a single stack. Set ``type:=leader`` or ``type:=follower`` and optionally
+``display:=true`` to launch RViz. The launch file forwards the ``model`` and
+``display_config`` arguments to the description package. A companion launch file
+``so101_robot_with_cameras.launch.py`` adds the USB camera pipeline.
 
 Simulation
 ----------
-Gazebo bring-up is provided by ``so101_bringup/launch/so101_sim_gazebo.launch.py``.
-The launch file forwards the ``model`` argument to the robot description and can
-start RViz when ``display:=true``. Internally it loads
-``include/sim_gazebo.launch.py`` which spawns the robot state publisher in
-simulation mode, launches the Gazebo environment from ``so101_sim`` and spawns
-the follower ros2_control controllers so that planning and teleoperation stacks
-see the same interfaces as the hardware.
+The teleoperation launch file also supports Gazebo simulation via ``mode:=gazebo``.
+It reuses ``include/sim_gazebo.launch.py`` to bring up the simulated follower
+robot, ros2_control controllers and Gazebo environment from ``so101_sim`` before
+loading the teleoperation component::
+
+   ros2 launch so101_bringup so101_teleoperate.launch.py mode:=gazebo display:=true
+
+For targeted simulation bring-up without teleoperation, use
+``so101_bringup/launch/so101_sim_gazebo.launch.py`` directly. It forwards the
+``model`` argument to the robot description and spawns the controllers required
+for MoveIt and ros2_control integrations.
 
 MoveIt integration
 ------------------

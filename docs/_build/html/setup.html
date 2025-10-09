@@ -98,29 +98,42 @@ calibration directory to match the hardware that is connected to the machine:</p
 <p>Each file defines the <code class="docutils literal notranslate"><span class="pre">port</span></code>, <code class="docutils literal notranslate"><span class="pre">id</span></code> and <code class="docutils literal notranslate"><span class="pre">publish_rate</span></code> fields used by the
 Python bridge node. The follower configuration additionally exposes
 <code class="docutils literal notranslate"><span class="pre">max_relative_target</span></code> and <code class="docutils literal notranslate"><span class="pre">disable_torque_on_disconnect</span></code> to bound commands
-sent to the arm.</p>
+sent to the arm. Set <code class="docutils literal notranslate"><span class="pre">calibration_dir</span></code> to the directory that contains the
+calibration JSON files generated during the Lerobot setup. When the field is
+omitted the bridge defaults to the bundled assets inside the package.</p>
 </section>
 <section id="calibration-assets">
 <h2>Calibration assets<a class="headerlink" href="#calibration-assets" title="Link to this heading"></a></h2>
 <p>Default calibration JSON files are installed with the package under
 <code class="docutils literal notranslate"><span class="pre">so101_ros2_bridge/config/calibration</span></code>. Replace or extend these files with the
 calibration data generated for your manipulators and point the parameter files
-to the desired directory when launching.</p>
+to the desired directory when launching. The naming convention <code class="docutils literal notranslate"><span class="pre">&lt;id&gt;.json</span></code> is
+used throughout the workspace and matches the examples provided in the Lerobot
+tutorials.</p>
 </section>
 <section id="python-environment">
 <h2>Python environment<a class="headerlink" href="#python-environment" title="Link to this heading"></a></h2>
-<p>The bridge code dynamically adds the Lerobot Conda environment to <code class="docutils literal notranslate"><span class="pre">sys.path</span></code>
-using the <code class="docutils literal notranslate"><span class="pre">LECONDA_SITE_PACKAGES</span></code> environment variable. Ensure the variable
-points to the <code class="docutils literal notranslate"><span class="pre">site-packages</span></code> directory that contains the <code class="docutils literal notranslate"><span class="pre">lerobot</span></code>
-distribution before starting the ROS 2 bridge nodes.</p>
+<p>Source the workspace in every terminal before launching any nodes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">~/</span><span class="n">ros2_ws</span><span class="o">/</span><span class="n">install</span><span class="o">/</span><span class="n">setup</span><span class="o">.</span><span class="n">bash</span>
+</pre></div>
+</div>
+<p>Then export <code class="docutils literal notranslate"><span class="pre">LECONDA_SITE_PACKAGES</span></code> so the Lerobot Conda environment is added
+to <code class="docutils literal notranslate"><span class="pre">sys.path</span></code> at runtime:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">LECONDA_SITE_PACKAGES</span><span class="o">=&lt;</span><span class="n">conda_root</span><span class="o">&gt;/</span><span class="n">envs</span><span class="o">/</span><span class="n">lerobot_ros2</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">python3</span><span class="mf">.10</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">packages</span>
+</pre></div>
+</div>
+<p>If you created a symbolic link from the Lerobot sources into the
+<code class="docutils literal notranslate"><span class="pre">so101_ros2_bridge</span></code> install directory (see <a class="reference internal" href="installation.html"><span class="doc">Installation</span></a>), verify that
+the link still exists after rebuilding the workspace.</p>
 </section>
 <section id="cameras">
 <h2>Cameras<a class="headerlink" href="#cameras" title="Link to this heading"></a></h2>
 <p>USB camera support is defined in <code class="docutils literal notranslate"><span class="pre">so101_bringup/config/so101_cameras.yaml</span></code>.
 Each entry references a USB camera parameter file such as
 <code class="docutils literal notranslate"><span class="pre">so101_bringup/config/so101_usb_cam_front.yaml</span></code> where the device path,
-resolution and exposure settings are declared. Update these files to match the
-connected cameras.</p>
+resolution and exposure settings are declared. Update <code class="docutils literal notranslate"><span class="pre">video_device</span></code> to match
+the enumerated device (for example <code class="docutils literal notranslate"><span class="pre">/dev/video4</span></code>) so the live feed appears in
+RViz during teleoperation.</p>
 </section>
 <section id="system-data-recorder">
 <h2>System data recorder<a class="headerlink" href="#system-data-recorder" title="Link to this heading"></a></h2>

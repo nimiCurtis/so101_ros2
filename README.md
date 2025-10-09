@@ -21,7 +21,7 @@ environment for testing and development.
 
 ## Setup Lerobot
 
-This docs assumed that your SO101 is already assembled and all motors ids and boudrates are set.
+These docs assume that your SO101 is already assembled and all motor IDs and baud rates are set.
 
 #### Lerobot ROS2 Python Env Setup
 
@@ -37,7 +37,7 @@ This docs assumed that your SO101 is already assembled and all motors ids and bo
     ```bash
     git clone https://github.com/nimiCurtis/lerobot.git
     cd lerobot
-    pip install -e ."[all]
+    pip install -e ".[all]"
     ```
 
 3. Grant access to USB ports (for robot communication)
@@ -85,10 +85,11 @@ Try this tutorial from the [official link](https://huggingface.co/docs/lerobot/i
     conda activate lerobot_isaac
     ```
 
-3. Then from the lerobot directory, install the neccessary packages to run the isaacsim/lab scripts for the simulation inference deployment and the rl training scripts:
+3. Then from the lerobot directory, install the extras required for the IsaacLab
+   utilities (adjust the extras list to match the features you use):
 
     ```bash
-    pip install -e ."[feetech,smolvla,pi,async]" (check later which packages needed)
+    pip install -e ".[feetech,smolvla,pi,async]"
     ```
 
 ## Build so101_ros2
@@ -138,69 +139,123 @@ ros2 launch so101_bringup so101_sim_gazebo.launch.py
 
 ## Imitation Learning with so101_ros2
 
-### Teleoperate
+This workspace connects the Lerobot leader/follower stack with ROS 2 so you can
+teleoperate the hardware, stream observations into ROS tooling and record
+demonstrations for imitation learning pipelines.
 
-### Real teleoperation
+### Prerequisites
 
-First set properly the parameters in  ```so101_ros2_bridge/config/so101_leader_params.yaml``` and ```so101_ros2_bridge/config/so101_follower_params.yaml``` according to the location of your calibration files.
+- Complete the Lerobot calibration procedure for both arms and keep the exported
+  JSON files handy. The bridge looks for them in
+  `so101_ros2_bridge/config/calibration/` by default (see `Gili.json` and
+  `Tzili.json` for the expected naming scheme). Alternatively provide an
+  absolute path via the `calibration_dir` parameter.
+- Export `LECONDA_SITE_PACKAGES` in every terminal that launches the bridge so
+  the Lerobot Python packages are discoverable:
 
-In addition set properly the camera port parameter in ```so101_bringup/config/so101_usb_cam_front.yaml``` here:
+  ```bash
+  export LECONDA_SITE_PACKAGES=<path to conda>/envs/lerobot_ros2/lib/python3.10/site-packages
+  ```
+
+- Source the workspace in each terminal: `source ~/ros2_ws/install/setup.bash`.
+- If you followed the optional symlink workaround in the build section, ensure
+  those links are still valid after rebuilding.
+
+### Configure bridge parameters
+
+Edit `so101_ros2_bridge/config/so101_leader_params.yaml` and
+`so101_ros2_bridge/config/so101_follower_params.yaml` so they reference the
+correct USB ports, calibration directory and Lerobot identifiers:
 
 ```yaml
-.
-.
-ros__parameters:
-    video_device: "/dev/video4" # Replace here
+so101_follower_ros2_bridge:
+  ros__parameters:
+    port: "/dev/ttyACM1"
+    id: "Tzili"
+    calibration_dir: "/abs/path/to/calibration"
+    use_degrees: true
+    max_relative_target: 10
+    disable_torque_on_disconnect: true
+    publish_rate: 30.0
 ```
 
-Then:
+If `calibration_dir` is omitted the node falls back to the bundled calibration
+files, which is useful for quick smoke testing.
+
+### Camera configuration (real teleoperation)
+
+When using the physical robot, update `so101_bringup/config/so101_usb_cam_front.yaml`
+with the correct video device path so the camera feed shows up in RViz:
+
+```yaml
+ros__parameters:
+  video_device: "/dev/video4"
+```
+
+### Run a real teleoperation session
+
+Launch the leader and follower bridges, cameras and RViz in one terminal:
 
 ```bash
 ros2 launch so101_bringup so101_teleoperate.launch.py mode:=real display:=true
 ```
 
-### Sim teleoperation
+The launch file brings up the leader bridge immediately, waits for the follower
+to connect, optionally opens RViz (`display:=true`) and starts the teleoperation
+node once both arms publish joint states. Watch the log output for any
+connection errors—most issues stem from missing calibration files or incorrect
+USB port assignments.
+
+### Run a Gazebo teleoperation session (not working yet)
+
+To test the pipeline without hardware, launch the same entry point in Gazebo
+mode:
+
+```bash
+ros2 launch so101_bringup so101_teleoperate.launch.py mode:=gazebo display:=true
+```
+
+This starts the simulated follower, loads ROS 2 controllers and spawns the RViz
+configuration so you can practice teleoperation flows before running them on
+the real robot. The leader bridge still runs locally, so keep the leader arm
+connected if you want to stream human demonstrations into the simulator.
+
+### Run an Isaac teleoperation session
 
 TBD...
 
-### Record Dataset with rosbag2 using system_data_recorder package
+### Record demonstrations with `system_data_recorder`
 
-First set properly the parameters in ```so101_bringup/config/so101_sdr.yaml``` according to your desired topics names and dataset destinations.
+1. Configure the topics you care about in
+   `so101_bringup/config/so101_sdr.yaml`.
 
-Pay attention that each topic name should have it corresponding message type.
+2. Start teleoperation (real|Gazebo|Isaac) from another terminal.
 
-```yaml
-.
-.
-# List of topics and their types to record.
-topic_names: [
-    "/joint_states",
-]
-topic_types: [
-    "sensor_msgs/msg/JointState",
-]
-```
+3. Launch the recorder lifecycle node:
 
-Then , while the teleopartion is runnning, launch from a second terminal the sdr lifecycle node with:
+   ```bash
+   ros2 launch so101_bringup so101_record.launch.py
+   ```
 
-``` bash
-ros2 launch so101_bringup so101_record.launch.py
-```
+4. Configure and activate the node to begin recording:
 
-And start recording from a third terminal with:
+   ```bash
+   ros2 lifecycle set /sdr configure
+   ros2 lifecycle set /sdr activate
+   ```
 
-```bash
-ros2 lifecycle set /sdr configure
-ros2 lifecycle set /sdr activate
-```
+5. When you are done collecting a demonstration, stop the recording:
 
-Stop recording with:
+   ```bash
+   ros2 lifecycle set /sdr deactivate
+   ros2 lifecycle set /sdr shutdown
+   ```
 
-```bash
-ros2 lifecycle set /sdr deactivate
-```
-
-For more information see [system_data_recording](https://github.com/nimiCurtis/system_data_recorder).
+The resulting rosbag2 dataset is stored under the `copy_destination` directory
+with the prefix defined in `bag_name_prefix`. Inspect the bag with
+`ros2 bag info <bag_path>` or process it with your preferred imitation learning
+tooling. For more options see the
+[system_data_recorder documentation](https://github.com/nimiCurtis/system_data_recorder).
 
 ---
 
@@ -213,18 +268,15 @@ full license text.
 
 ## Contributions
 
-Install the hooks with `pre-commit install` so the checks run automatically
-before each commit. The CI executes `pre-commit` on pushes and pull requests
-to the `main` and `dev` branches.
-
-[TBD how to fork the repo and contribut]
+Contributions are welcome. Fork the repository, create a feature branch and run
+`pre-commit run --all-files` before opening a pull request. The CI triggers the
+same hooks on pushes to `main` and `dev`.
 
 ---
 
-## TODO:
+## Roadmap
 
-- [ ] Go over movieit code and refactor (NO PLANNING LIBRARY LOADED issue)
-- [ ] Clean code and refactoring
-- [ ] Add integration with isaacSim/Lab
-- [ ] Improve readme and check installation process
-- [ ] Fix teleoperate with gazebo
+- [ ] Investigate the MoveIt "No Planning Library Loaded" warning and refactor the configuration
+- [ ] General code clean-up and API documentation
+- [ ] Integrate the IsaacSim/Lab pipeline end-to-end
+- [ ] Harden Gazebo teleoperation to match the hardware workflow
