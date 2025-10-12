@@ -60,6 +60,7 @@ def generate_launch_description():
         parameters=[
             {"robot_description": robot_description},
             {"use_sim_time": use_sim},
+            {"tf_prefix": robot_type}
         ],
         namespace=robot_type,
     )
