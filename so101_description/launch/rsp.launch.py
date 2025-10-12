@@ -26,6 +26,7 @@ from launch.substitutions import (
     Command,
     FindExecutable,
     LaunchConfiguration,
+    TextSubstitution,
     PathJoinSubstitution,
 )
 from launch_ros.actions import Node
@@ -60,13 +61,33 @@ def generate_launch_description():
         parameters=[
             {"robot_description": robot_description},
             {"use_sim_time": use_sim},
-            {"tf_prefix": robot_type}
+            {
+                "frame_prefix": [
+                    robot_type,
+                    TextSubstitution(text="/"),
+                ]
+            },
         ],
         namespace=robot_type,
+    )
+
+    # Static transform publisher: world -> {robot_type}/base_link
+    static_tf_node = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="world_to_base_link_publisher",
+        namespace=robot_type,
+        arguments=[
+            "0", "0", "0",  # x y z
+            "0", "0", "0",  # roll pitch yaw (or qx qy qz qw)
+            "world",  # parent frame
+            [robot_type, TextSubstitution(text="/base_link")],  # child frame
+        ],
     )
 
     return LaunchDescription(
         [
             robot_state_publisher_node,
+            static_tf_node,
         ]
     )

@@ -38,14 +38,15 @@ def generate_launch_description():
     # Paths
     bringup_pkg = get_package_share_directory("so101_bringup")
     description_pkg = get_package_share_directory("so101_description")
+    teleop_pkg = get_package_share_directory("so101_teleop")
 
     # --- Declare arguments ---
     display_config_arg = DeclareLaunchArgument(
         "display_config",
         default_value=os.path.join(
-            description_pkg,
+            teleop_pkg,
             "rviz",
-            "robot_display_with_cameras.rviz",
+            "teleop_with_camera.rviz",
         ),
     )
     args.append(display_config_arg)

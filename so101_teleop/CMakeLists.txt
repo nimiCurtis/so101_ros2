@@ -71,16 +71,18 @@ add_executable(${LEADER_TELEOP_EXEC} src/leader_teleop_node.cpp)
 target_link_libraries(${LEADER_TELEOP_EXEC} ${LEADER_TELEOP_LIB})
 ament_target_dependencies(${LEADER_TELEOP_EXEC} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
-install(
-  TARGETS
-    ${LEADER_TELEOP_EXEC}
-  DESTINATION lib/${PROJECT_NAME}
-)
+
 
 
 #############
 ## Install ##
 #############
+
+install(
+  TARGETS
+    ${LEADER_TELEOP_EXEC}
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # Components
 install(
@@ -98,6 +100,7 @@ install(
 install(DIRECTORY include/ DESTINATION include)
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY rviz DESTINATION share/${PROJECT_NAME})
 
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
