@@ -55,12 +55,16 @@ namespace so101_teleop
     gripper_action_client_ = rclcpp_action::create_client<control_msgs::action::GripperCommand>(
         this,
         follower_gripper_action);
+    
+    // === NEW: Declare and get the gripper deadband parameter ===
+    gripper_deadband_ = this->declare_parameter<double>("gripper_deadband", 0.01);
+    RCLCPP_INFO(this->get_logger(), "Using gripper deadband of: %.4f radians", gripper_deadband_);
 
     // Subscriber for the leader's joint states
     joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
         leader_topic, 10,
         std::bind(&LeaderTeleopComponent::joint_state_callback, this, std::placeholders::_1));
-
+    
     RCLCPP_INFO(this->get_logger(), "Component successfully initialized.");
   }
 
@@ -108,44 +112,53 @@ namespace so101_teleop
     }
 
     // === Handle Arm Teleop ===
-    auto trajectory_msg = std::make_unique<trajectory_msgs::msg::JointTrajectory>();
-    trajectory_msg->header.stamp = this->get_clock()->now();
-    trajectory_msg->joint_names = ordered_arm_joint_names_;
+    // Clear and reuse the pre-allocated message
+    trajectory_msg_.points.clear(); 
+    trajectory_msg_.header.stamp = this->get_clock()->now();
+    trajectory_msg_.joint_names = ordered_arm_joint_names_;
 
     trajectory_msgs::msg::JointTrajectoryPoint point;
-    // Populate arm positions, skipping the gripper position
+    point.positions.reserve(ordered_arm_joint_names_.size()); // Avoid reallocations
     for (size_t i = 0; i < msg->name.size(); ++i)
     {
       if (leader_gripper_joint_index_.has_value() && i == *leader_gripper_joint_index_)
       {
-        continue; // Skip gripper joint
+        continue;
       }
       point.positions.push_back(msg->position[i]);
     }
 
-    point.time_from_start = rclcpp::Duration(std::chrono::milliseconds(5));
-    trajectory_msg->points.push_back(point);
-    trajectory_pub_->publish(std::move(trajectory_msg));
+    point.time_from_start = rclcpp::Duration(std::chrono::milliseconds(3));
+    trajectory_msg_.points.push_back(point);
+    trajectory_pub_->publish(trajectory_msg_); // Publish by const reference
 
-    // === Handle Gripper Teleop ===
+
+    // === Handle Gripper Teleop with Deadband Logic ===
     if (leader_gripper_joint_index_.has_value())
     {
-      // Use wait_for_action_server with a zero timeout for a non-blocking check
-      if (!gripper_action_client_->wait_for_action_server(std::chrono::seconds(0)))
+      double current_gripper_pos = msg->position[*leader_gripper_joint_index_];
+
+      // ONLY send a new goal if the position has changed by more than the deadband
+      if (std::abs(current_gripper_pos - last_gripper_goal_position_) > gripper_deadband_)
       {
-        RCLCPP_WARN_ONCE(this->get_logger(), "Gripper action server is not available yet.");
-        return;
+        if (!gripper_action_client_->wait_for_action_server(std::chrono::seconds(0)))
+        {
+          RCLCPP_WARN_ONCE(this->get_logger(), "Gripper action server is not available yet.");
+          return;
+        }
+
+        auto goal_msg = control_msgs::action::GripperCommand::Goal();
+        goal_msg.command.position = current_gripper_pos;
+        goal_msg.command.max_effort = 10.0; 
+
+        auto send_goal_options = rclcpp_action::Client<control_msgs::action::GripperCommand>::SendGoalOptions();
+        gripper_action_client_->async_send_goal(goal_msg, send_goal_options);
+        
+        // IMPORTANT: Update the last sent position
+        last_gripper_goal_position_ = current_gripper_pos;
       }
-
-      auto goal_msg = control_msgs::action::GripperCommand::Goal();
-      goal_msg.command.position = msg->position[*leader_gripper_joint_index_];
-      goal_msg.command.max_effort = 10.0;
-
-      auto send_goal_options = rclcpp_action::Client<control_msgs::action::GripperCommand>::SendGoalOptions();
-      gripper_action_client_->async_send_goal(goal_msg, send_goal_options);
     }
   }
-
 } // namespace so101_teleop
 
 // Register the component with class_loader

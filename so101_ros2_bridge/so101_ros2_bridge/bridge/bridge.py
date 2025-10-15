@@ -68,6 +68,13 @@ class SO101ROS2Bridge(Node, ABC):
         self._alive_thread = threading.Thread(target=self._alive, daemon=True)
 
         self.joint_pub = self.create_publisher(JointState, 'joint_states_raw', 10)
+        
+        # Pre-allocate the message and its internal lists
+        self._joint_state_msg = JointState()
+        self._joint_state_msg.name = self.JOINT_NAMES
+        self._positions = [0.0] * len(self.JOINT_NAMES)
+        self._velocities = [0.0] * len(self.JOINT_NAMES)
+    
         rate = params.get("publish_rate", 30.0)
         self.timer = self.create_timer(1.0 / rate, self.publish_joint_states)
 
@@ -111,42 +118,34 @@ class SO101ROS2Bridge(Node, ABC):
         This method should be implemented by subclasses to return the robot's joint states.
         """
 
+    # In your publish_joint_states method:
     def publish_joint_states(self):
         try:
             current_time = self.get_clock().now()
             obs = self.get_joints_states()
-            msg = JointState()
-            msg.header.stamp = self.get_clock().now().to_msg()
-            msg.name = self.JOINT_NAMES
-            positions = []
-            for joint in self.JOINT_NAMES:
+
+            # Update the pre-allocated lists instead of creating new ones
+            for i, joint in enumerate(self.JOINT_NAMES):
                 if joint == "gripper":
-                    # Normalize gripper position to be within [0, pi] for MoveIt
                     pos = ((obs.get(f"{joint}.pos", 0.0) - 10.0) / 100.0) * math.pi
                 else:
                     pos = math.radians(obs.get(f"{joint}.pos", 0.0))
-                positions.append(pos)
+                self._positions[i] = pos
 
-            # Velocity calculation
-            velocities = [0.0] * len(self.JOINT_NAMES)
-            # On the first run, last_positions will be None, so velocities will be zero.
             if self.last_positions is not None:
-                # Calculate time delta in seconds
                 dt = (current_time - self.last_time).nanoseconds / 1e9
-                # Avoid division by zero if the time delta is too small
-                if dt > 0:
+                if dt > 1e-6: # More robust check against zero
                     for i in range(len(self.JOINT_NAMES)):
-                        velocities[i] = (positions[i] - self.last_positions[i]) / dt
+                        self._velocities[i] = (self._positions[i] - self.last_positions[i]) / dt
+            
+            # Update and publish the pre-allocated message
+            self._joint_state_msg.header.stamp = self.get_clock().now().to_msg()
+            self._joint_state_msg.position = self._positions
+            self._joint_state_msg.velocity = self._velocities
+            self.joint_pub.publish(self._joint_state_msg)
 
-            # Prepare msg
-            msg.position = positions
-            msg.velocity = velocities
-
-            # Publish
-            self.joint_pub.publish(msg)
-
-            # Store the current state for the next iteration's calculation
-            self.last_positions = positions
+            # Store a copy for the next velocity calculation
+            self.last_positions = list(self._positions) # or self._positions[:]
             self.last_time = current_time
 
         except Exception as e:

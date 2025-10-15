@@ -68,6 +68,14 @@ namespace so101_teleop
     std::vector<std::string> ordered_arm_joint_names_;
     std::string leader_gripper_joint_name_;
     std::optional<size_t> leader_gripper_joint_index_;
+
+    // Add as a private member variable
+    trajectory_msgs::msg::JointTrajectory trajectory_msg_;
+
+    // Variables for gripper deadband logic
+    double last_gripper_goal_position_;
+    double gripper_deadband_; 
+
   };
 
 } // namespace so101_teleop

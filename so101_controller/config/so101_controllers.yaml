@@ -2,7 +2,7 @@
 /follower:
   controller_manager:
     ros__parameters:
-      update_rate: 25  # Hz
+      update_rate: 30  # Hz
 
       arm_controller:
         type: joint_trajectory_controller/JointTrajectoryController
@@ -27,16 +27,27 @@
       state_interfaces:
         - position
         - velocity
+      
+      # GAINS CONFIGURATION ADDED HERE
+      gains:
+        shoulder_pan:  {p: 0.0, i: 0.0, d: 0.0}
+        shoulder_lift: {p: 0.0, i: 0.0, d: 0.0}
+        elbow_flex:    {p: 0.0, i: 0.0, d: 0.0}
+        wrist_flex:    {p: 0.0, i: 0.0, d: 0.0}
+        wrist_roll:    {p: 0.0, i: 0.0, d: 0.0}
         
   gripper_controller:
     ros__parameters:
       type: position_controllers/GripperActionController
       joint: gripper
+      # You can add other relevant gripper parameters here if needed
+      # goal_tolerance: 0.01
+      # max_effort: 10.0 ## No Force sensing
 
 /leader:
   controller_manager:
     ros__parameters:
-      update_rate: 25  # Hz
+      update_rate: 30  # Hz
 
       joint_state_broadcaster:
         type: joint_state_broadcaster/JointStateBroadcaster

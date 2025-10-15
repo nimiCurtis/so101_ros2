@@ -6,5 +6,5 @@ so101_leader_ros2_bridge:
     use_degrees: true
     # max_relative_target: 10 # default is none
     disable_torque_on_disconnect: true
-    publish_rate: 30.0
+    publish_rate: 50.0
 
