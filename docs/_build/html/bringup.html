@@ -48,7 +48,8 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Bring-up</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#real-hardware">Real hardware</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#teleoperation-bring-up-real-hardware">Teleoperation bring-up (real hardware)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#standalone-arm-bring-up">Standalone arm bring-up</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#simulation">Simulation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#moveit-integration">MoveIt integration</a></li>
 </ul>
@@ -84,36 +85,43 @@
              
   <section id="bring-up">
 <h1>Bring-up<a class="headerlink" href="#bring-up" title="Link to this heading"></a></h1>
-<section id="real-hardware">
-<h2>Real hardware<a class="headerlink" href="#real-hardware" title="Link to this heading"></a></h2>
-<p>Use <code class="docutils literal notranslate"><span class="pre">so101_bringup/launch/so101_robot.launch.py</span></code> to start either the follower
-or leader hardware stack. The launch file exposes the <code class="docutils literal notranslate"><span class="pre">type</span></code> argument to pick
-the robot role and forwards the <code class="docutils literal notranslate"><span class="pre">model</span></code> and <code class="docutils literal notranslate"><span class="pre">display</span></code> options to the
-underlying description launch files. For example, to start the follower arm with
-RViz:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ros2</span> <span class="n">launch</span> <span class="n">so101_bringup</span> <span class="n">so101_robot</span><span class="o">.</span><span class="n">launch</span><span class="o">.</span><span class="n">py</span> <span class="nb">type</span><span class="o">:=</span><span class="n">follower</span> <span class="n">display</span><span class="o">:=</span><span class="n">true</span>
+<section id="teleoperation-bring-up-real-hardware">
+<h2>Teleoperation bring-up (real hardware)<a class="headerlink" href="#teleoperation-bring-up-real-hardware" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">so101_bringup/launch/so101_teleoperate.launch.py</span></code> is the primary entry point
+for running both arms in tandem. It launches the leader bridge first, waits for
+the follower bridge to connect, starts cameras when in real mode and optionally
+opens RViz after the controllers are ready:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ros2</span> <span class="n">launch</span> <span class="n">so101_bringup</span> <span class="n">so101_teleoperate</span><span class="o">.</span><span class="n">launch</span><span class="o">.</span><span class="n">py</span> <span class="n">mode</span><span class="o">:=</span><span class="n">real</span> <span class="n">display</span><span class="o">:=</span><span class="n">true</span>
 </pre></div>
 </div>
-<p>When <code class="docutils literal notranslate"><span class="pre">type:=follower</span></code> is selected the launch file loads
-<code class="docutils literal notranslate"><span class="pre">include/follower.launch.py</span></code> which in turn brings up the robot state publisher
-for the real hardware, the Python bridge node and the ros2_control controller
-manager with timed spawners for the arm and gripper controllers. Selecting
-<code class="docutils literal notranslate"><span class="pre">type:=leader</span></code> activates the analogous stack defined in
-<code class="docutils literal notranslate"><span class="pre">include/leader.launch.py</span></code>.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">display_config</span></code> argument may be used to pick a custom RViz configuration
-and <code class="docutils literal notranslate"><span class="pre">model</span></code> can be set to an alternative URDF if needed. For setups with
-cameras, <code class="docutils literal notranslate"><span class="pre">so101_robot_with_cameras.launch.py</span></code> extends the bring-up with the USB
-camera pipeline before optionally launching RViz.</p>
+<p>Internally the launch file reuses <code class="docutils literal notranslate"><span class="pre">include/leader.launch.py</span></code> and
+<code class="docutils literal notranslate"><span class="pre">include/follower.launch.py</span></code> for the hardware bring-up, plus
+<code class="docutils literal notranslate"><span class="pre">include/camera.launch.py</span></code> when cameras are enabled. The teleoperation
+component is injected into a multithreaded container once both bridges publish
+joint states. Use the <code class="docutils literal notranslate"><span class="pre">display_config</span></code> argument to select a custom RViz
+configuration if desired.</p>
+</section>
+<section id="standalone-arm-bring-up">
+<h2>Standalone arm bring-up<a class="headerlink" href="#standalone-arm-bring-up" title="Link to this heading"></a></h2>
+<p>When you only need one arm, <code class="docutils literal notranslate"><span class="pre">so101_bringup/launch/so101_robot.launch.py</span></code> can
+start a single stack. Set <code class="docutils literal notranslate"><span class="pre">type:=leader</span></code> or <code class="docutils literal notranslate"><span class="pre">type:=follower</span></code> and optionally
+<code class="docutils literal notranslate"><span class="pre">display:=true</span></code> to launch RViz. The launch file forwards the <code class="docutils literal notranslate"><span class="pre">model</span></code> and
+<code class="docutils literal notranslate"><span class="pre">display_config</span></code> arguments to the description package. A companion launch file
+<code class="docutils literal notranslate"><span class="pre">so101_robot_with_cameras.launch.py</span></code> adds the USB camera pipeline.</p>
 </section>
 <section id="simulation">
 <h2>Simulation<a class="headerlink" href="#simulation" title="Link to this heading"></a></h2>
-<p>Gazebo bring-up is provided by <code class="docutils literal notranslate"><span class="pre">so101_bringup/launch/so101_sim_gazebo.launch.py</span></code>.
-The launch file forwards the <code class="docutils literal notranslate"><span class="pre">model</span></code> argument to the robot description and can
-start RViz when <code class="docutils literal notranslate"><span class="pre">display:=true</span></code>. Internally it loads
-<code class="docutils literal notranslate"><span class="pre">include/sim_gazebo.launch.py</span></code> which spawns the robot state publisher in
-simulation mode, launches the Gazebo environment from <code class="docutils literal notranslate"><span class="pre">so101_sim</span></code> and spawns
-the follower ros2_control controllers so that planning and teleoperation stacks
-see the same interfaces as the hardware.</p>
+<p>The teleoperation launch file also supports Gazebo simulation via <code class="docutils literal notranslate"><span class="pre">mode:=gazebo</span></code>.
+It reuses <code class="docutils literal notranslate"><span class="pre">include/sim_gazebo.launch.py</span></code> to bring up the simulated follower
+robot, ros2_control controllers and Gazebo environment from <code class="docutils literal notranslate"><span class="pre">so101_sim</span></code> before
+loading the teleoperation component:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ros2</span> <span class="n">launch</span> <span class="n">so101_bringup</span> <span class="n">so101_teleoperate</span><span class="o">.</span><span class="n">launch</span><span class="o">.</span><span class="n">py</span> <span class="n">mode</span><span class="o">:=</span><span class="n">gazebo</span> <span class="n">display</span><span class="o">:=</span><span class="n">true</span>
+</pre></div>
+</div>
+<p>For targeted simulation bring-up without teleoperation, use
+<code class="docutils literal notranslate"><span class="pre">so101_bringup/launch/so101_sim_gazebo.launch.py</span></code> directly. It forwards the
+<code class="docutils literal notranslate"><span class="pre">model</span></code> argument to the robot description and spawns the controllers required
+for MoveIt and ros2_control integrations.</p>
 </section>
 <section id="moveit-integration">
 <h2>MoveIt integration<a class="headerlink" href="#moveit-integration" title="Link to this heading"></a></h2>
