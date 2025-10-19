@@ -276,7 +276,10 @@ same hooks on pushes to `main` and `dev`.
 
 ## Roadmap
 
+- [ ] Add recording keyborad commander node for sdr
+- [ ] Check refactored branch for no sim pkg
+- [ ] Refactor launch configuration for "mode" arg
 - [ ] Investigate the MoveIt "No Planning Library Loaded" warning and refactor the configuration
-- [ ] General code clean-up and API documentation
-- [ ] Integrate the IsaacSim/Lab pipeline end-to-end
 - [ ] Harden Gazebo teleoperation to match the hardware workflow
+- [ ] Check and fix Github actions workflow
+- [ ] General code clean-up and API documentation
