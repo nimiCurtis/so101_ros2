@@ -279,6 +279,7 @@ same hooks on pushes to `main` and `dev`.
 - [ ] Add recording keyborad commander node for sdr
 - [ ] Check refactored branch for no sim pkg
 - [ ] Refactor launch configuration for "mode" arg
+- [ ] rw_rate > update_rate
 - [ ] Investigate the MoveIt "No Planning Library Loaded" warning and refactor the configuration
 - [ ] Harden Gazebo teleoperation to match the hardware workflow
 - [ ] Check and fix Github actions workflow
