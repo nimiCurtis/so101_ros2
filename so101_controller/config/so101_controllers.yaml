@@ -2,7 +2,7 @@
 /follower:
   controller_manager:
     ros__parameters:
-      update_rate: 30  # Hz
+      update_rate: 40  # Hz
 
       arm_controller:
         type: joint_trajectory_controller/JointTrajectoryController
@@ -14,7 +14,9 @@
         type: joint_state_broadcaster/JointStateBroadcaster
 
   arm_controller:
+  
     ros__parameters:
+      update_rate: 40
       type: joint_trajectory_controller/JointTrajectoryController
       joints:
         - shoulder_pan
@@ -35,6 +37,10 @@
         elbow_flex:    {p: 0.0, i: 0.0, d: 0.0}
         wrist_flex:    {p: 0.0, i: 0.0, d: 0.0}
         wrist_roll:    {p: 0.0, i: 0.0, d: 0.0}
+      
+        # --- HERE ARE THE PARAMETERS ---
+      state_publish_rate: 30.0  # <-- Change this to your desired value
+      action_monitor_rate: 30.0 # <-- Change this to your desired value
         
   gripper_controller:
     ros__parameters:
@@ -47,7 +53,7 @@
 /leader:
   controller_manager:
     ros__parameters:
-      update_rate: 30  # Hz
+      update_rate: 40  # Hz
 
       joint_state_broadcaster:
         type: joint_state_broadcaster/JointStateBroadcaster
