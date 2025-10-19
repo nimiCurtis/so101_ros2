@@ -38,7 +38,7 @@
         wrist_flex:    {p: 0.0, i: 0.0, d: 0.0}
         wrist_roll:    {p: 0.0, i: 0.0, d: 0.0}
       
-        # --- HERE ARE THE PARAMETERS ---
+      # --- HERE ARE THE PARAMETERS ---
       state_publish_rate: 30.0  # <-- Change this to your desired value
       action_monitor_rate: 30.0 # <-- Change this to your desired value
         
