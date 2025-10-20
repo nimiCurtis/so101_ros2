@@ -52,7 +52,10 @@ def generate_launch_description():
                     ),
                 ],
                 extra_arguments=[
-                    {"use_intra_process_comms": True, "use_sim_time": mode == "gazebo" or mode == "isaac"}
+                    {
+                        "use_intra_process_comms": True,
+                        "use_sim_time": mode == "gazebo" or mode == "isaac",
+                    }
                 ],
             ),
         ],

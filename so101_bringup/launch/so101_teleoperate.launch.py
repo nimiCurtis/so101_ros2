@@ -23,10 +23,15 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction, LogInfo
+from launch.actions import (
+    DeclareLaunchArgument,
+    IncludeLaunchDescription,
+    LogInfo,
+    TimerAction,
+)
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, EqualsSubstitution
+from launch.substitutions import EqualsSubstitution, LaunchConfiguration
 
 
 def generate_launch_description():
@@ -80,15 +85,13 @@ def generate_launch_description():
     mode_log = LogInfo(msg=["[TELEOP LAUNCH] Mode is set to: ", mode])
     actions.append(mode_log)
 
-
-
     # Launch follower - ONLY in real mode
     follower_log = LogInfo(
         msg="[TELEOP LAUNCH] Launching REAL follower",
-        condition=IfCondition(EqualsSubstitution(mode, "real"))
+        condition=IfCondition(EqualsSubstitution(mode, "real")),
     )
     actions.append(follower_log)
-    
+
     follower_robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(bringup_pkg, "launch", "include", "follower.launch.py")
@@ -104,10 +107,10 @@ def generate_launch_description():
     # Include cameras - ONLY in real mode
     camera_log = LogInfo(
         msg="[TELEOP LAUNCH] Launching cameras",
-        condition=IfCondition(EqualsSubstitution(mode, "real"))
+        condition=IfCondition(EqualsSubstitution(mode, "real")),
     )
     actions.append(camera_log)
-    
+
     cameras_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(bringup_pkg, "launch", "include", "camera.launch.py")
@@ -119,10 +122,10 @@ def generate_launch_description():
     # Include sim_gazebo.launch ONLY if mode == "gazebo"
     gazebo_log = LogInfo(
         msg="[TELEOP LAUNCH] Launching Gazebo simulation",
-        condition=IfCondition(EqualsSubstitution(mode, "gazebo"))
+        condition=IfCondition(EqualsSubstitution(mode, "gazebo")),
     )
     actions.append(gazebo_log)
-    
+
     sim_gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(bringup_pkg, "launch", "include", "sim_gazebo.launch.py")
@@ -138,10 +141,10 @@ def generate_launch_description():
     # Include sim_isaac.launch ONLY if mode == "isaac"
     isaac_log = LogInfo(
         msg="[TELEOP LAUNCH] Launching Isaac simulation",
-        condition=IfCondition(EqualsSubstitution(mode, "isaac"))
+        condition=IfCondition(EqualsSubstitution(mode, "isaac")),
     )
     actions.append(isaac_log)
-    
+
     sim_isaac_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(bringup_pkg, "launch", "include", "sim_isaac.launch.py")
@@ -154,8 +157,7 @@ def generate_launch_description():
     )
     actions.append(sim_isaac_launch)
 
-
-        # Launch leader - ALWAYS (in real mode)
+    # Launch leader - ALWAYS (in real mode)
     leader_robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(bringup_pkg, "launch", "include", "leader.launch.py")

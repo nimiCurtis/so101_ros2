@@ -26,8 +26,8 @@ from launch.substitutions import (
     Command,
     FindExecutable,
     LaunchConfiguration,
-    TextSubstitution,
     PathJoinSubstitution,
+    TextSubstitution,
 )
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -78,8 +78,12 @@ def generate_launch_description():
         name="world_to_base_link_publisher",
         namespace=robot_type,
         arguments=[
-            "0", "0", "0",  # x y z
-            "0", "0", "0",  # roll pitch yaw (or qx qy qz qw)
+            "0",
+            "0",
+            "0",  # x y z
+            "0",
+            "0",
+            "0",  # roll pitch yaw (or qx qy qz qw)
             "world",  # parent frame
             [robot_type, TextSubstitution(text="/base_link")],  # child frame
         ],
