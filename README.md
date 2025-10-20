@@ -276,11 +276,12 @@ same hooks on pushes to `main` and `dev`.
 
 ## Roadmap
 
-- [ ] Add recording keyborad commander node for sdr
+- [x] Add recording keyboard commander node for SDR
 - [ ] Check refactored branch for no sim pkg
 - [ ] Refactor launch configuration for "mode" arg
-- [ ] rw_rate > update_rate
+- [ ] Ensure `rw_rate > update_rate`
 - [ ] Investigate the MoveIt "No Planning Library Loaded" warning and refactor the configuration
 - [ ] Harden Gazebo teleoperation to match the hardware workflow
-- [ ] Check and fix Github actions workflow
-- [ ] General code clean-up and API documentation
+- [ ] Create rviz display config for each mode
+- [ ] Check and fix GitHub Actions workflow
+- [ ] General code clean-up and documentation
