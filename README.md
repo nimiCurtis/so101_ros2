@@ -286,3 +286,4 @@ same hooks on pushes to `main` and `dev`.
 - [ ] Create rviz display config for each mode
 - [ ] Check and fix GitHub Actions workflow
 - [ ] General code clean-up and documentation
+- [ ] Add realsense top camera
