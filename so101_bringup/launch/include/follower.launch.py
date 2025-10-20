@@ -23,7 +23,7 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, TimerAction
+from launch.actions import IncludeLaunchDescription, TimerAction, GroupAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 
@@ -37,17 +37,20 @@ def generate_launch_description():
 
     model = LaunchConfiguration("model")
 
-    # Include RSP with sim settings
-    rsp_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(description_pkg, "launch", "rsp.launch.py")
-        ),
-        launch_arguments={
-            "model": model,
-            "mode": "real",
-            "use_sim": "false",
-            "type": "follower",
-        }.items(),
+    follower_rsp_group = GroupAction(
+        scoped=True,  
+        actions=[
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    os.path.join(description_pkg, "launch", "rsp.launch.py")
+                ),
+                launch_arguments={
+                    "model": model,
+                    "mode": "real",   # leader always hardware
+                    "type": "follower",
+                }.items(),
+            ),
+        ],
     )
 
     # Include robot ros2 bridge
@@ -84,7 +87,7 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
-            rsp_launch,
+            follower_rsp_group,
             robot_launch,
             delayed_controller_manager,
             delayed_spawn_controllers,

@@ -69,93 +69,29 @@ def generate_launch_description():
     )
     args.append(model_arg)
 
-    mode_arg = DeclareLaunchArgument(
-        "mode",
+    teleop_mode_arg = DeclareLaunchArgument(
+        "teleop_mode",
         default_value="real",
         description="Execution mode: real, gazebo, isaac",
     )
-    args.append(mode_arg)
+    args.append(teleop_mode_arg)
 
     model = LaunchConfiguration("model")
     display_config = LaunchConfiguration("display_config")
     display = LaunchConfiguration("display")
-    mode = LaunchConfiguration("mode")
+    teleop_mode = LaunchConfiguration("teleop_mode")
 
     # Debug: Log the mode
-    mode_log = LogInfo(msg=["[TELEOP LAUNCH] Mode is set to: ", mode])
+    mode_log = LogInfo(msg=["[TELEOP LAUNCH] Mode is set to: ", teleop_mode])
     actions.append(mode_log)
 
     # Launch follower - ONLY in real mode
     follower_log = LogInfo(
         msg="[TELEOP LAUNCH] Launching REAL follower",
-        condition=IfCondition(EqualsSubstitution(mode, "real")),
+        condition=IfCondition(EqualsSubstitution(teleop_mode, "real")),
     )
     actions.append(follower_log)
 
-    follower_robot_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(bringup_pkg, "launch", "include", "follower.launch.py")
-        ),
-        launch_arguments={
-            "model": model,
-            "use_sim_time": "false",
-        }.items(),
-        condition=IfCondition(EqualsSubstitution(mode, "real")),
-    )
-    actions.append(follower_robot_launch)
-
-    # Include cameras - ONLY in real mode
-    camera_log = LogInfo(
-        msg="[TELEOP LAUNCH] Launching cameras",
-        condition=IfCondition(EqualsSubstitution(mode, "real")),
-    )
-    actions.append(camera_log)
-
-    cameras_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(bringup_pkg, "launch", "include", "camera.launch.py")
-        ),
-        condition=IfCondition(EqualsSubstitution(mode, "real")),
-    )
-    actions.append(cameras_launch)
-
-    # Include sim_gazebo.launch ONLY if mode == "gazebo"
-    gazebo_log = LogInfo(
-        msg="[TELEOP LAUNCH] Launching Gazebo simulation",
-        condition=IfCondition(EqualsSubstitution(mode, "gazebo")),
-    )
-    actions.append(gazebo_log)
-
-    sim_gazebo_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(bringup_pkg, "launch", "include", "sim_gazebo.launch.py")
-        ),
-        launch_arguments={
-            "model": model,
-            "display_config": display_config,
-        }.items(),
-        condition=IfCondition(EqualsSubstitution(mode, "gazebo")),
-    )
-    actions.append(sim_gazebo_launch)
-
-    # Include sim_isaac.launch ONLY if mode == "isaac"
-    isaac_log = LogInfo(
-        msg="[TELEOP LAUNCH] Launching Isaac simulation",
-        condition=IfCondition(EqualsSubstitution(mode, "isaac")),
-    )
-    actions.append(isaac_log)
-
-    sim_isaac_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(bringup_pkg, "launch", "include", "sim_isaac.launch.py")
-        ),
-        launch_arguments={
-            "model": model,
-            "display_config": display_config,
-        }.items(),
-        condition=IfCondition(EqualsSubstitution(mode, "isaac")),
-    )
-    actions.append(sim_isaac_launch)
 
     # Launch leader - ALWAYS (in real mode)
     leader_robot_launch = IncludeLaunchDescription(
@@ -167,7 +103,75 @@ def generate_launch_description():
             "use_sim_time": "false",  # Leader always uses real time
         }.items(),
     )
+    # delayed_leader_launch = TimerAction(period=8.0, actions=[leader_robot_launch])
     actions.append(leader_robot_launch)
+    
+    follower_robot_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(bringup_pkg, "launch", "include", "follower.launch.py")
+        ),
+        launch_arguments={
+            "model": model,
+            "use_sim_time": "false",
+        }.items(),
+        condition=IfCondition(EqualsSubstitution(teleop_mode, "real")),
+    )
+    delayed_follower_launch = TimerAction(period=5.0, actions=[follower_robot_launch], condition=IfCondition(EqualsSubstitution(teleop_mode, "real")))
+    actions.append(delayed_follower_launch)
+
+    # Include cameras - ONLY in real mode
+    camera_log = LogInfo(
+        msg="[TELEOP LAUNCH] Launching cameras",
+        condition=IfCondition(EqualsSubstitution(teleop_mode, "real")),
+    )
+    actions.append(camera_log)
+
+    cameras_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(bringup_pkg, "launch", "include", "camera.launch.py")
+        ),
+        condition=IfCondition(EqualsSubstitution(teleop_mode, "real")),
+    )
+    actions.append(cameras_launch)
+
+    # Include sim_gazebo.launch ONLY if teleop_mode == "gazebo"
+    gazebo_log = LogInfo(
+        msg="[TELEOP LAUNCH] Launching Gazebo simulation",
+        condition=IfCondition(EqualsSubstitution(teleop_mode, "gazebo")),
+    )
+    actions.append(gazebo_log)
+
+    sim_gazebo_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(bringup_pkg, "launch", "include", "sim_gazebo.launch.py")
+        ),
+        launch_arguments={
+            "model": model,
+            "display_config": display_config,
+        }.items(),
+        condition=IfCondition(EqualsSubstitution(teleop_mode, "gazebo")),
+    )
+    actions.append(sim_gazebo_launch)
+
+    # Include sim_isaac.launch ONLY if teleop_mode == "isaac"
+    isaac_log = LogInfo(
+        msg="[TELEOP LAUNCH] Launching Isaac simulation",
+        condition=IfCondition(EqualsSubstitution(teleop_mode, "isaac")),
+    )
+    actions.append(isaac_log)
+
+    sim_isaac_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(bringup_pkg, "launch", "include", "sim_isaac.launch.py")
+        ),
+        launch_arguments={
+            "model": model,
+            "display_config": display_config,
+        }.items(),
+        condition=IfCondition(EqualsSubstitution(teleop_mode, "isaac")),
+    )
+    delayed_sim_isaac_launch = TimerAction(period=5.0, actions=[sim_isaac_launch], condition=IfCondition(EqualsSubstitution(teleop_mode, "isaac")))
+    actions.append(delayed_sim_isaac_launch)
 
     # Include display.launch.py
     display_launch = IncludeLaunchDescription(
@@ -194,7 +198,7 @@ def generate_launch_description():
             )
         ),
         launch_arguments={
-            "mode": mode,
+            "mode": teleop_mode,
         }.items(),
     )
 

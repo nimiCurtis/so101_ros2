@@ -21,6 +21,7 @@
 # SOFTWARE.
 
 
+from statistics import mode
 from launch import LaunchDescription
 from launch.substitutions import (
     Command,
@@ -28,19 +29,25 @@ from launch.substitutions import (
     LaunchConfiguration,
     PathJoinSubstitution,
     TextSubstitution,
+    PythonExpression, 
+    EqualsSubstitution
+    
 )
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
-
+from launch.conditions import IfCondition
 
 def generate_launch_description():
 
     # Launch configurations
     model = LaunchConfiguration("model")
     mode = LaunchConfiguration("mode")
-    use_sim = LaunchConfiguration("use_sim")
     robot_type = LaunchConfiguration("type")
 
+    # Determine use_sim based on mode
+    use_sim = PythonExpression(["'", mode, "' != 'real'"])
+
+    # Robot description
     robot_description = ParameterValue(
         Command(
             [
@@ -55,6 +62,7 @@ def generate_launch_description():
         value_type=str,
     )
 
+    # Robot state publisher node
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
