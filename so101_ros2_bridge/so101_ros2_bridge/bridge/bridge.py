@@ -28,7 +28,14 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 import rclpy
+from builtin_interfaces.msg import Duration
 from rclpy.node import Node
+from rclpy.qos import (
+    QoSDurabilityPolicy,
+    QoSHistoryPolicy,
+    QoSProfile,
+    QoSReliabilityPolicy,
+)
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Float64MultiArray  # Import message type for commands
 
@@ -67,8 +74,6 @@ class SO101ROS2Bridge(Node, ABC):
         self._timeout = 5.0
         self._alive_thread = threading.Thread(target=self._alive, daemon=True)
 
-        self.joint_pub = self.create_publisher(JointState, 'joint_states_raw', 10)
-
         # Pre-allocate the message and its internal lists
         self._joint_state_msg = JointState()
         self._joint_state_msg.name = self.JOINT_NAMES
@@ -76,6 +81,20 @@ class SO101ROS2Bridge(Node, ABC):
         self._velocities = [0.0] * len(self.JOINT_NAMES)
 
         rate = params.get("publish_rate", 30.0)
+        # QoS for joint state publisher
+        js_deadline_ns = int(1e9 / rate)  # expected period
+        self._qos_joint_states = QoSProfile(
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=5,  # small queue; we only care about freshest
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,  # don't block publisher
+            durability=QoSDurabilityPolicy.VOLATILE,
+        )
+        self._qos_joint_states.deadline = Duration(nanoseconds=js_deadline_ns)
+
+        self.joint_pub = self.create_publisher(
+            JointState, 'joint_states_raw', self._qos_joint_states
+        )
+
         self.timer = self.create_timer(1.0 / rate, self.publish_joint_states)
 
         # Register the robot type in the factory registry
@@ -225,12 +244,21 @@ class FollowerBridge(SO101ROS2Bridge):
             raise TypeError(
                 f"Expected robot type SO101Follower, got {type(self.robot).__name__}"
             )
+
+        # QoS for joint command subscriber
+        qos_joint_cmds = QoSProfile(
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=1,  # only latest command matters
+            reliability=QoSReliabilityPolicy.RELIABLE,  # ensure delivery
+            durability=QoSDurabilityPolicy.VOLATILE,
+        )
+
         # Subscribe to commands from the ros2_control hardware interface bridge
         self.create_subscription(
             Float64MultiArray,
             'joint_commands',  # This topic should match the publisher in the C++ bridge
             self.command_callback,
-            10,
+            qos_joint_cmds,
         )
         self.get_logger().info("SO101 Follower ROS2 Bridge initialized.")
 

@@ -105,9 +105,12 @@ Once you can teleoperate so101 leader-follower properly it is time to bridge to 
     cd ~/ros2_ws/src
     git clone --recurse-submodules git@github.com:nimiCurtis/so101_ros2.git
     cd ..
+    sudo apt update
+    rosdep update
     rosdep install --from-paths src --ignore-src -r -y
     colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
-    source install/setup.bash
+    echo source $(pwd)/install/local_setup.bash >> ~/.bashrc # automatically source the installation in every new bash (optional)
+    source ~/.bashrc
     ```
 
 2. Because lerebot env is managed by conda package manager, a workaround to compile the ros2 workspace and utilize the lerobot virtual env is to make a symbolic link between lerobot env to ros2_ws by:
