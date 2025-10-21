@@ -45,26 +45,37 @@ namespace so101_teleop
         this->get_logger(), "Creating gripper action client for: '%s'",
         follower_gripper_action.c_str());
 
-    // === Create publishers and subscribers ===
+    // --- QoS profiles ---
 
+    // 1) Leader JointState subscriber: low latency, drop rather than block
+    rclcpp::QoS js_sub_qos{rclcpp::KeepLast(1)};
+    js_sub_qos.best_effort()
+        .durability_volatile();
+
+    // 2) Follower arm JointTrajectory publisher: reliable delivery to controller
+    rclcpp::QoS traj_pub_qos{rclcpp::KeepLast(2)};
+    traj_pub_qos.reliable()
+        .durability_volatile();
+
+    // === Create publishers and subscribers ===
     // Publisher for the arm trajectory
     trajectory_pub_ =
-        this->create_publisher<trajectory_msgs::msg::JointTrajectory>(follower_arm_topic, 10);
+        this->create_publisher<trajectory_msgs::msg::JointTrajectory>(follower_arm_topic, traj_pub_qos);
 
-    // Action client for the gripper
+    // Create action client (note: rclcpp_action, not clcpp_action)
     gripper_action_client_ = rclcpp_action::create_client<control_msgs::action::GripperCommand>(
         this,
         follower_gripper_action);
-    
+
     // === NEW: Declare and get the gripper deadband parameter ===
     gripper_deadband_ = this->declare_parameter<double>("gripper_deadband", 0.01);
     RCLCPP_INFO(this->get_logger(), "Using gripper deadband of: %.4f radians", gripper_deadband_);
 
     // Subscriber for the leader's joint states
     joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
-        leader_topic, 10,
+        leader_topic, js_sub_qos,
         std::bind(&LeaderTeleopComponent::joint_state_callback, this, std::placeholders::_1));
-    
+
     RCLCPP_INFO(this->get_logger(), "Component successfully initialized.");
   }
 
@@ -113,7 +124,7 @@ namespace so101_teleop
 
     // === Handle Arm Teleop ===
     // Clear and reuse the pre-allocated message
-    trajectory_msg_.points.clear(); 
+    trajectory_msg_.points.clear();
     trajectory_msg_.header.stamp = this->get_clock()->now();
     trajectory_msg_.joint_names = ordered_arm_joint_names_;
 
@@ -132,7 +143,6 @@ namespace so101_teleop
     trajectory_msg_.points.push_back(point);
     trajectory_pub_->publish(trajectory_msg_); // Publish by const reference
 
-
     // === Handle Gripper Teleop with Deadband Logic ===
     if (leader_gripper_joint_index_.has_value())
     {
@@ -149,11 +159,11 @@ namespace so101_teleop
 
         auto goal_msg = control_msgs::action::GripperCommand::Goal();
         goal_msg.command.position = current_gripper_pos;
-        goal_msg.command.max_effort = 10.0; 
+        goal_msg.command.max_effort = 10.0;
 
         auto send_goal_options = rclcpp_action::Client<control_msgs::action::GripperCommand>::SendGoalOptions();
         gripper_action_client_->async_send_goal(goal_msg, send_goal_options);
-        
+
         // IMPORTANT: Update the last sent position
         last_gripper_goal_position_ = current_gripper_pos;
       }

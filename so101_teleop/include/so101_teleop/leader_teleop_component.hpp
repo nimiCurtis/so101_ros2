@@ -25,6 +25,9 @@
 #include <trajectory_msgs/msg/joint_trajectory.hpp>
 #include <control_msgs/action/gripper_command.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
+#include <rclcpp/qos.hpp>
+#include <rclcpp/duration.hpp>
+#include <chrono>
 #include <optional> // For std::optional
 #include <vector>
 #include <string>
@@ -74,8 +77,7 @@ namespace so101_teleop
 
     // Variables for gripper deadband logic
     double last_gripper_goal_position_;
-    double gripper_deadband_; 
-
+    double gripper_deadband_;
   };
 
 } // namespace so101_teleop
