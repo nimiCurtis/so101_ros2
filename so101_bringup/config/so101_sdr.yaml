@@ -16,3 +16,6 @@ sdr:
     topic_types: [
       "sensor_msgs/msg/JointState",
     ]
+    
+    # The task description which will be used for language model prompts for the robot's agent.
+    task: "pick and place the green cube from the table to the blue box"
