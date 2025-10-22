@@ -28,7 +28,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 import rclpy
-from builtin_interfaces.msg import Duration
+from rclpy.duration import Duration as RclpyDuration
 from rclpy.node import Node
 from rclpy.qos import (
     QoSDurabilityPolicy,
@@ -81,18 +81,9 @@ class SO101ROS2Bridge(Node, ABC):
         self._velocities = [0.0] * len(self.JOINT_NAMES)
 
         rate = params.get("publish_rate", 30.0)
-        # QoS for joint state publisher
-        js_deadline_ns = int(1e9 / rate)  # expected period
-        self._qos_joint_states = QoSProfile(
-            history=QoSHistoryPolicy.KEEP_LAST,
-            depth=5,  # small queue; we only care about freshest
-            reliability=QoSReliabilityPolicy.BEST_EFFORT,  # don't block publisher
-            durability=QoSDurabilityPolicy.VOLATILE,
-        )
-        self._qos_joint_states.deadline = Duration(nanoseconds=js_deadline_ns)
 
         self.joint_pub = self.create_publisher(
-            JointState, 'joint_states_raw', self._qos_joint_states
+            JointState, 'joint_states_raw', 10
         )
 
         self.timer = self.create_timer(1.0 / rate, self.publish_joint_states)
