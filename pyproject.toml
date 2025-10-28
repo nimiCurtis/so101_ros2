@@ -1,5 +1,6 @@
 [tool.ruff]
 line-length = 88
+extend-select = ["I"]  # enable import sorting (replaces isort)
 fix = true
 
 [tool.ruff.lint]
