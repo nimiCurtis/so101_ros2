@@ -19,7 +19,9 @@ environment for testing and development.
 
 ---
 
-## Setup Lerobot
+## Installation
+
+### Setup lerobot
 
 These docs assume that your SO101 is already assembled and all motor IDs and baud rates are set.
 
@@ -92,7 +94,7 @@ Try this tutorial from the [official link](https://huggingface.co/docs/lerobot/i
     pip install -e ".[feetech,smolvla,pi,async]"
     ```
 
-## Build so101_ros2
+### Build so101_ros2
 
 Once you can teleoperate so101 leader-follower properly it is time to bridge to ros2 workspace.
 
@@ -122,7 +124,29 @@ Once you can teleoperate so101 leader-follower properly it is time to bridge to 
     ln -s $LEROBOT_SRC $SO101BRIDGE_INSTALL_SITE_PACKAGES
     ```
 
----
+
+### Cameras
+
+This package supports the following camera types:
+
+1. **V4L USB Cameras**
+   The ROS wrapper for USB cameras should be installed automatically using `rosdep` when building the package.
+   If not, install it manually with:
+
+   ```bash
+   sudo apt install ros-humble-usb-cam
+   ```
+
+2. **Intel® RealSense™ Cameras**
+   Install the latest Intel® RealSense™ SDK 2.0 by following the *"Installing the packages"* section in the [librealsense documentation](https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md#installing-the-packages).
+   The ROS wrapper for RealSense cameras should also be installed automatically via `rosdep`.
+   If not, install it manually with:
+
+   ```bash
+   sudo apt install ros-humble-realsense2-*
+   ```
+
+--- 
 
 ## Getting Started
 
