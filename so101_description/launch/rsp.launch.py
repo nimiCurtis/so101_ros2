@@ -21,21 +21,18 @@
 # SOFTWARE.
 
 
-from statistics import mode
 from launch import LaunchDescription
 from launch.substitutions import (
     Command,
     FindExecutable,
     LaunchConfiguration,
     PathJoinSubstitution,
+    PythonExpression,
     TextSubstitution,
-    PythonExpression, 
-    EqualsSubstitution
-    
 )
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
-from launch.conditions import IfCondition
+
 
 def generate_launch_description():
 

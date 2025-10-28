@@ -92,7 +92,6 @@ def generate_launch_description():
     )
     actions.append(follower_log)
 
-
     # Launch leader - ALWAYS (in real mode)
     leader_robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -105,7 +104,7 @@ def generate_launch_description():
     )
     # delayed_leader_launch = TimerAction(period=8.0, actions=[leader_robot_launch])
     actions.append(leader_robot_launch)
-    
+
     follower_robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(bringup_pkg, "launch", "include", "follower.launch.py")
@@ -116,7 +115,11 @@ def generate_launch_description():
         }.items(),
         condition=IfCondition(EqualsSubstitution(teleop_mode, "real")),
     )
-    delayed_follower_launch = TimerAction(period=5.0, actions=[follower_robot_launch], condition=IfCondition(EqualsSubstitution(teleop_mode, "real")))
+    delayed_follower_launch = TimerAction(
+        period=5.0,
+        actions=[follower_robot_launch],
+        condition=IfCondition(EqualsSubstitution(teleop_mode, "real")),
+    )
     actions.append(delayed_follower_launch)
 
     # Include cameras - ONLY in real mode
@@ -170,7 +173,11 @@ def generate_launch_description():
         }.items(),
         condition=IfCondition(EqualsSubstitution(teleop_mode, "isaac")),
     )
-    delayed_sim_isaac_launch = TimerAction(period=5.0, actions=[sim_isaac_launch], condition=IfCondition(EqualsSubstitution(teleop_mode, "isaac")))
+    delayed_sim_isaac_launch = TimerAction(
+        period=5.0,
+        actions=[sim_isaac_launch],
+        condition=IfCondition(EqualsSubstitution(teleop_mode, "isaac")),
+    )
     actions.append(delayed_sim_isaac_launch)
 
     # Include display.launch.py

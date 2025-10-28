@@ -28,7 +28,6 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 import rclpy
-from rclpy.duration import Duration as RclpyDuration
 from rclpy.node import Node
 from rclpy.qos import (
     QoSDurabilityPolicy,
@@ -82,9 +81,7 @@ class SO101ROS2Bridge(Node, ABC):
 
         rate = params.get("publish_rate", 30.0)
 
-        self.joint_pub = self.create_publisher(
-            JointState, 'joint_states_raw', 10
-        )
+        self.joint_pub = self.create_publisher(JointState, 'joint_states_raw', 10)
 
         self.timer = self.create_timer(1.0 / rate, self.publish_joint_states)
 

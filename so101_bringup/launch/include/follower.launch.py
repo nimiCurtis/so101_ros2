@@ -23,7 +23,7 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, TimerAction, GroupAction
+from launch.actions import GroupAction, IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 
@@ -38,7 +38,7 @@ def generate_launch_description():
     model = LaunchConfiguration("model")
 
     follower_rsp_group = GroupAction(
-        scoped=True,  
+        scoped=True,
         actions=[
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
@@ -46,7 +46,7 @@ def generate_launch_description():
                 ),
                 launch_arguments={
                     "model": model,
-                    "mode": "real",   # leader always hardware
+                    "mode": "real",  # leader always hardware
                     "type": "follower",
                 }.items(),
             ),

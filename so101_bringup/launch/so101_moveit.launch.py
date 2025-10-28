@@ -78,7 +78,9 @@ def generate_launch_description():
 
     model_arg = DeclareLaunchArgument(
         "model",
-        default_value=os.path.join(description_pkg, "urdf", "so101_new_calib.urdf.xacro"),
+        default_value=os.path.join(
+            description_pkg, "urdf", "so101_new_calib.urdf.xacro"
+        ),
         description="Path to the robot xacro/urdf",
     )
     args.append(model_arg)
