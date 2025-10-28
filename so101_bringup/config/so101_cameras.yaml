@@ -1,4 +1,11 @@
 cameras:
-  - name: cam_front
-    param_path: so101_usb_cam_front.yaml
-    namespace: follower
+
+  - name: cam_front # name of camera
+    type: usb_camera # name of pkg
+    param_path: so101_usb_cam.yaml
+    namespace: follower # ns (info of cam location)
+
+  - name: cam_side # name of camera
+    type: realsense2_camera # name of pkg
+    param_path: so101_realsense.yaml
+    namespace: static # ns (info of cam location)
