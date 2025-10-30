@@ -103,15 +103,16 @@ Once you can teleoperate so101 leader-follower properly it is time to bridge to 
     **[NOTE]: Dont forget to deactivate conda environment if was opened before compilation of the ros workspace**
 
     ```bash
+    source /opt/ros/humble/setup.bash
     mkdir -p ~/ros2_ws/src
     cd ~/ros2_ws/src
-    git clone --recurse-submodules git@github.com:nimiCurtis/so101_ros2.git
+    git clone --recurse-submodules https://github.com/nimiCurtis/so101_ros2.git
     cd ..
     sudo apt update
     rosdep update
     rosdep install --from-paths src --ignore-src -r -y
     colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
-    echo source $(pwd)/install/local_setup.bash >> ~/.bashrc # automatically source the installation in every new bash (optional)
+    echo source $(pwd)/install/local_setup.bash >> ~/.bashrc 
     source ~/.bashrc
     ```
 
