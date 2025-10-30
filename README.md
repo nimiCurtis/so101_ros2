@@ -75,7 +75,7 @@ Check out [this link](https://huggingface.co/docs/lerobot/so101?calibrate_follow
 
 Try this tutorial from the [official link](https://huggingface.co/docs/lerobot/il_robots) to check env and robots are configured correctly.
 
-#### (Optional) Lerobot IsaacSim/Lab Python Env Setup
+#### (Optional) Lerobot IsaacLab Python Env Setup
 
 1. Follow the instructions of the [this link](https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/source_installation.html) to install IsaacSim 5.0 and the most updated IsaacLab.
 
@@ -84,7 +84,7 @@ Try this tutorial from the [official link](https://huggingface.co/docs/lerobot/i
 2. Activate the environment:
 
     ```bash
-    conda activate lerobot_isaac
+    conda activate lerobot_isaaclab
     ```
 
 3. Then from the lerobot directory, install the extras required for the IsaacLab
@@ -103,12 +103,15 @@ Once you can teleoperate so101 leader-follower properly it is time to bridge to 
     **[NOTE]: Dont forget to deactivate conda environment if was opened before compilation of the ros workspace**
 
     ```bash
-    source /opt/ros/humble/setup.bash
+    conda deactivate
+    echo source /opt/ros/humble/setup.bash >> ~/.bashrc 
+    source ~/.bashrc
     mkdir -p ~/ros2_ws/src
     cd ~/ros2_ws/src
     git clone --recurse-submodules https://github.com/nimiCurtis/so101_ros2.git
     cd ..
     sudo apt update
+    rosdep init
     rosdep update
     rosdep install --from-paths src --ignore-src -r -y
     colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
@@ -125,6 +128,12 @@ Once you can teleoperate so101 leader-follower properly it is time to bridge to 
     ln -s $LEROBOT_SRC $SO101BRIDGE_INSTALL_SITE_PACKAGES
     ```
 
+**3. Known Issues**
+
+  * **Potential NumPy Version Error:** You may encounter an error related to NumPy version. To fix this, please upgrade your installation with the following command:
+    ```bash
+    pip install --upgrade numpy
+    ```
 
 ### Cameras
 
@@ -278,6 +287,41 @@ TBD...
    ros2 lifecycle set /sdr deactivate
    ros2 lifecycle set /sdr shutdown
    ```
+
+
+#### Keyboard Commander Utility
+
+For manual control and testing, an `SDRKeyboardCommander` node is available. This node listens for keyboard presses and sends the corresponding lifecycle transition requests to the `/sdr` node.
+
+
+##### Running
+
+1.  In one terminal, run your `sdr` node:
+
+    ```bash
+    ros2 launch so101_bringup so101_record.launch.py
+    ```
+
+2.  In a second terminal, source your workspace and run the commander:
+
+    ```bash
+    ros2 run system_data_recorder sdr_commander
+    ```
+
+##### Controls
+
+Once the commander node is running and connected to the `/sdr` services, you can use the following keys to control the recorder:
+
+| Key | Action | Lifecycle Transition |
+| :--- | :--- | :--- |
+| **c** | Configure | `CONFIGURE` |
+| **a** | Activate | `ACTIVATE` (Starts recording) |
+| **d** | Deactivate | `DEACTIVATE` (Pauses recording) |
+| **l** | Cleanup | `CLEANUP` |
+| **s** | Shutdown | `SHUTDOWN` |
+| **g** | Get State | (Queries and prints the current state) |
+| **h** | Help | (Prints the help menu) |
+| **q** | Quit | (Shuts down the commander node) |
 
 The resulting rosbag2 dataset is stored under the `copy_destination` directory
 with the prefix defined in `bag_name_prefix`. Inspect the bag with
