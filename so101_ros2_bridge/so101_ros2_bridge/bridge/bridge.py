@@ -28,6 +28,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 import rclpy
+from cv2 import norm
 from rclpy.node import Node
 from rclpy.qos import (
     QoSDurabilityPolicy,
@@ -65,7 +66,6 @@ class SO101ROS2Bridge(Node, ABC):
         super().__init__(node_name)
         params = self.read_parameters()
         self.use_degrees = params["use_degrees"]
-        # config = self.dict_to_so101config(params)
 
         # Initialize watchdog at the background
         self._is_alive = True
@@ -136,7 +136,11 @@ class SO101ROS2Bridge(Node, ABC):
                 if joint == "gripper":
                     pos = ((obs.get(f"{joint}.pos", 0.0) - 10.0) / 100.0) * math.pi
                 else:
-                    pos = math.radians(obs.get(f"{joint}.pos", 0.0))
+                    if self.use_degrees:
+                        pos = math.radians(obs.get(f"{joint}.pos", 0.0))
+                    else:
+                        # unormalized range [-100, 100] to radians
+                        pos = (obs.get(f"{joint}.pos", 0.0) / 100.0) * math.pi
                 self._positions[i] = pos
 
             if self.last_positions is not None:
@@ -216,10 +220,15 @@ class SO101ROS2Bridge(Node, ABC):
         """
         if joint_name == "gripper":
             # Convert radian command [0, pi] to the robot's expected gripper range [10, ~110]
-            return (rad / math.pi) * 100.0 + 10.0
+            normalized = (rad / math.pi) * 100.0 + 10.0
         else:
             # Convert radians to degrees for all other joints
-            return math.degrees(rad)
+            if self.use_degrees:
+                normalized = math.degrees(rad)
+            else:
+                # Convert radians to normalized range [-100, 100]
+                normalized = (rad / math.pi) * 100.0
+        return normalized
 
 
 class FollowerBridge(SO101ROS2Bridge):
