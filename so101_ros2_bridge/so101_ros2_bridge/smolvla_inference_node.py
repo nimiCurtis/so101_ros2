@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, JointState
 from std_msgs.msg import Float32MultiArray, Float64MultiArray, MultiArrayDimension
 import numpy as np
 import torch
@@ -25,15 +25,15 @@ class SmolVLAInferenceNode(Node):
         # Declare parameters
         self.declare_parameter('model_id', 'lerobot/smolvla_base')  # Using base model (large doesn't exist)
         self.declare_parameter('camera1_topic', '/follower/cam_front/image_raw')
-        self.declare_parameter('camera2_topic', '/follower/cam_left/image_raw')
-        self.declare_parameter('camera3_topic', '/follower/cam_right/image_raw')
-        self.declare_parameter('joint_state_topic', '/follower/robot_state_publisher')
+        self.declare_parameter('camera2_topic', '/follower/cam_top1/image_raw')
+        self.declare_parameter('camera3_topic', '/follower/cam_top2/image_raw')
+        self.declare_parameter('joint_state_topic', '/isaac/isaac_joint_states')
         self.declare_parameter('action_topic', '/smolvla_inference/action')
         self.declare_parameter('action_chunk_topic', '/smolvla_inference/action_chunk')
         self.declare_parameter('task', 'Pick up the cube')
         self.declare_parameter('robot_type', 'so100')
         self.declare_parameter('use_dummy_input', False)  # Changed to False - use real topics by default
-        self.declare_parameter('publisher_rate', 4)  # Hz for action publishing
+        self.declare_parameter('publisher_rate', 2)  # Hz for action publishing
         self.declare_parameter('image_subscription_qos', 2)  # QoS depth for image subscription
         self.declare_parameter('joint_state_subscription_qos', 2)  # QoS depth for joint state subscription
 
@@ -142,7 +142,7 @@ class SmolVLAInferenceNode(Node):
             self.get_logger().info(f'Subscribing to camera3: {camera3_topic} (QoS: {image_qos})')
 
             self.joint_state_subscriber = self.create_subscription(
-                Float64MultiArray,
+                JointState,
                 joint_state_topic,
                 self.joint_state_subscriber_callback,
                 joint_state_qos
@@ -194,7 +194,8 @@ class SmolVLAInferenceNode(Node):
         self.latest_camera3_msg = msg
 
     def joint_state_subscriber_callback(self, msg):
-        self.latest_joint_state_msg = msg
+        # position, velocity, effort are all lists
+        self.latest_joint_state_msg = msg.position # Store only the positions
 
     def action_chunk_callback(self, msg):
         """
@@ -325,7 +326,7 @@ class SmolVLAInferenceNode(Node):
                 state_feature = self.input_features[f"observation.{state_key}"]
                 state_dim = state_feature.shape[0]
                 
-                robot_state_data = np.array(self.latest_joint_state_msg.data, dtype=np.float32)
+                robot_state_data = np.array(self.latest_joint_state_msg, dtype=np.float32) # remove .data
                 if robot_state_data.shape[0] != state_dim:
                     self.get_logger().error(
                         f"Joint state dimension mismatch. Expected {state_dim}, got {robot_state_data.shape[0]}"

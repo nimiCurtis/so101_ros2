@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import Image
-from std_msgs.msg import Float64MultiArray, Header
+from sensor_msgs.msg import Image, JointState
+from std_msgs.msg import Header
 import numpy as np
 import time
 
@@ -12,9 +12,10 @@ class SmolVLATestPublisher(Node):
 
         # Declare parameters
         self.declare_parameter('camera1_topic', '/follower/cam_front/image_raw')
-        self.declare_parameter('camera2_topic', '/follower/cam_left/image_raw')
-        self.declare_parameter('camera3_topic', '/follower/cam_right/image_raw')
-        self.declare_parameter('joint_state_topic', '/follower/robot_state_publisher')
+        self.declare_parameter('camera2_topic', '/follower/cam_top1/image_raw')
+        self.declare_parameter('camera3_topic', '/follower/cam_top2/image_raw')
+        # Changed default topic to match Isaac Sim
+        self.declare_parameter('joint_state_topic', '/isaac/isaac_joint_states') 
         self.declare_parameter('publish_rate', 30)  # Hz
         self.declare_parameter('image_width', 128)
         self.declare_parameter('image_height', 128)
@@ -46,12 +47,30 @@ class SmolVLATestPublisher(Node):
         self.get_logger().info(f'Publishing camera2 to: {camera2_topic}')
         self.get_logger().info(f'Publishing camera3 to: {camera3_topic}')
 
+        # --- MODIFIED PUBLISHER ---
+        # Changed message type from Float64MultiArray to JointState
         self.joint_state_publisher = self.create_publisher(
-            Float64MultiArray,
+            JointState,
             joint_state_topic,
             10
         )
         self.get_logger().info(f'Publishing joint states to: {joint_state_topic}')
+        
+        # --- ADDED JOINT NAMES ---
+        # Added joint names based on your 'ros2 topic echo' output
+        self.joint_names = [
+            'shoulder_pan', 'shoulder_lift', 'elbow_flex', 
+            'wrist_flex', 'wrist_roll', 'gripper'
+        ]
+        # Check if num_joints parameter matches the list
+        if self.num_joints != len(self.joint_names):
+            self.get_logger().warning(
+                f'num_joints parameter ({self.num_joints}) does not match '
+                f'hardcoded joint_names list ({len(self.joint_names)}). '
+                f'Using {len(self.joint_names)}.'
+            )
+            self.num_joints = len(self.joint_names)
+
 
         # Timer for publishing
         timer_period = 1.0 / publish_rate # seconds (30 Hz)
@@ -134,30 +153,48 @@ class SmolVLATestPublisher(Node):
         
         return img
 
+    # --- MODIFIED JOINT STATE GENERATION ---
     def generate_joint_states(self):
-        """Generate test joint states based on noise type."""
+        """Generate test joint states (pos, vel, eff) based on noise type."""
         if self.noise_type == 'random':
-            # Random joint positions
-            joints = np.random.uniform(
+            # Random joint positions, velocities, and efforts
+            positions = np.random.uniform(
                 -self.joint_noise_level,
                 self.joint_noise_level,
                 self.num_joints
             )
+            velocities = np.random.uniform(-1.0, 1.0, self.num_joints)
+            efforts = np.random.uniform(-0.5, 0.5, self.num_joints)
+
         elif self.noise_type in ['sine', 'colored']:
-            # Sine wave joint positions
+            # Sine wave joint positions, velocities (cosine), and efforts
             t = self.frame_count * 0.05
-            joints = np.array([
+            positions = np.array([
                 np.sin(t + i * np.pi / 3) * self.joint_noise_level
                 for i in range(self.num_joints)
             ])
+            velocities = np.array([
+                np.cos(t + i * np.pi / 3) * 0.5 # Use cosine for variety
+                for i in range(self.num_joints)
+            ])
+            efforts = np.array([
+                np.sin(t * 2 + i * np.pi / 3) * 0.1 # Different freq/amplitude
+                for i in range(self.num_joints)
+            ])
+        
         elif self.noise_type == 'static':
             # Static zero positions
-            joints = np.zeros(self.num_joints)
+            positions = np.zeros(self.num_joints)
+            velocities = np.zeros(self.num_joints)
+            efforts = np.zeros(self.num_joints)
+
         else:
             # Default to zeros
-            joints = np.zeros(self.num_joints)
+            positions = np.zeros(self.num_joints)
+            velocities = np.zeros(self.num_joints)
+            efforts = np.zeros(self.num_joints)
         
-        return joints
+        return positions, velocities, efforts
 
     def create_image_msg(self, img, camera_id):
         """Create a ROS Image message from numpy array."""
@@ -175,20 +212,43 @@ class SmolVLATestPublisher(Node):
 
     def timer_callback(self):
         """Publish test data at regular intervals."""
+        current_stamp = self.get_clock().now().to_msg()
+
         # Generate and publish images for all 3 cameras
         img1 = self.generate_image(camera_id=0)
         img2 = self.generate_image(camera_id=1)
         img3 = self.generate_image(camera_id=2)
         
-        self.camera1_publisher.publish(self.create_image_msg(img1, 0))
-        self.camera2_publisher.publish(self.create_image_msg(img2, 1))
-        self.camera3_publisher.publish(self.create_image_msg(img3, 2))
-
-        # Generate and publish joint states
-        joints = self.generate_joint_states()
+        # Create and publish image messages
+        img_msg1 = self.create_image_msg(img1, 0)
+        img_msg2 = self.create_image_msg(img2, 1)
+        img_msg3 = self.create_image_msg(img3, 2)
         
-        joint_msg = Float64MultiArray()
-        joint_msg.data = joints.tolist()
+        # Set all stamps to be the same for this cycle
+        img_msg1.header.stamp = current_stamp
+        img_msg2.header.stamp = current_stamp
+        img_msg3.header.stamp = current_stamp
+
+        self.camera1_publisher.publish(img_msg1)
+        self.camera2_publisher.publish(img_msg2)
+        self.camera3_publisher.publish(img_msg3)
+
+
+        # --- MODIFIED JOINT STATE MESSAGE CREATION ---
+        
+        # Generate joint state data
+        positions, velocities, efforts = self.generate_joint_states()
+        
+        # Create the JointState message
+        joint_msg = JointState()
+        joint_msg.header = Header()
+        joint_msg.header.stamp = current_stamp # Use same stamp as images
+        joint_msg.header.frame_id = '' # As per your example
+        
+        joint_msg.name = self.joint_names
+        joint_msg.position = positions.tolist()
+        joint_msg.velocity = velocities.tolist()
+        joint_msg.effort = efforts.tolist()
         
         self.joint_state_publisher.publish(joint_msg)
 
@@ -200,7 +260,8 @@ class SmolVLATestPublisher(Node):
             self.get_logger().info(
                 f'Published {self.frame_count} frames (x3 cameras) | '
                 f'Average rate: {actual_rate:.1f} Hz | '
-                f'Sample joints: [{joints[0]:.3f}, {joints[1]:.3f}, {joints[2]:.3f}, ...]'
+                # Updated log to show position
+                f'Sample position: [{positions[0]:.3f}, {positions[1]:.3f}, ...]'
             )
 
 def main(args=None):
