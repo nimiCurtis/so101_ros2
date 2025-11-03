@@ -495,7 +495,7 @@ class SmolVLAInferenceNode(Node):
             total_inference_time = (time.time() - inference_start_time) * 1000
             
             self.get_logger().info(
-                f'Action: {action_msg.data} | '
+                # f'Action: {action_msg.data} | '
                 f'Chunk size: {len(action_chunk_msg.data)} | '
                 f'Total: {total_inference_time:.1f}ms '
                 f'(frame: {frame_build_time:.1f}ms, '

@@ -2,7 +2,7 @@ so101_leader_ros2_bridge:
   ros__parameters:
     port: "/dev/ttyACM0"
     id: "leader"
-    # calibration_dir: <abs path to your calibration dir>
+    calibration_dir: "/home/anton/ros2_ws/src/so101_ros2/so101_ros2_bridge/config/calibration/leader.json"
     use_degrees: true
     # max_relative_target: 10 # default is none
     disable_torque_on_disconnect: true
