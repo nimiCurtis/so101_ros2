@@ -16,10 +16,10 @@ class SmolVLATestPublisher(Node):
         self.declare_parameter('camera3_topic', '/follower/cam_right/image_raw')
         self.declare_parameter('joint_state_topic', '/follower/robot_state_publisher')
         self.declare_parameter('publish_rate', 30)  # Hz
-        self.declare_parameter('image_width', 640)
-        self.declare_parameter('image_height', 480)
+        self.declare_parameter('image_width', 128)
+        self.declare_parameter('image_height', 128)
         self.declare_parameter('num_joints', 6)
-        self.declare_parameter('noise_type', 'random')  # 'random', 'sine', 'static', 'colored'
+        self.declare_parameter('noise_type', 'static')  # 'random', 'sine', 'static', 'colored'
         self.declare_parameter('image_noise_level', 50)  # 0-255 for random noise amplitude
         self.declare_parameter('joint_noise_level', 0.5)  # radians for random noise amplitude
         self.declare_parameter('different_cameras', True)  # Make each camera different
