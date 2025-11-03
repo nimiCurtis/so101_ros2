@@ -1,0 +1,12 @@
+source;share/so101_smolvla_inference/hook/path.ps1
+source;share/so101_smolvla_inference/hook/path.dsv
+source;share/so101_smolvla_inference/hook/path.sh
+source;share/so101_smolvla_inference/hook/pythonpath.ps1
+source;share/so101_smolvla_inference/hook/pythonpath.dsv
+source;share/so101_smolvla_inference/hook/pythonpath.sh
+source;share/so101_smolvla_inference/hook/pythonscriptspath.ps1
+source;share/so101_smolvla_inference/hook/pythonscriptspath.dsv
+source;share/so101_smolvla_inference/hook/pythonscriptspath.sh
+source;share/so101_smolvla_inference/hook/ament_prefix_path.ps1
+source;share/so101_smolvla_inference/hook/ament_prefix_path.dsv
+source;share/so101_smolvla_inference/hook/ament_prefix_path.sh

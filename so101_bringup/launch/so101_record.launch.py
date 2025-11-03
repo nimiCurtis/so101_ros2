@@ -36,7 +36,7 @@ def generate_launch_description():
     # Create the node action
     sdr_node = Node(
         package='system_data_recorder',
-        executable='system_data_recorder',
+        executable='sdr',
         name='sdr',
         output='screen',
         parameters=[config_file_path],

@@ -4,17 +4,23 @@ sdr:
     bag_name_prefix: "robot_data"
 
     # The parent directory where all recording session folders will be saved.
-    copy_destination: "/home/nimrod/ros2_ws/src/so101_ros2/bag"
+    copy_destination: "/home/anton/ros2_ws/src/so101_ros2/bag"
 
     # Maximum size of each individual .db3 file in bytes before splitting.
     max_file_size: 268435456  # 256 MiB
 
     # List of topics and their types to record.
     topic_names: [
-      "/joint_states",
+      "/follower/joint_states",
+      "/follower/cam_front/image_raw",
+      "/follower/cam_front/camera_info",
+      "/leader/joint_commands",
     ]
     topic_types: [
       "sensor_msgs/msg/JointState",
+      "sensor_msgs/msg/Image",
+      "sensor_msgs/msg/CameraInfo",
+      "std_msgs/msg/Float64MultiArray",
     ]
     
     # The task description which will be used for language model prompts for the robot's agent.

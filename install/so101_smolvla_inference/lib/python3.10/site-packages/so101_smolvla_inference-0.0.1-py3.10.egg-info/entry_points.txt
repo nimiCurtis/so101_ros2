@@ -1,0 +1,3 @@
+[console_scripts]
+smolvla_inference_node = so101_smolvla_inference.smolvla_inference_node:main
+

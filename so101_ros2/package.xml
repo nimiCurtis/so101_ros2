@@ -15,6 +15,7 @@
   <exec_depend>so101_ros2_bridge</exec_depend>
   <exec_depend>so101_hardware_interface</exec_depend>
   <exec_depend>so101_bringup</exec_depend>
+  <exec_depend>so101_smolvla_inference</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

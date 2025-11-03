@@ -1,0 +1,25 @@
+running egg_info
+creating ../build/so101_smolvla_inference/so101_smolvla_inference.egg-info
+writing ../build/so101_smolvla_inference/so101_smolvla_inference.egg-info/PKG-INFO
+writing dependency_links to ../build/so101_smolvla_inference/so101_smolvla_inference.egg-info/dependency_links.txt
+writing entry points to ../build/so101_smolvla_inference/so101_smolvla_inference.egg-info/entry_points.txt
+writing requirements to ../build/so101_smolvla_inference/so101_smolvla_inference.egg-info/requires.txt
+writing top-level names to ../build/so101_smolvla_inference/so101_smolvla_inference.egg-info/top_level.txt
+writing manifest file '../build/so101_smolvla_inference/so101_smolvla_inference.egg-info/SOURCES.txt'
+reading manifest file '../build/so101_smolvla_inference/so101_smolvla_inference.egg-info/SOURCES.txt'
+writing manifest file '../build/so101_smolvla_inference/so101_smolvla_inference.egg-info/SOURCES.txt'
+running build
+running install
+running install_data
+creating /home/anton/ros2_ws/src/so101_ros2/install/so101_smolvla_inference/share/ament_index
+creating /home/anton/ros2_ws/src/so101_ros2/install/so101_smolvla_inference/share/ament_index/resource_index
+creating /home/anton/ros2_ws/src/so101_ros2/install/so101_smolvla_inference/share/ament_index/resource_index/packages
+copying resource/so101_smolvla_inference -> /home/anton/ros2_ws/src/so101_ros2/install/so101_smolvla_inference/share/ament_index/resource_index/packages
+copying package.xml -> /home/anton/ros2_ws/src/so101_ros2/install/so101_smolvla_inference/share/so101_smolvla_inference
+creating /home/anton/ros2_ws/src/so101_ros2/install/so101_smolvla_inference/share/so101_smolvla_inference/launch
+copying launch/smolvla_inference.launch.py -> /home/anton/ros2_ws/src/so101_ros2/install/so101_smolvla_inference/share/so101_smolvla_inference/launch
+running install_egg_info
+Copying ../build/so101_smolvla_inference/so101_smolvla_inference.egg-info to /home/anton/ros2_ws/src/so101_ros2/install/so101_smolvla_inference/lib/python3.10/site-packages/so101_smolvla_inference-0.0.1-py3.10.egg-info
+running install_scripts
+Installing smolvla_inference_node script to /home/anton/ros2_ws/src/so101_ros2/install/so101_smolvla_inference/bin
+writing list of installed files to '/home/anton/ros2_ws/src/so101_ros2/build/so101_smolvla_inference/install.log'

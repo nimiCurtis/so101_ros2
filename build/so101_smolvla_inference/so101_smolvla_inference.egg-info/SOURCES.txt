@@ -1,0 +1,11 @@
+package.xml
+setup.py
+../build/so101_smolvla_inference/so101_smolvla_inference.egg-info/PKG-INFO
+../build/so101_smolvla_inference/so101_smolvla_inference.egg-info/SOURCES.txt
+../build/so101_smolvla_inference/so101_smolvla_inference.egg-info/dependency_links.txt
+../build/so101_smolvla_inference/so101_smolvla_inference.egg-info/entry_points.txt
+../build/so101_smolvla_inference/so101_smolvla_inference.egg-info/requires.txt
+../build/so101_smolvla_inference/so101_smolvla_inference.egg-info/top_level.txt
+../build/so101_smolvla_inference/so101_smolvla_inference.egg-info/zip-safe
+launch/smolvla_inference.launch.py
+resource/so101_smolvla_inference
