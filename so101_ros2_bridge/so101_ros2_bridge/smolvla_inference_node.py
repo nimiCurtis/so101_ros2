@@ -22,13 +22,21 @@ class SmolVLAInferenceNode(Node):
         super().__init__('smolvla_inference_node')
         self.get_logger().info('SmolVLA Inference Node starting...')
 
+        # /camera_info
+        # /follower/cam_front/camera_info
+        # /follower/cam_front/image_raw
+        # /follower/cam_top1/image_raw
+        # /follower/cam_top2/image_raw
+        # /isaac/isaac_joint_command
+        # /isaac/isaac_joint_states
+
         # Declare parameters
         self.declare_parameter('model_id', 'lerobot/smolvla_base')  # Using base model (large doesn't exist)
         self.declare_parameter('camera1_topic', '/follower/cam_front/image_raw')
         self.declare_parameter('camera2_topic', '/follower/cam_top1/image_raw')
         self.declare_parameter('camera3_topic', '/follower/cam_top2/image_raw')
-        self.declare_parameter('joint_state_topic', '/isaac/isaac_joint_states')
-        self.declare_parameter('action_topic', '/smolvla_inference/action')
+        self.declare_parameter('joint_state_topic', '/isaac/isaac_joint_states') # /isaac/isaac_joint_states 
+        self.declare_parameter('action_topic', '/isaac/isaac_joint_command') # /smolvla_inference/action
         self.declare_parameter('action_chunk_topic', '/smolvla_inference/action_chunk')
         self.declare_parameter('task', 'Pick up the cube')
         self.declare_parameter('robot_type', 'so100')
