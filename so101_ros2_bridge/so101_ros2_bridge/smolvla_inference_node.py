@@ -38,7 +38,7 @@ class SmolVLAInferenceNode(Node):
         self.declare_parameter('joint_state_topic', '/isaac/isaac_joint_states') # /isaac/isaac_joint_states 
         self.declare_parameter('action_topic', '/isaac/isaac_joint_command') # /smolvla_inference/action
         self.declare_parameter('action_chunk_topic', '/smolvla_inference/action_chunk')
-        self.declare_parameter('task', 'Pick up the cube')
+        self.declare_parameter('task', 'Pick up the the white object and insert it on the green peg.')
         self.declare_parameter('robot_type', 'so100')
         self.declare_parameter('use_dummy_input', False)  # Changed to False - use real topics by default
         self.declare_parameter('publisher_rate', 2)  # Hz for action publishing
@@ -58,6 +58,16 @@ class SmolVLAInferenceNode(Node):
         publisher_rate = self.get_parameter('publisher_rate').get_parameter_value().integer_value
         image_qos = self.get_parameter('image_subscription_qos').get_parameter_value().integer_value
         joint_state_qos = self.get_parameter('joint_state_subscription_qos').get_parameter_value().integer_value
+
+        # Define joint names based on your robot configuration
+        self.joint_names = [
+            'shoulder_pan',
+            'shoulder_lift', 
+            'elbow_flex',
+            'wrist_flex',
+            'wrist_roll',
+            'gripper'
+        ]
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.get_logger().info(f'Using device: {self.device}')
@@ -157,12 +167,13 @@ class SmolVLAInferenceNode(Node):
             )
             self.get_logger().info(f'Subscribing to joint state topic: {joint_state_topic} (QoS: {joint_state_qos})')
 
+        # MODIFIED: Changed publisher type from Float32MultiArray to JointState
         self.action_publisher = self.create_publisher(
-            Float32MultiArray,
+            JointState,
             action_topic,
             10
         )
-        self.get_logger().info(f'Publishing to action topic: {action_topic}')
+        self.get_logger().info(f'Publishing JointState to action topic: {action_topic}')
 
         self.action_chunk_publisher = self.create_publisher(
             Float32MultiArray,
@@ -176,186 +187,155 @@ class SmolVLAInferenceNode(Node):
         enable_echo = self.get_parameter('enable_action_chunk_echo').get_parameter_value().bool_value
         
         if enable_echo:
-            self.action_chunk_subscriber = self.create_subscription(
+            self.action_chunk_echo_subscriber = self.create_subscription(
                 Float32MultiArray,
                 action_chunk_topic,
-                self.action_chunk_callback,
+                self.action_chunk_echo_callback,
                 10
             )
-            self.get_logger().info(f'Subscribing to action chunk topic for echo/validation')
+            self.get_logger().info(f'Echoing action chunks from: {action_chunk_topic}')
 
-        # Create a timer for inference
-        timer_period = 1.0 / publisher_rate  # Convert Hz to seconds
-        self.timer = self.create_timer(timer_period, self.inference_timer_callback)
-        self.get_logger().info(f'Inference timer set to {publisher_rate} Hz ({timer_period*1000:.1f} ms period)')
+        self.timer = self.create_timer(1.0/publisher_rate, self.inference_callback)
+        self.get_logger().info(f'Publishing rate: {publisher_rate} Hz')
         
-        # Add a flag to prevent overlapping inference calls
         self.inference_in_progress = False
 
     def camera1_callback(self, msg):
         self.latest_camera1_msg = msg
+        # self.get_logger().debug('Camera1 image received', throttle_duration_sec=10.0)
 
     def camera2_callback(self, msg):
         self.latest_camera2_msg = msg
+        # self.get_logger().debug('Camera2 image received', throttle_duration_sec=10.0)
 
     def camera3_callback(self, msg):
         self.latest_camera3_msg = msg
+        # self.get_logger().debug('Camera3 image received', throttle_duration_sec=10.0)
 
     def joint_state_subscriber_callback(self, msg):
-        # position, velocity, effort are all lists
-        self.latest_joint_state_msg = msg.position # Store only the positions
+        self.latest_joint_state_msg = msg
+        # self.get_logger().debug('Joint state received', throttle_duration_sec=10.0)
 
-    def action_chunk_callback(self, msg):
-        """
-        Callback to demonstrate how to read the structured action chunk data.
-        This shows how subscribers can interpret the MultiArrayDimension layout.
-        """
-        try:
-            # Extract dimensions from layout
-            if len(msg.layout.dim) < 2:
-                self.get_logger().warn('Action chunk message has invalid dimensions')
-                return
-            
+    def action_chunk_echo_callback(self, msg):
+        # Extract dimensions from the layout (assuming 2D array [actions, action_dimensions])
+        if len(msg.layout.dim) >= 2:
             num_actions = msg.layout.dim[0].size
             action_dim = msg.layout.dim[1].size
             
-            # Reshape the flattened data back to 2D array
-            data = np.array(msg.data)
-            
-            if len(data) != num_actions * action_dim:
-                self.get_logger().error(
-                    f'Data size mismatch: expected {num_actions * action_dim}, got {len(data)}'
-                )
-                return
-            
-            actions = data.reshape(num_actions, action_dim)
-            
-            # Log structured information
             self.get_logger().info(
-                f'Action Chunk: {num_actions} actions × {action_dim} dims | '
-                f'First: {actions[0]} | '
-                f'Mid: {actions[num_actions//2]} | '
-                f'Last: {actions[-1]}',
-                throttle_duration_sec=2.0
+                f'Action chunk received: {num_actions} actions x {action_dim} dimensions',
+                throttle_duration_sec=1.0
             )
             
-            # Demonstrate accessing specific elements
-            # Element at action[i][j] can be accessed as: msg.data[i * stride + j]
-            # Or just use the reshaped numpy array: actions[i][j]
-            
-        except Exception as e:
-            self.get_logger().error(f'Error parsing action chunk: {e}')
+            # Optionally print first action
+            if len(msg.data) >= action_dim:
+                first_action = msg.data[:action_dim]
+                self.get_logger().info(
+                    f'First action: {first_action}',
+                    throttle_duration_sec=1.0
+                )
 
-    def imgmsg_to_numpy(self, img_msg):
-        """Convert ROS Image message to numpy array without cv_bridge."""
+    def get_joint_states_from_dummy_input(self):
+        # Return a numpy array with 6 joint values
+        return np.array([0.0, 0.0139, 0.0044, 0.0005, 0.0, 0.0])
+
+    def get_images_from_dummy_input(self):
+        # Use the actual dimensions expected by the model for dummy images
+        import cv2
+        
+        # Generate dummy images with expected dimensions
+        # SmolVLA typically expects 224x224 RGB images
+        dummy_image1 = np.random.randint(0, 255, (224, 224, 3), dtype=np.uint8)
+        dummy_image2 = np.random.randint(0, 255, (224, 224, 3), dtype=np.uint8)
+        dummy_image3 = np.random.randint(0, 255, (224, 224, 3), dtype=np.uint8)
+        
+        return dummy_image1, dummy_image2, dummy_image3
+
+    def image_msg_to_numpy(self, img_msg):
+        """Convert ROS Image message to numpy array."""
+        import cv2
+        import numpy as np
+        
         # Get image dimensions
         height = img_msg.height
         width = img_msg.width
         
-        # Convert bytes to numpy array
-        dtype = np.uint8
-        img_array = np.frombuffer(img_msg.data, dtype=dtype)
-        
-        # Reshape based on encoding
-        if img_msg.encoding == 'rgb8':
-            img_array = img_array.reshape((height, width, 3))
-        elif img_msg.encoding == 'bgr8':
-            img_array = img_array.reshape((height, width, 3))
+        # Convert based on encoding
+        if img_msg.encoding == 'bgr8':
+            # BGR8: 3 channels, 8 bits per channel
+            img_array = np.frombuffer(img_msg.data, dtype=np.uint8).reshape(height, width, 3)
             # Convert BGR to RGB
-            img_array = img_array[:, :, ::-1]
-        elif img_msg.encoding == 'mono8' or img_msg.encoding == 'gray8':
-            img_array = img_array.reshape((height, width))
-            # Convert grayscale to RGB by stacking
-            img_array = np.stack([img_array, img_array, img_array], axis=2)
+            img_array = cv2.cvtColor(img_array, cv2.COLOR_BGR2RGB)
+        elif img_msg.encoding == 'rgb8':
+            # RGB8: 3 channels, 8 bits per channel
+            img_array = np.frombuffer(img_msg.data, dtype=np.uint8).reshape(height, width, 3)
+        elif img_msg.encoding == 'mono8':
+            # Mono8: 1 channel, 8 bits
+            img_array = np.frombuffer(img_msg.data, dtype=np.uint8).reshape(height, width)
+            # Convert grayscale to RGB
+            img_array = cv2.cvtColor(img_array, cv2.COLOR_GRAY2RGB)
         else:
-            raise ValueError(f"Unsupported encoding: {img_msg.encoding}")
-        
+            self.get_logger().warn(f'Unsupported image encoding: {img_msg.encoding}')
+            return None
+            
         return img_array
 
-    def inference_timer_callback(self):
-        # Skip if previous inference is still running
+    def inference_callback(self):
+        """Main inference callback called by timer."""
+        # Prevent concurrent inferences
         if self.inference_in_progress:
-            self.get_logger().warn('Skipping inference - previous call still in progress', throttle_duration_sec=1.0)
+            self.get_logger().debug('Skipping inference - previous inference still in progress')
             return
         
         self.inference_in_progress = True
-        inference_start_time = time.time()
         
-        # Determine the correct observation keys from model config
-        image_keys = [k.replace("observation.images.", "") for k in self.input_features.keys() if "image" in k]
-        state_keys = [k for k in self.input_features.keys() if "state" in k]
-        
-        if not image_keys or not state_keys:
-            self.get_logger().error(f'Could not find image or state keys in model config.')
-            return
-        
-        state_key = state_keys[0].replace("observation.", "")
-
-        if self.use_dummy_input:
-            # Get expected state dimension from model config
-            state_feature = self.input_features[f"observation.{state_key}"]
-            state_dim = state_feature.shape[0]
+        try:
+            # self.get_logger().info('Starting inference...', throttle_duration_sec=5.0)
+            inference_start_time = time.time()
             
-            # Generate dummy robot state as individual named values
-            dummy_robot_state = {f"joint_{i}": 0.0 for i in range(state_dim)}
-            
-            # Create raw observation dict with ALL required cameras
-            raw_obs = {**dummy_robot_state}
-            
-            # Add dummy images for each camera the model expects
-            for img_key in image_keys:
-                image_feature = self.input_features[f"observation.images.{img_key}"]
-                c, h, w = image_feature.shape
-                dummy_cv_image = np.zeros((h, w, c), dtype=np.uint8)
-                raw_obs[img_key] = dummy_cv_image
-        else:
-            if self.latest_camera1_msg is None:
-                self.get_logger().warn('No camera1 message received yet. Skipping inference.')
-                return
-            if self.latest_camera2_msg is None:
-                self.get_logger().warn('No camera2 message received yet. Skipping inference.')
-                return
-            if self.latest_camera3_msg is None:
-                self.get_logger().warn('No camera3 message received yet. Skipping inference.')
-                return
-            if self.latest_joint_state_msg is None:
-                self.get_logger().warn('No joint state message received yet. Skipping inference.')
-                return
-
-            try:
-                cv_image1 = self.imgmsg_to_numpy(self.latest_camera1_msg)
-                cv_image2 = self.imgmsg_to_numpy(self.latest_camera2_msg)
-                cv_image3 = self.imgmsg_to_numpy(self.latest_camera3_msg)
-            except Exception as e:
-                self.get_logger().error(f'Error converting images: {e}')
-                return
-
-            try:
-                state_feature = self.input_features[f"observation.{state_key}"]
-                state_dim = state_feature.shape[0]
-                
-                robot_state_data = np.array(self.latest_joint_state_msg, dtype=np.float32) # remove .data
-                if robot_state_data.shape[0] != state_dim:
-                    self.get_logger().error(
-                        f"Joint state dimension mismatch. Expected {state_dim}, got {robot_state_data.shape[0]}"
+            # Get observation data
+            if self.use_dummy_input:
+                # Use dummy data for testing
+                camera1, camera2, camera3 = self.get_images_from_dummy_input()
+                joint_states = self.get_joint_states_from_dummy_input()
+            else:
+                # Check if we have all required data
+                if (self.latest_camera1_msg is None or 
+                    self.latest_camera2_msg is None or 
+                    self.latest_camera3_msg is None or 
+                    self.latest_joint_state_msg is None):
+                    self.get_logger().info(
+                        f'Waiting for data - Camera1: {self.latest_camera1_msg is not None}, '
+                        f'Camera2: {self.latest_camera2_msg is not None}, '
+                        f'Camera3: {self.latest_camera3_msg is not None}, '
+                        f'Joint: {self.latest_joint_state_msg is not None}',
+                        throttle_duration_sec=5.0
                     )
                     return
                 
-                robot_state_dict = {f"joint_{i}": float(robot_state_data[i]) for i in range(state_dim)}
-            except Exception as e:
-                self.get_logger().error(f'Error processing joint state: {e}')
-                return
-
-            raw_obs = {**robot_state_dict}
+                # Convert images to numpy arrays
+                camera1 = self.image_msg_to_numpy(self.latest_camera1_msg)
+                camera2 = self.image_msg_to_numpy(self.latest_camera2_msg)
+                camera3 = self.image_msg_to_numpy(self.latest_camera3_msg)
+                
+                # Get joint positions
+                joint_states = np.array(self.latest_joint_state_msg.position[:6])
             
-            # Add all 3 real camera images
-            raw_obs["camera1"] = cv_image1
-            raw_obs["camera2"] = cv_image2
-            raw_obs["camera3"] = cv_image3
-
-        try:
-            # Build the inference frame
-            # self.get_logger().info('Starting frame build...', throttle_duration_sec=5.0)
+            # Build raw observation
+            # The model expects joint states as individual keys like 'joint_0', 'joint_1', etc.
+            raw_obs = {}
+            
+            # Add joint states with individual keys
+            for i, joint_value in enumerate(joint_states):
+                raw_obs[f'joint_{i}'] = joint_value
+            
+            # Add camera images
+            raw_obs['camera1'] = camera1
+            raw_obs['camera2'] = camera2
+            raw_obs['camera3'] = camera3
+            
+            # Build inference frame
+            # self.get_logger().info('Building inference frame...', throttle_duration_sec=5.0)
             frame_build_start = time.time()
             obs_frame = build_inference_frame(
                 observation=raw_obs,
@@ -442,27 +422,52 @@ class SmolVLAInferenceNode(Node):
             first_robot_action = robot_actions[0]
             postprocess_time = (time.time() - postprocess_start) * 1000
 
-            # Publish single action (first in chunk)
-            action_msg = Float32MultiArray()
+            # MODIFIED: Create and publish JointState message instead of Float32MultiArray
+            action_msg = JointState()
             
+            # Set header with timestamp
+            action_msg.header.stamp = self.get_clock().now().to_msg()
+            action_msg.header.frame_id = ''
+            
+            # Set joint names
+            action_msg.name = self.joint_names
+            
+            # Extract prediction values for position field
             if isinstance(first_robot_action, dict):
                 action_keys = sorted([k for k in first_robot_action.keys() if k.startswith('action_')])
                 if action_keys:
-                    action_msg.data = [float(first_robot_action[k]) for k in action_keys]
+                    prediction_values = [float(first_robot_action[k]) for k in action_keys]
                 else:
                     self.get_logger().error(f'No action keys found in robot_action')
                     return
             else:
                 if hasattr(first_robot_action, 'squeeze'):
-                    action_msg.data = first_robot_action.squeeze().tolist()
+                    prediction_values = first_robot_action.squeeze().tolist()
                 elif hasattr(first_robot_action, 'tolist'):
-                    action_msg.data = first_robot_action.tolist()
+                    prediction_values = first_robot_action.tolist()
                 else:
-                    action_msg.data = list(first_robot_action)
-                
+                    prediction_values = list(first_robot_action)
+            
+            # Ensure we have the right number of values
+            if len(prediction_values) != len(self.joint_names):
+                self.get_logger().warn(f'Prediction has {len(prediction_values)} values but expected {len(self.joint_names)}. Padding/truncating.')
+                # Pad with zeros or truncate as needed
+                if len(prediction_values) < len(self.joint_names):
+                    prediction_values.extend([0.0] * (len(self.joint_names) - len(prediction_values)))
+                else:
+                    prediction_values = prediction_values[:len(self.joint_names)]
+            
+            # Set position to the prediction values
+            action_msg.position = prediction_values
+            
+            # Set velocity and effort to zeros
+            action_msg.velocity = [0.0] * len(self.joint_names)
+            action_msg.effort = [0.0] * len(self.joint_names)
+            
+            # Publish the JointState message
             self.action_publisher.publish(action_msg)
             
-            # Publish all 50 robot actions in the chunk
+            # Publish all 50 robot actions in the chunk (keeping this as Float32MultiArray)
             action_chunk_msg = Float32MultiArray()
             all_actions = []
             
@@ -481,7 +486,7 @@ class SmolVLAInferenceNode(Node):
                         all_actions.extend(list(robot_action))
             
             # Set up proper dimensions for 2D array [50, action_dim]
-            action_dim = len(action_msg.data)  # Get dimension from first action
+            action_dim = len(prediction_values)  # Get dimension from first action
             
             dim0 = MultiArrayDimension()
             dim0.label = "actions"
@@ -503,7 +508,7 @@ class SmolVLAInferenceNode(Node):
             total_inference_time = (time.time() - inference_start_time) * 1000
             
             self.get_logger().info(
-                # f'Action: {action_msg.data} | '
+                # f'Published JointState with positions: {prediction_values[:3]}... | '  # Show first 3 values
                 f'Chunk size: {len(action_chunk_msg.data)} | '
                 f'Total: {total_inference_time:.1f}ms '
                 f'(frame: {frame_build_time:.1f}ms, '
