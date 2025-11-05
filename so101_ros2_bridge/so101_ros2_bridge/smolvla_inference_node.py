@@ -22,24 +22,16 @@ class SmolVLAInferenceNode(Node):
         super().__init__('smolvla_inference_node')
         self.get_logger().info('SmolVLA Inference Node starting...')
 
-        # /camera_info
-        # /follower/cam_front/camera_info
-        # /follower/cam_front/image_raw
-        # /follower/cam_top1/image_raw
-        # /follower/cam_top2/image_raw
-        # /isaac/isaac_joint_command
-        # /isaac/isaac_joint_states
-
         # Declare parameters
-        self.declare_parameter('model_id', 'lerobot/smolvla_base')  # Using base model (large doesn't exist)
-        self.declare_parameter('camera1_topic', '/follower/cam_front/image_raw')
+        self.declare_parameter('model_id', 'lerobot/smolvla_base')  # Using base model by default
+        self.declare_parameter('camera1_topic', '/follower/cam_front/image_raw') 
         self.declare_parameter('camera2_topic', '/follower/cam_top1/image_raw')
         self.declare_parameter('camera3_topic', '/follower/cam_top2/image_raw')
         self.declare_parameter('joint_state_topic', '/isaac/isaac_joint_states') # /isaac/isaac_joint_states 
         self.declare_parameter('action_topic', '/isaac/isaac_joint_command_test') # /smolvla_inference/action
         self.declare_parameter('action_chunk_topic', '/smolvla_inference/action_chunk')
         self.declare_parameter('task', 'Pick up the white block and insertit on the green peg')
-        self.declare_parameter('robot_type', 'so100')
+        self.declare_parameter('robot_type', 'so101')
         self.declare_parameter('use_dummy_input', False)  # Changed to False - use real topics by default
         self.declare_parameter('publisher_rate', 2)  # Hz for action publishing
         self.declare_parameter('image_subscription_qos', 2)  # QoS depth for image subscription

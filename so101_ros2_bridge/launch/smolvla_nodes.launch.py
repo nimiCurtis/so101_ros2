@@ -33,7 +33,7 @@ def generate_launch_description():
     
     robot_type_arg = DeclareLaunchArgument(
         'robot_type',
-        default_value='so100',
+        default_value='so101',
         description='Robot type identifier'
     )
     
