@@ -230,15 +230,15 @@ effort:
 **Format**: 2D array flattened to 1D, containing 2 timestamp values + 50 predicted future actions
 
 **Structure**:
-- Shape: `(chunk_size + 2, action_dim)` - typically `(52, 6)` for a 6-DOF robot, where the first 2 rows are timestamps
-- Total elements: `2 + (chunk_size × action_dim)` (e.g., 2 + 50 × 6 = 302 floats)
+- Shape: `( 2 + chunk_size * action_dim)` - typically `(50, 6)` for a 6-DOF robot, where the first 2 rows are timestamps
+- Total elements: `2 + chunk_size * action_dim` (e.g., 2 + 50 × 6 = 302 floats)
 - Layout dimensions:
   - `dim[0]`:
-    - label: "actions"
+    - label: `"actions"`
     - size: `chunk_size + 2` (52)
     - stride: `(chunk_size + 2) × action_dim`
   - `dim[1]`:
-    - label: "action_dimensions"
+    - label: `"action_dimensions"`
     - size: `action_dim` (6)
     - stride: `action_dim`
 
@@ -261,136 +261,17 @@ layout:
     stride: 6
   data_offset: 0
 data:
-- 1762269440.0
-- 296617056.0
-- -1.4599275588989258
-- -1.6516928672790527
-- -1.6570250988006592
-- -0.22167553007602692
-- 1.2022589445114136
-- 0.4496384859085083
-- -1.4582624435424805
-- -1.6511688232421875
-- -1.6709789037704468
-- -0.2382495403289795
-- 1.1887333393096924
-- 0.48980385065078735
-- -1.4668002128601074
-- -1.666101217269895
-- -1.658732533454895
-- -0.27149534225463867
-- 1.2048795223236084
-- 0.5457153916358948
-- -1.4772748947143555
-- -1.6952322721481323
-- -1.6639209985733032
-- -0.30639898777008057
-- 1.2346596717834473
-- 0.6844183802604675
-- -1.512203574180603
-- -1.6999720335006714
-- -1.7174572944641113
-- -0.34121620655059814
-- 1.2428629398345947
-- 0.673546552658081
-- -1.5074506998062134
-- -1.6741893291473389
-- -1.7145512104034424
-- -0.35252419114112854
-- 1.2267612218856812
-- 0.7088098526000977
-- -1.494873285293579
-- -1.6852753162384033
-- -1.7150545120239258
-- -0.36087265610694885
-- 1.2425258159637451
-- 0.6899479031562805
-- -1.4988080263137817
-- -1.6689192056655884
-- -1.7484028339385986
-- -0.3341304063796997
-- 1.2542998790740967
-- 0.7171642780303955
-- -1.5065908432006836
-- -1.6338917016983032
-- -1.6877516508102417
-- -0.33749791979789734
-- 1.256849765777588
-- 0.6644541025161743
-- -1.502788782119751
-- -1.6237363815307617
-- -1.6719340085983276
-- -0.3123919367790222
-- 1.2939789295196533
-- 0.670678973197937
-- -1.4791538715362549
-- -1.6321967840194702
-- -1.6564608812332153
-- -0.3003908693790436
-- 1.2966629266738892
-- 0.5972675681114197
-- -1.4918737411499023
-- -1.6658424139022827
-- -1.6576815843582153
-- -0.29515713453292847
-- 1.2935608625411987
-- 0.506298303604126
-- -1.5033193826675415
-- -1.6854203939437866
-- -1.6724570989608765
-- -0.3084224760532379
-- 1.2856717109680176
-- 0.26553982496261597
-- -1.4983813762664795
-- -1.687287449836731
-- -1.6407911777496338
-- -0.3278532028198242
-- 1.2669061422348022
-- -0.13187141716480255
-- -1.4728171825408936
-- -1.6458839178085327
-- -1.5713070631027222
-- -0.35534921288490295
-- 1.2835944890975952
-- -0.19488635659217834
-- -1.475502371788025
-- -1.6408628225326538
-- -1.5887492895126343
-- -0.3704479932785034
-- 1.2415920495986938
-- -0.32275378704071045
-- -1.4654011726379395
-- -1.559928297996521
-- -1.4269890785217285
-- -0.41869330406188965
-- 1.2514954805374146
-- -0.3842206597328186
-- -1.4670462608337402
-- -1.5806533098220825
-- -1.4673389196395874
-- -0.41785842180252075
-- 1.2707599401474
-- -0.3561934232711792
-- -1.484092116355896
-- -1.5603832006454468
-- -1.3861905336380005
-- -0.383577823638916
-- 1.2736577987670898
-- -0.40297529101371765
-- -1.48274827003479
-- -1.533495545387268
-- -1.4050052165985107
-- -0.3648447096347809
-- 1.2717206478118896
-- -0.40583696961402893
-- -1.5199120044708252
-- -1.4276756048202515
-- -1.2427228689193726
-- -0.33201444149017334
-- 1.2738555669784546
-- -0.35666394233703613
-- '...'
----
+- 1762268707 # timestamp for first action (seconds)
+- 722207310  # timestamp for first action (nanoseconds)
+- -1.9869054555892944 # action[0][0]
+- -1.29507315158844  # action[0][1]
+- -1.0298640727996826 # action[0][2]
+- -0.21833369135856628 # action[0][3]
+- 1.4961460828781128  # action[0][4]
+- 0.6207866072654724  # action[0][5]
+- 0.12    # action[1][0]
+- -0.34   # action[1][1]
+- ...     # (many more values for remaining actions)
 ```
 
 **Example Reading Code**:
@@ -504,13 +385,56 @@ ros2 topic echo /smolvla_inference/action_chunk
 ros2 topic hz /smolvla_inference/action
 ```
 
-## Running the Nodes
+## Running Nodes with Custom Environment
 
-To run the inference and executor nodes, use the provided shell scripts:
+Due to potential conflicts with `conda` and `LD_LIBRARY_PATH`, it is recommended to run the `action_chunk_executor_node.py` and `smolvla_inference_node.py` using dedicated shell scripts that set up the environment correctly.
+
+### `spin_executor_node.sh`
+
+This script is used to run the `action_chunk_executor_node.py`.
 
 ```bash
-/home/anton/ros2_ws/spin_inference_node.sh
-/home/anton/ros2_ws/spin_executor_node.sh
+#!/bin/bash
+
+# Source conda
+source /home/anton/miniconda3/etc/profile.d/conda.sh
+conda activate lerobot_ros2
+
+# Source ROS2
+source /opt/ros/humble/setup.bash
+source /home/anton/ros2_ws/install/setup.bash
+
+# CRITICAL: Put system library paths FIRST to override conda's libstdc++
+export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+
+# Also ensure system libs are used for other potential conflicts
+export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+
+# Run the node
+ros2 run so101_ros2_bridge action_chunk_executor_node
 ```
 
-**CRITICAL**: These scripts are necessary because they set up system library paths correctly to override conda's `libstdc++` and activate the conda environment.
+### `spin_inference_node.sh`
+
+This script is used to run the `smolvla_inference_node.py`.
+
+```bash
+#!/bin/bash
+
+# Source conda
+source /home/anton/miniconda3/etc/profile.d/conda.sh
+conda activate lerobot_ros2
+
+# Source ROS2
+source /opt/ros/humble/setup.bash
+source /home/anton/ros2_ws/install/setup.bash
+
+# CRITICAL: Put system library paths FIRST to override conda's libstdc++
+export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+
+# Also ensure system libs are used for other potential conflicts
+export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+
+# Run the node
+ros2 run so101_ros2_bridge smolvla_inference_node
+```
