@@ -9,10 +9,14 @@ import os
 import time
 
 # Add the lerobot src directory to the Python path
-lerobot_src_path = '/home/anton/lerobot/src'
-if lerobot_src_path not in sys.path:
-    sys.path.insert(0, lerobot_src_path)
+# lerobot_src_path = '/home/anton/lerobot/src'
+# if lerobot_src_path not in sys.path:
+#     sys.path.insert(0, lerobot_src_path)
 
+# Ensure the conda site-packages directory is in the system path
+from so101_ros2_bridge.utils import ensure_conda_site_packages_from_env
+
+ensure_conda_site_packages_from_env()
 from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
 from lerobot.policies.factory import make_pre_post_processors
 from lerobot.policies.utils import build_inference_frame, make_robot_action
@@ -178,7 +182,7 @@ class SmolVLAInferenceNode(Node):
         self.declare_parameter('enable_action_chunk_echo', False)
         enable_echo = self.get_parameter('enable_action_chunk_echo').get_parameter_value().bool_value
         
-        if enable_echo:
+        if enable_echo: # TODO remove if not in use
             self.action_chunk_echo_subscriber = self.create_subscription(
                 Float32MultiArray,
                 action_chunk_topic,
@@ -208,7 +212,7 @@ class SmolVLAInferenceNode(Node):
         self.latest_joint_state_msg = msg
         # self.get_logger().debug('Joint state received', throttle_duration_sec=10.0)
 
-    def action_chunk_echo_callback(self, msg):
+    def action_chunk_echo_callback(self, msg): #TODO remove if not in use
         # Extract dimensions from the layout (assuming 2D array [actions, action_dimensions])
         if len(msg.layout.dim) >= 2:
             num_actions = msg.layout.dim[0].size
@@ -364,6 +368,8 @@ class SmolVLAInferenceNode(Node):
             # self.get_logger().info('Starting preprocessing...', throttle_duration_sec=5.0)
             preprocess_start = time.time()
             processed_transition = self.pre_processor._forward(transition)
+            # obs = self.pre_processor(obs_frame)
+
             preprocess_time = (time.time() - preprocess_start) * 1000
             # self.get_logger().info(f'Preprocessed in {preprocess_time:.1f}ms', throttle_duration_sec=5.0)
             
@@ -385,9 +391,11 @@ class SmolVLAInferenceNode(Node):
             # Model inference
             model_inference_start = time.time()
 
-            with torch.no_grad():
-                # predic 50 actions ahead 50 [actions]*0.033 [sec/action] = 1.65 [sec] ahead assuming 33ms per step
-                action_tensor = self.model.predict_action_chunk(flattened_transition)
+            
+            
+            # action = self.model.select_action(obs)
+            # predic 50 actions ahead 50 [actions]*0.033 [sec/action] = 1.65 [sec] ahead assuming 33ms per step
+            action_tensor = self.model.predict_action_chunk(flattened_transition) # TODO check if can use select action with observation_dict directly
 
             model_inference_time = (time.time() - model_inference_start) * 1000
 
@@ -397,6 +405,9 @@ class SmolVLAInferenceNode(Node):
             processed_actions = []
             robot_actions = []
             
+            # in select mode
+            # processed_action = self.post_processor(action)
+            # robot_action = make_robot_action(action, self.dataset_features)
             for i in range(chunk_size):
                 # Extract action at timestep i: (B, action_dim)
                 single_action = action_tensor[:, i, :]
@@ -418,7 +429,7 @@ class SmolVLAInferenceNode(Node):
             action_msg = JointState()
             
             # Set header with timestamp
-            action_msg.header.stamp = self.get_clock().now().to_msg()
+            action_msg.header.stamp = self.get_clock().now().to_msg() # TODO check if can get simtime
             action_msg.header.frame_id = ''
             
             # Set joint names
@@ -494,7 +505,7 @@ class SmolVLAInferenceNode(Node):
             
             # Add timestamp as data_offset (converting to nanoseconds as integer)
             # This is a creative use of data_offset field to store timestamp
-            current_time = self.get_clock().now()
+            current_time = self.get_clock().now() # todo take from sim
             # Store seconds and nanoseconds in the data array at the beginning
             # First two values will be timestamp (seconds, nanoseconds), rest will be actions
             timestamp_and_actions = [

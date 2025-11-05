@@ -1,3 +1,8 @@
+# Installs and Know Hows 
+
+conda install -n lerobot_ros2 -c conda-forge "libstdcxx-ng>=12" "libgcc-ng>=12"
+
+
 # SmolVLA Inference Node
 
 The `smolvla_inference_node.py` script runs a ROS 2 node that performs inference using a pre-trained SmolVLA (Small Vision-Language-Action) model. It takes multiple camera inputs and the robot's joint states, along with a natural language task description, to predict a sequence of actions. This node now publishes the first action from the predicted sequence for immediate testing and also publishes the complete chunk of 50 predicted future actions.

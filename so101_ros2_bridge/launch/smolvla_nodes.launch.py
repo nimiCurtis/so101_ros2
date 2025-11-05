@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
+import os
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.actions import IncludeLaunchDescription
+from launch.conditions import IfCondition
+from launch.substitutions import EqualsSubstitution
+from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     """
@@ -18,7 +23,19 @@ def generate_launch_description():
     # =============================================================================
     # Declare Launch Arguments - SmolVLA Inference Node
     # =============================================================================
-    
+    teleop_mode_arg = DeclareLaunchArgument(
+        "teleop_mode",
+        default_value="isaac",
+        description="Execution mode: real, gazebo, isaac",
+    )
+
+    model_arg = DeclareLaunchArgument(
+        "model",
+        default_value=os.path.join(
+            get_package_share_directory("so101_description"), "urdf", "so101_new_calib.urdf.xacro"
+        ),
+    )
+
     model_id_arg = DeclareLaunchArgument(
         'model_id',
         default_value='lerobot/smolvla_base',
@@ -101,9 +118,15 @@ def generate_launch_description():
         description='Topic for receiving action chunks from inference node'
     )
     
+    # joint_command_topic_arg = DeclareLaunchArgument(
+    #     'joint_command_topic',
+    #     default_value='/isaac/isaac_joint_command',
+    #     description='Topic for publishing joint commands to robot controller'
+    # )
+
     joint_command_topic_arg = DeclareLaunchArgument(
         'joint_command_topic',
-        default_value='/isaac/isaac_joint_command',
+        default_value='leader/joint_states',
         description='Topic for publishing joint commands to robot controller'
     )
     
@@ -185,12 +208,40 @@ def generate_launch_description():
         }]
     )
 
+    sim_isaac_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory("so101_bringup"), "launch", "include", "sim_isaac.launch.py")
+        ),
+        launch_arguments={
+            "model": LaunchConfiguration("model"),
+        }.items(),
+        condition=IfCondition(EqualsSubstitution(LaunchConfiguration("teleop_mode"), "isaac")),
+    )
+
+
+    # Include leader teleop
+    teleop_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("so101_teleop"),
+                "launch",
+                "so101_leader_teleop.launch.py",
+            )
+        ),
+        launch_arguments={
+            "mode": LaunchConfiguration("teleop_mode")
+,
+        }.items(),
+    )
+
     # =============================================================================
     # Build Launch Description
     # =============================================================================
     
     return LaunchDescription([
         # Inference node arguments
+        model_arg,
+        teleop_mode_arg,
         model_id_arg,
         task_arg,
         robot_type_arg,
@@ -216,4 +267,6 @@ def generate_launch_description():
         # Nodes
         smolvla_inference_node,
         action_chunk_executor_node,
+        sim_isaac_launch,
+        teleop_launch,
     ])

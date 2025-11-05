@@ -17,7 +17,7 @@ class  ActionChunkExecutor(Node):
 
         # Declare parameters
         self.declare_parameter('action_chunk_topic', '/smolvla_inference/action_chunk')
-        self.declare_parameter('joint_command_topic', '/isaac/isaac_joint_command')
+        self.declare_parameter('joint_command_topic', '/leader/isaac_joint_command')
         self.declare_parameter('publish_rate', 30.0)  # Hz
         self.declare_parameter('inference_delay', 0.5)  # seconds - how long inference takes
         self.declare_parameter('chunk_size', 50)  # Expected number of actions in a chunk
