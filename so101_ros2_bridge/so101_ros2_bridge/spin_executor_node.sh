@@ -15,4 +15,6 @@ export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu:$LD_LIBRA
 export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
 
 # Run the node
-ros2 run so101_ros2_bridge action_chunk_executor_node
+
+# With custom parameters:
+ros2 run so101_ros2_bridge action_chunk_executor_node "$@"
