@@ -1,0 +1,320 @@
+# SmolVLA System Parameter Configuration Template
+# This file documents all available parameters and their typical values
+# Copy and customize sections as needed for your launch configurations
+
+# =============================================================================
+# INFERENCE NODE PARAMETERS
+# =============================================================================
+
+inference_node:
+  # Model Configuration
+  model_id: "lerobot/smolvla_base"  # HuggingFace model ID
+  robot_type: "so100"                # Robot identifier
+  
+  # Task Description
+  task: "Pick up the white block and insert it on the green peg"
+  # Examples:
+  # - "Place the red cube into the box"
+  # - "Pick up the blue cylinder and place it on the platform"
+  # - "Grasp the bottle and move it to the left"
+  
+  # Topic Configuration
+  topics:
+    camera1: "/follower/cam_front/image_raw"
+    camera2: "/follower/cam_top1/image_raw"
+    camera3: "/follower/cam_top2/image_raw"
+    joint_states: "/isaac/isaac_joint_states"
+    action_output: "/isaac/isaac_joint_command_test"
+    action_chunk_output: "/smolvla_inference/action_chunk"
+  
+  # Performance Settings
+  inference_rate: 2  # Hz - How often to run inference
+  # Typical values:
+  # - 1 Hz: Conservative, for slow hardware
+  # - 2 Hz: Default, balanced performance
+  # - 3-5 Hz: Fast, requires good GPU
+  # - >5 Hz: Very fast, high-end hardware only
+  
+  # Quality of Service
+  qos:
+    image_subscription: 2
+    joint_state_subscription: 2
+  
+  # Testing/Debug
+  use_dummy_input: false  # Set true for testing without real sensors
+
+# =============================================================================
+# EXECUTOR NODE PARAMETERS
+# =============================================================================
+
+executor_node:
+  # Topic Configuration
+  topics:
+    action_chunk_input: "/smolvla_inference/action_chunk"
+    joint_command_output: "/isaac/isaac_joint_command"
+  
+  # Execution Rate
+  publish_rate: 30.0  # Hz - How fast to execute actions
+  # Typical values:
+  # - 15.0 Hz: Slow, ~67ms per action
+  # - 20.0 Hz: Conservative, ~50ms per action
+  # - 30.0 Hz: Default, ~33ms per action
+  # - 50.0 Hz: Fast, ~20ms per action
+  # - 100.0 Hz: Very fast, ~10ms per action
+  
+  # Delay Compensation
+  delay_compensation:
+    enabled: true
+    inference_delay: 0.5  # seconds - expected inference time
+    # How to set this:
+    # 1. Run system and check logs for "Total: XXXms"
+    # 2. Convert to seconds: 450ms = 0.45s
+    # 3. Add small buffer: 0.45s + 0.05s = 0.5s
+  
+  # Action Chunk Configuration
+  chunk_size: 50  # Expected number of actions per chunk
+  action_dim: 6   # Number of joints/DOF
+  # Common configurations:
+  # - 6 DOF: Standard 6-axis arm
+  # - 7 DOF: Redundant arm with extra joint
+  # - 8 DOF: Arm + gripper as separate joint
+
+# =============================================================================
+# CONFIGURATION PRESETS
+# =============================================================================
+
+presets:
+  
+  # High Performance - Fast GPU, responsive control
+  high_performance:
+    inference_rate: 5
+    publish_rate: 50.0
+    inference_delay: 0.2
+    use_delay_compensation: true
+  
+  # Balanced - Default recommended settings
+  balanced:
+    inference_rate: 2
+    publish_rate: 30.0
+    inference_delay: 0.5
+    use_delay_compensation: true
+  
+  # Conservative - Slower hardware, prioritize stability
+  conservative:
+    inference_rate: 1
+    publish_rate: 15.0
+    inference_delay: 1.0
+    use_delay_compensation: true
+  
+  # Testing - No real sensors
+  testing:
+    inference_rate: 2
+    publish_rate: 30.0
+    use_dummy_input: true
+    use_delay_compensation: false
+
+# =============================================================================
+# HARDWARE-SPECIFIC TUNING GUIDELINES
+# =============================================================================
+
+hardware_tuning:
+  
+  # NVIDIA RTX 4090 / A100
+  high_end_gpu:
+    inference_rate: 5-10
+    inference_delay: 0.1-0.2
+    expected_inference_time: "100-200ms"
+  
+  # NVIDIA RTX 3080 / 3090
+  mid_high_gpu:
+    inference_rate: 3-5
+    inference_delay: 0.2-0.3
+    expected_inference_time: "200-300ms"
+  
+  # NVIDIA RTX 2080 / 3060
+  mid_range_gpu:
+    inference_rate: 2-3
+    inference_delay: 0.3-0.5
+    expected_inference_time: "300-500ms"
+  
+  # NVIDIA GTX 1080 / RTX 2060
+  entry_gpu:
+    inference_rate: 1-2
+    inference_delay: 0.5-0.8
+    expected_inference_time: "500-800ms"
+  
+  # CPU Only
+  cpu_inference:
+    inference_rate: 0.5-1
+    inference_delay: 2.0-5.0
+    expected_inference_time: "2000-5000ms"
+    note: "Not recommended for real-time control"
+
+# =============================================================================
+# ROBOT-SPECIFIC CONFIGURATIONS
+# =============================================================================
+
+robot_configs:
+  
+  # SO-100 Robot (6 DOF)
+  so100:
+    action_dim: 6
+    joint_names:
+      - shoulder_pan
+      - shoulder_lift
+      - elbow_flex
+      - wrist_flex
+      - wrist_roll
+      - gripper
+    typical_publish_rate: 30.0
+  
+  # Example 7-DOF Robot
+  custom_7dof:
+    action_dim: 7
+    typical_publish_rate: 30.0
+  
+  # High-speed robot
+  high_speed_robot:
+    action_dim: 6
+    typical_publish_rate: 50.0
+    inference_rate: 5
+    inference_delay: 0.2
+
+# =============================================================================
+# TIMING ANALYSIS
+# =============================================================================
+
+timing_calculations:
+  
+  # Chunk Duration = chunk_size / publish_rate
+  # Example: 50 actions / 30 Hz = 1.67 seconds
+  
+  # Actions Skipped = publish_rate × inference_delay
+  # Example: 30 Hz × 0.5s = 15 actions
+  
+  # Remaining Actions = chunk_size - actions_skipped
+  # Example: 50 - 15 = 35 actions
+  
+  # Execution Time = remaining_actions / publish_rate
+  # Example: 35 / 30 Hz = 1.17 seconds
+  
+  examples:
+    - scenario: "Default configuration"
+      chunk_size: 50
+      publish_rate: 30.0
+      inference_delay: 0.5
+      actions_skipped: 15
+      chunk_duration: 1.67  # seconds
+      execution_time: 1.17  # seconds
+    
+    - scenario: "Fast execution"
+      chunk_size: 50
+      publish_rate: 50.0
+      inference_delay: 0.2
+      actions_skipped: 10
+      chunk_duration: 1.0   # seconds
+      execution_time: 0.8   # seconds
+    
+    - scenario: "Slow hardware"
+      chunk_size: 50
+      publish_rate: 15.0
+      inference_delay: 1.0
+      actions_skipped: 15
+      chunk_duration: 3.33  # seconds
+      execution_time: 2.33  # seconds
+
+# =============================================================================
+# TROUBLESHOOTING GUIDE
+# =============================================================================
+
+troubleshooting:
+  
+  issue_delayed_response:
+    symptoms:
+      - "Robot responds slowly to changes"
+      - "Actions feel laggy"
+    solutions:
+      - "Increase inference_rate (e.g., 3-5 Hz)"
+      - "Reduce inference_delay if hardware is faster"
+      - "Ensure use_delay_compensation is enabled"
+  
+  issue_jerky_motion:
+    symptoms:
+      - "Robot motion is not smooth"
+      - "Sudden jumps between actions"
+    solutions:
+      - "Decrease publish_rate (e.g., 20 Hz)"
+      - "Check if inference_delay matches actual timing"
+      - "Verify network latency is low"
+  
+  issue_running_out_of_actions:
+    symptoms:
+      - "Log shows 'waiting for new chunk' frequently"
+      - "Actions published counter >> chunks received"
+    solutions:
+      - "Increase inference_delay (inference too slow)"
+      - "Decrease publish_rate to make chunks last longer"
+      - "Upgrade hardware for faster inference"
+  
+  issue_no_motion:
+    symptoms:
+      - "Robot doesn't move"
+      - "No joint commands published"
+    solutions:
+      - "Check topic names match robot controller"
+      - "Verify camera feeds are publishing"
+      - "Try use_dummy_input:=true to test"
+      - "Check ROS 2 topic connections"
+
+# =============================================================================
+# MONITORING AND METRICS
+# =============================================================================
+
+monitoring:
+  
+  key_metrics:
+    - metric: "Inference Time"
+      location: "Inference node logs"
+      typical_value: "200-500ms"
+      pattern: "Total: XXXms"
+    
+    - metric: "Actions Published vs Chunks Received"
+      location: "Executor node status logs"
+      healthy_ratio: "~(chunk_size - actions_skipped)"
+      pattern: "Actions published: XXX"
+    
+    - metric: "Chunk Age"
+      location: "Executor node status logs"
+      healthy_value: "<2 seconds"
+      pattern: "Chunk age: X.XXs"
+    
+    - metric: "Actions Remaining"
+      location: "Executor node logs"
+      healthy_value: ">0"
+      pattern: "remaining: XX"
+  
+  commands:
+    - description: "Monitor inference node"
+      command: "ros2 topic echo /smolvla_inference/action_chunk"
+    
+    - description: "Monitor executor output"
+      command: "ros2 topic echo /isaac/isaac_joint_command"
+    
+    - description: "Check node parameters"
+      command: "ros2 param list /action_chunk_executor_node"
+    
+    - description: "Monitor node logs"
+      command: "ros2 node info /smolvla_inference_node"
+
+# =============================================================================
+# NOTES
+# =============================================================================
+
+notes:
+  - "Always measure your actual inference time before tuning"
+  - "Start with defaults and adjust incrementally"
+  - "Higher rates need better hardware"
+  - "Delay compensation is critical for responsive control"
+  - "Monitor logs during first runs to verify timing"
+  - "Different tasks may benefit from different rates"
+  - "Consider robot's physical limits when setting rates"
