@@ -36,9 +36,9 @@ class SmolVLAInferenceNode(Node):
         self.declare_parameter('camera2_topic', '/follower/cam_top1/image_raw')
         self.declare_parameter('camera3_topic', '/follower/cam_top2/image_raw')
         self.declare_parameter('joint_state_topic', '/isaac/isaac_joint_states') # /isaac/isaac_joint_states 
-        self.declare_parameter('action_topic', '/isaac/isaac_joint_command') # /smolvla_inference/action
+        self.declare_parameter('action_topic', '/isaac/isaac_joint_command_test') # /smolvla_inference/action
         self.declare_parameter('action_chunk_topic', '/smolvla_inference/action_chunk')
-        self.declare_parameter('task', 'Pick up the the white object and insert it on the green peg.')
+        self.declare_parameter('task', 'Pick up the white block and insertit on the green peg')
         self.declare_parameter('robot_type', 'so100')
         self.declare_parameter('use_dummy_input', False)  # Changed to False - use real topics by default
         self.declare_parameter('publisher_rate', 2)  # Hz for action publishing
@@ -499,8 +499,20 @@ class SmolVLAInferenceNode(Node):
             dim1.stride = action_dim
             
             action_chunk_msg.layout.dim = [dim0, dim1]
-            action_chunk_msg.layout.data_offset = 0
-            action_chunk_msg.data = all_actions
+            
+            # Add timestamp as data_offset (converting to nanoseconds as integer)
+            # This is a creative use of data_offset field to store timestamp
+            current_time = self.get_clock().now()
+            # Store seconds and nanoseconds in the data array at the beginning
+            # First two values will be timestamp (seconds, nanoseconds), rest will be actions
+            timestamp_and_actions = [
+                float(current_time.seconds_nanoseconds()[0]),  # seconds
+                float(current_time.seconds_nanoseconds()[1])   # nanoseconds
+            ]
+            timestamp_and_actions.extend(all_actions)
+            
+            action_chunk_msg.layout.data_offset = 2  # Indicate that actual data starts at index 2
+            action_chunk_msg.data = timestamp_and_actions
             
             self.action_chunk_publisher.publish(action_chunk_msg)
 

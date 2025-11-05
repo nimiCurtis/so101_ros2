@@ -28,6 +28,7 @@ setup(
             'leader_node = so101_ros2_bridge.leader_ros2_node:main',
             'smolvla_inference_node = so101_ros2_bridge.smolvla_inference_node:main',
             'smolvla_test_node = so101_ros2_bridge.smolvla_test_node:main',
+            'action_chunk_executor_node = so101_ros2_bridge.action_chunk_executor_node:main',
         ],
     },
     # Force use of conda python
