@@ -6,16 +6,20 @@ A ROS 2 driver for the Lerobot SO101 manipulator.
 
 ## Overview
 
-This workspace contains several packages that provide description files, controllers,
-MoveIt configurations and Gazebo simulation for the SO101 arm. It allows you to
-visualise the robot model, control it with ROS 2 control and run a simulation
-environment for testing and development.
+This workspace contains several packages that provide description files, controllers
+and ROS 2 integrations for the SO101 arm. The current focus is on the
+Lerobot ↔ ROS 2 bridge, teleoperation workflows and recording datasets for
+imitation learning. MoveIt motion planning and Gazebo simulation support are a
+work in progress, while Isaac Sim integration is already available for
+teleoperating the leader/follower arms and streaming observations for data
+collection.
 
 ---
 
 ## Dependencies
 
 - ROS2 Humble from the [Official Link](https://docs.ros.org/en/humble/Installation.html)
+- (Optional) Isaac Sim ≥ 5.0 following the [IsaacLab installation guide](https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/source_installation.html)
 
 ---
 
@@ -105,35 +109,33 @@ Try this tutorial from the [official link](https://huggingface.co/docs/lerobot/i
 
 Once you can teleoperate so101 leader-follower properly it is time to bridge to ros2 workspace.
 
-1. Clone this repository into the `src` folder of your ROS 2 workspace and build with `colcon`:
-
-    **[NOTE]: Dont forget to deactivate conda environment if was opened before compilation of the ros workspace**
+1. **Create the workspace and clone the repository:**
 
     ```bash
-    conda deactivate
-    echo source /opt/ros/humble/setup.bash >> ~/.bashrc 
-    source ~/.bashrc
     mkdir -p ~/ros2_ws/src
     cd ~/ros2_ws/src
     git clone --recurse-submodules https://github.com/nimiCurtis/so101_ros2.git
-    cd ..
-    sudo apt update
-    rosdep init
-    rosdep update
-    rosdep install --from-paths src --ignore-src -r -y
-    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
-    echo source $(pwd)/install/local_setup.bash >> ~/.bashrc 
+    cd so101_ros2
+    ```
+
+2. **Initial workspace bootstrap (run once):** Execute [`build.sh`](build.sh) to install dependencies and prepare your shell environment.
+
+    ```bash
+    ./build.sh
+    ```
+
+    The script can be invoked again safely, but it is intended for the first-time initialisation of the project. After that, regular development workflows only need incremental `colcon build` invocations inside `~/ros2_ws`. It appends the ROS 2 Humble environment, `RMW_IMPLEMENTATION=rmw_cyclonedds_cpp` and the workspace overlay sourcing statements to your `~/.bashrc` so new shells are ready to use.
+
+3. Because lerebot env is managed by conda package manager, a workaround to compile the ros2 workspace and utilize the lerobot virtual env is to export the required variables in your shell initialisation file:
+
+    ```bash
+    echo export LECONDA_SITE_PACKAGES="<your path to anaconda/miniconda installation/envs/lerobot_ros2/lib/python3.10/site-packages" >> ~/.bashrc
+    echo export LEROBOT_SRC="<your path to lerobot pkg>/src/lerobot" >> ~/.bashrc
+    echo export SO101BRIDGE_INSTALL_SITE_PACKAGES="<your path to ros2_ws>/install/so101_ros2_bridge/lib/python3.10/site-packages/lerobot" >> ~/.bashrc
     source ~/.bashrc
     ```
 
-2. Because lerebot env is managed by conda package manager, a workaround to compile the ros2 workspace and utilize the lerobot virtual env is to make a symbolic link between lerobot env to ros2_ws by:
-
-    ```bash
-    export LECONDA_SITE_PACKAGES="<your path to anaconda/miniconda installation/envs/lerobot_ros2/lib/python3.10/site-packages"
-    export LEROBOT_SRC="<your path to lerobot pkg>/src/lerobot"
-    export SO101BRIDGE_INSTALL_SITE_PACKAGES="<your path to ros2_ws>/install/so101_ros2_bridge/lib/python3.10/site-packages/lerobot"
-    ln -s $LEROBOT_SRC $SO101BRIDGE_INSTALL_SITE_PACKAGES
-    ```
+    Re-open your shell (or run `source ~/.bashrc`) before launching ROS 2 nodes so the bridge can discover the Lerobot Python packages.
 
 **3. Known Issues**
 
@@ -167,17 +169,13 @@ This package supports the following camera types:
 
 ## Getting Started
 
-To visualise the robot description run:
+To visualise the robot description with the camera pipelines enabled run:
 
 ```bash
-ros2 launch so101_description display_robot.launch.py
+ros2 launch so101_bringup so101_robot_with_cameras.launch.py display:=true
 ```
 
-Launch Gazebo simulation with:
-
-```bash
-ros2 launch so101_bringup so101_sim_gazebo.launch.py
-```
+This brings up the SO101 description, controllers and USB/RealSense camera bridges while opening RViz (`display:=true`). You should see the robot model and camera overlays matching the reference figure that will be added to this section. If everything looks correct you can continue to the teleoperation and data recording sections.
 
 ---
 
@@ -194,16 +192,12 @@ demonstrations for imitation learning pipelines.
   `so101_ros2_bridge/config/calibration/` by default (see `Gili.json` and
   `Tzili.json` for the expected naming scheme). Alternatively provide an
   absolute path via the `calibration_dir` parameter.
-- Export `LECONDA_SITE_PACKAGES` in every terminal that launches the bridge so
-  the Lerobot Python packages are discoverable:
-
-  ```bash
-  export LECONDA_SITE_PACKAGES=<path to conda>/envs/lerobot_ros2/lib/python3.10/site-packages
-  ```
-
+- Source your shell initialisation (`source ~/.bashrc`) so the environment
+  variables appended during installation are active. They expose the Lerobot
+  Python packages (via `LECONDA_SITE_PACKAGES`, `LEROBOT_SRC` and
+  `SO101BRIDGE_INSTALL_SITE_PACKAGES`) and set the ROS 2 middleware to Cyclone
+  DDS.
 - Source the workspace in each terminal: `source ~/ros2_ws/install/setup.bash`.
-- If you followed the optional symlink workaround in the build section, ensure
-  those links are still valid after rebuilding.
 
 ### Configure bridge parameters
 
@@ -266,7 +260,13 @@ connected if you want to stream human demonstrations into the simulator.
 
 ### Run an Isaac teleoperation session
 
-TBD...
+Start Isaac Sim/Isaac Lab following the optional dependency instructions and load the SO101 task. With the simulator running, launch the ROS 2 side:
+
+```bash
+ros2 launch so101_bringup so101_teleoperate.launch.py mode:=isaac display:=true
+```
+
+This reuses the teleoperation pipeline while switching the interfaces to the Isaac transport topics so you can stream demonstrations from the leader arm directly into the simulator.
 
 ### Record demonstrations with `system_data_recorder`
 
