@@ -34,6 +34,13 @@ These docs assume that your SO101 is already assembled and all motor IDs and bau
     conda activate lerobot_ros2
     ```
 
+    To avoid "libstdc++.so.6: version GLIBCXX_3.4.30' not found (required by /opt/ros/humble/lib/librosbag2_compression.so)" error update conda’s C++ runtime:
+
+  ```bash
+    conda install -n lerobot_ros -c conda-forge "libstdcxx-ng>=12" "libgcc-ng>=12"
+  ```
+
+
 2. Clone and install the forked Lerobot repository
 
     ```bash
@@ -355,7 +362,9 @@ same hooks on pushes to `main` and `dev`.
 - [x] Add appropriate QoS profiles for realtime topics
 - [ ] Investigate the MoveIt "No Planning Library Loaded" warning and refactor the configuration
 - [ ] Harden Gazebo teleoperation to match the hardware workflow
+- [ ] Create isaac sim asset, cameras and task.
+- [ ] Setup real env
 - [ ] Create rviz display config for each mode
 - [ ] Check and fix GitHub Actions workflow
 - [ ] General code clean-up and documentation
-- [ ] Add realsense top camera
+- [x] Add realsense top camera
