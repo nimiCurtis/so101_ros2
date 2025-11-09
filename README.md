@@ -19,7 +19,7 @@ collection.
 ## Dependencies
 
 - ROS2 Humble from the [Official Link](https://docs.ros.org/en/humble/Installation.html)
-- (Optional) Isaac Sim ≥ 5.0 following the [IsaacLab installation guide](https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/source_installation.html)
+- (Optional) Isaac Sim ≥ 5.0 following the [IsaacSim official repo](https://github.com/isaac-sim/IsaacSim?tab=readme-ov-file#quick-start)
 
 ---
 
@@ -135,8 +135,6 @@ Once you can teleoperate so101 leader-follower properly it is time to bridge to 
     source ~/.bashrc
     ```
 
-    Re-open your shell (or run `source ~/.bashrc`) before launching ROS 2 nodes so the bridge can discover the Lerobot Python packages.
-
 **3. Known Issues**
 
   * **Potential NumPy Version Error:** You may encounter an error related to NumPy version. To fix this, please upgrade your installation with the following command:
@@ -175,7 +173,7 @@ To visualise the robot description with the camera pipelines enabled run:
 ros2 launch so101_bringup so101_robot_with_cameras.launch.py display:=true
 ```
 
-This brings up the SO101 description, controllers and USB/RealSense camera bridges while opening RViz (`display:=true`). You should see the robot model and camera overlays matching the reference figure that will be added to this section. If everything looks correct you can continue to the teleoperation and data recording sections.
+This brings up the SO101 description, controllers and USB/RealSense camera bridges while opening RViz (`display:=true`). You should see the robot model and cameras output matching your follower robot current status.
 
 ---
 
@@ -244,19 +242,6 @@ node once both arms publish joint states. Watch the log output for any
 connection errors—most issues stem from missing calibration files or incorrect
 USB port assignments.
 
-### Run a Gazebo teleoperation session (not working yet)
-
-To test the pipeline without hardware, launch the same entry point in Gazebo
-mode:
-
-```bash
-ros2 launch so101_bringup so101_teleoperate.launch.py mode:=gazebo display:=true
-```
-
-This starts the simulated follower, loads ROS 2 controllers and spawns the RViz
-configuration so you can practice teleoperation flows before running them on
-the real robot. The leader bridge still runs locally, so keep the leader arm
-connected if you want to stream human demonstrations into the simulator.
 
 ### Run an Isaac teleoperation session
 
@@ -356,7 +341,7 @@ same hooks on pushes to `main` and `dev`.
 ## Roadmap
 
 - [x] Add recording keyboard commander node for SDR
-- [ ] Check refactored branch for no sim pkg
+- [x] Check refactored branch for no sim pkg
 - [x] Refactor launch configuration for "mode" arg
 - [x] Ensure `rw_rate > update_rate`
 - [x] Add appropriate QoS profiles for realtime topics

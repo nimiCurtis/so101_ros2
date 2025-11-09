@@ -45,4 +45,4 @@ fi
 
 source "$BASHRC_FILE"
 
-echo "Bootstrap complete. Run 'source ~/.bashrc' in new terminals if needed."
+echo "Build so101_ros2 completed.."

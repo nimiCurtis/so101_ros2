@@ -72,7 +72,7 @@ def generate_launch_description():
     teleop_mode_arg = DeclareLaunchArgument(
         "teleop_mode",
         default_value="real",
-        description="Execution mode: real, gazebo, isaac",
+        description="Execution mode: real, isaac",
     )
     args.append(teleop_mode_arg)
 
@@ -136,25 +136,6 @@ def generate_launch_description():
         condition=IfCondition(EqualsSubstitution(teleop_mode, "real")),
     )
     actions.append(cameras_launch)
-
-    # Include sim_gazebo.launch ONLY if teleop_mode == "gazebo"
-    gazebo_log = LogInfo(
-        msg="[TELEOP LAUNCH] Launching Gazebo simulation",
-        condition=IfCondition(EqualsSubstitution(teleop_mode, "gazebo")),
-    )
-    actions.append(gazebo_log)
-
-    sim_gazebo_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(bringup_pkg, "launch", "include", "sim_gazebo.launch.py")
-        ),
-        launch_arguments={
-            "model": model,
-            "display_config": display_config,
-        }.items(),
-        condition=IfCondition(EqualsSubstitution(teleop_mode, "gazebo")),
-    )
-    actions.append(sim_gazebo_launch)
 
     # Include sim_isaac.launch ONLY if teleop_mode == "isaac"
     isaac_log = LogInfo(

@@ -74,21 +74,6 @@ def generate_launch_description():
         namespace=robot_type,
     )
 
-    # This event handler will now only shut down the launch script if the node
-    # crashes (exits with a non-zero code). A clean exit (Ctrl+C) will be ignored.
-    # node_monitor = RegisterEventHandler(
-    #     OnProcessExit(
-    #         target_action=so101_bridge_node,
-    #         on_exit=[
-    #             Shutdown(
-    #                 reason=f"Node '{so101_bridge_node.name}' crashed, shutting down launch."
-    #             )
-    #         ],
-    #         # This condition ensures the shutdown only happens on a crash
-    #         # condition=lambda event: event.returncode != 0,
-    #     )
-    # )
-
     return LaunchDescription(
         [
             # type_arg,
