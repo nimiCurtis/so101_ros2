@@ -9,7 +9,7 @@
   <!-- packages in so101_ros2 -->
   <exec_depend>so101_controller</exec_depend>
   <exec_depend>so101_description</exec_depend>
-  <exec_depend>so101_moveit</exec_depend>
+  <!-- <exec_depend>so101_moveit</exec_depend> -->
   <exec_depend>so101_sim</exec_depend>
   <exec_depend>so101_teleop</exec_depend>
   <exec_depend>so101_ros2_bridge</exec_depend>

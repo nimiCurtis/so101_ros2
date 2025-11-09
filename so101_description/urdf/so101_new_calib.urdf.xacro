@@ -11,11 +11,6 @@
     <xacro:include filename="$(find so101_description)/urdf/so101_new_calib.urdf" />
     <xacro:include filename="$(find so101_description)/urdf/so101_new_calib_with_transmission.xacro"/>
 
-    <!-- Conditionally include gazebo extensions if mode is gazebo -->
-    <xacro:if value="$(eval mode == 'gazebo')">
-        <xacro:include filename="$(find so101_description)/urdf/so101_new_calib_gazebo.xacro"/>
-    </xacro:if>
-
     <!-- Conditionally include control if not GUI -->
     <xacro:if value="$(eval not joint_states_gui)">
         <xacro:include filename="$(find so101_description)/urdf/so101_new_calib.ros2_control.xacro" />
