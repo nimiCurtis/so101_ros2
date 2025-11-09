@@ -4,8 +4,6 @@ import os
 
 package_name = 'so101_ros2_bridge'
 
-# Get conda environment python path
-conda_python = '/home/anton/miniconda3/envs/lerobot_ros2/bin/python'
 
 setup(
     name=package_name,
@@ -29,20 +27,14 @@ setup(
     entry_points={
         'console_scripts': [
             # node scripts
-            'follower_node = so101_ros2_bridge.follower_ros2_node:main',
-            'leader_node = so101_ros2_bridge.leader_ros2_node:main',
+            'follower_ros2_node = so101_ros2_bridge.follower_ros2_node:main',
+            'leader_ros2_node = so101_ros2_bridge.leader_ros2_node:main',
             'smolvla_inference_node = so101_ros2_bridge.smolvla_inference_node:main',
             'smolvla_test_node = so101_ros2_bridge.smolvla_test_node:main',
             'action_chunk_executor_node = so101_ros2_bridge.action_chunk_executor_node:main',
-            # python scripts
-            'smolvla_inference_node.py = so101_ros2_bridge.smolvla_inference_node:main',
-            'action_chunk_executor_node.py = so101_ros2_bridge.action_chunk_executor_node:main',
+            # # python scripts
+            # 'smolvla_inference_node.py = so101_ros2_bridge.smolvla_inference_node:main',
+            # 'action_chunk_executor_node.py = so101_ros2_bridge.action_chunk_executor_node:main',
         ],
-    },
-    # Force use of conda python
-    options={
-        'build_scripts': {
-            'executable': conda_python,
-        },
     },
 )
