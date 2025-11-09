@@ -28,7 +28,6 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 import rclpy
-from cv2 import norm
 from rclpy.node import Node
 from rclpy.qos import (
     QoSDurabilityPolicy,
