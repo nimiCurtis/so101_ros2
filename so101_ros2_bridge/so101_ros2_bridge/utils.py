@@ -33,10 +33,10 @@ def ensure_conda_site_packages_from_env(var_name='LECONDA_SITE_PACKAGES'):
     """
     conda_site = os.environ.get(var_name)
     if not conda_site:
-        raise EnvironmentError(f'{var_name} environment variable is not set.')
+        return
 
     if not os.path.exists(conda_site):
-        raise EnvironmentError(f"{var_name} path '{conda_site}' does not exist.")
+        return
 
     if conda_site not in sys.path:
         sys.path.append(conda_site)
