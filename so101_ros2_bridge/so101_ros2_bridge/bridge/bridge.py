@@ -36,7 +36,7 @@ from rclpy.qos import (
     QoSReliabilityPolicy,
 )
 from sensor_msgs.msg import JointState
-from std_msgs.msg import Float64MultiArray  # Import message type for commands
+from std_msgs.msg import Float64MultiArray
 
 # Ensure the conda site-packages directory is in the system path
 from so101_ros2_bridge.utils import ensure_conda_site_packages_from_env
@@ -64,7 +64,7 @@ class SO101ROS2Bridge(Node, ABC):
     def __init__(self, node_name='so101_ros2_bridge'):
         super().__init__(node_name)
         params = self.read_parameters()
-        self.use_degrees = params["use_degrees"]
+        self.use_degrees = params['use_degrees']
 
         # Initialize watchdog at the background
         self._is_alive = True
@@ -78,7 +78,7 @@ class SO101ROS2Bridge(Node, ABC):
         self._positions = [0.0] * len(self.JOINT_NAMES)
         self._velocities = [0.0] * len(self.JOINT_NAMES)
 
-        rate = params.get("publish_rate", 30.0)
+        rate = params.get('publish_rate', 30.0)
 
         self.joint_pub = self.create_publisher(JointState, 'joint_states_raw', 10)
 
@@ -87,14 +87,12 @@ class SO101ROS2Bridge(Node, ABC):
         # Register the robot type in the factory registry
         if not ROBOT_FACTORY_REGISTRY:
             raise RuntimeError(
-                "ROBOT_FACTORY_REGISTRY is empty. Ensure robot types are registered."
+                'ROBOT_FACTORY_REGISTRY is empty. Ensure robot types are registered.'
             )
 
-        self.declare_parameter("type", "follower")
-        robot_type = self.get_parameter("type").get_parameter_value().string_value
-        self.get_logger().info(
-            f"Initializing SO101 ROS2 Bridge for robot type: {robot_type}"
-        )
+        self.declare_parameter('type', 'follower')
+        robot_type = self.get_parameter('type').get_parameter_value().string_value
+        self.get_logger().info(f'Initializing SO101 ROS2 Bridge for robot type: {robot_type}')
         factory_fn = ROBOT_FACTORY_REGISTRY.get(robot_type)
         if factory_fn is None:
             raise ValueError(f"Robot type '{robot_type}' not registered.")
@@ -105,7 +103,7 @@ class SO101ROS2Bridge(Node, ABC):
         try:
             self.robot.connect(calibrate=False)
         except Exception as e:
-            raise RuntimeError(f"Failed to connect to SO101 robot: {e}") from e
+            raise RuntimeError(f'Failed to connect to SO101 robot: {e}') from e
 
         self.last_positions = None
         self.last_time = self.get_clock().now()
@@ -132,23 +130,21 @@ class SO101ROS2Bridge(Node, ABC):
 
             # Update the pre-allocated lists instead of creating new ones
             for i, joint in enumerate(self.JOINT_NAMES):
-                if joint == "gripper":
-                    pos = ((obs.get(f"{joint}.pos", 0.0) - 10.0) / 100.0) * math.pi
+                if joint == 'gripper':
+                    pos = ((obs.get(f'{joint}.pos', 0.0) - 10.0) / 100.0) * math.pi
                 else:
                     if self.use_degrees:
-                        pos = math.radians(obs.get(f"{joint}.pos", 0.0))
+                        pos = math.radians(obs.get(f'{joint}.pos', 0.0))
                     else:
                         # unormalized range [-100, 100] to radians
-                        pos = (obs.get(f"{joint}.pos", 0.0) / 100.0) * math.pi
+                        pos = (obs.get(f'{joint}.pos', 0.0) / 100.0) * math.pi
                 self._positions[i] = pos
 
             if self.last_positions is not None:
                 dt = (current_time - self.last_time).nanoseconds / 1e9
                 if dt > 1e-6:  # More robust check against zero
                     for i in range(len(self.JOINT_NAMES)):
-                        self._velocities[i] = (
-                            self._positions[i] - self.last_positions[i]
-                        ) / dt
+                        self._velocities[i] = (self._positions[i] - self.last_positions[i]) / dt
 
             # Update and publish the pre-allocated message
             self._joint_state_msg.header.stamp = self.get_clock().now().to_msg()
@@ -161,7 +157,7 @@ class SO101ROS2Bridge(Node, ABC):
             self.last_time = current_time
 
         except Exception as e:
-            self.get_logger().error(f"Failed to publish joint states: {e}")
+            self.get_logger().error(f'Failed to publish joint states: {e}')
 
     def _alive(self):
         """
@@ -175,7 +171,7 @@ class SO101ROS2Bridge(Node, ABC):
             # Check ROS system state
             if not rclpy.ok():
                 self.get_logger().error(
-                    "ROS shutdown detected (rclpy.ok() == False). Triggering shutdown."
+                    'ROS shutdown detected (rclpy.ok() == False). Triggering shutdown.'
                 )
                 self.shutdown_hook()
                 rclpy.try_shutdown()
@@ -186,7 +182,7 @@ class SO101ROS2Bridge(Node, ABC):
             elapsed = (now - self.last_time).nanoseconds / 1e9
             if elapsed > self._timeout:
                 self.get_logger().error(
-                    f"ROS time not updating for {elapsed:.1f}s — triggering shutdown."
+                    f'ROS time not updating for {elapsed:.1f}s — triggering shutdown.'
                 )
                 self.shutdown_hook()
                 rclpy.try_shutdown()
@@ -203,21 +199,21 @@ class SO101ROS2Bridge(Node, ABC):
 
         self._is_alive = False
         try:
-            self.get_logger().info("Shutting down, disconnecting robot...")
+            self.get_logger().info('Shutting down, disconnecting robot...')
             if hasattr(self, 'robot'):
                 (
                     self.robot.disconnect()
                     if self.robot.is_connected
-                    else self.get_logger().warn("Robot is already disconnected")
+                    else self.get_logger().warn('Robot is already disconnected')
                 )
         except Exception as e:
-            self.get_logger().warn(f"Exception during shutdown: {e}")
+            self.get_logger().warn(f'Exception during shutdown: {e}')
 
     def radians_to_normalized(self, joint_name: str, rad: float) -> float:
         """
         converts a command in radians from MoveIt to the format expected by the SO101 API.
         """
-        if joint_name == "gripper":
+        if joint_name == 'gripper':
             # Convert radian command [0, pi] to the robot's expected gripper range [10, ~110]
             normalized = (rad / math.pi) * 100.0 + 10.0
         else:
@@ -231,15 +227,12 @@ class SO101ROS2Bridge(Node, ABC):
 
 
 class FollowerBridge(SO101ROS2Bridge):
-
     def __init__(self):
-        super().__init__("so101_follower_ros2_bridge")
+        super().__init__('so101_follower_ros2_bridge')
 
         # Type hint of the robot
         if not isinstance(self.robot, SO101Follower):
-            raise TypeError(
-                f"Expected robot type SO101Follower, got {type(self.robot).__name__}"
-            )
+            raise TypeError(f'Expected robot type SO101Follower, got {type(self.robot).__name__}')
 
         # QoS for joint command subscriber
         qos_joint_cmds = QoSProfile(
@@ -256,42 +249,34 @@ class FollowerBridge(SO101ROS2Bridge):
             self.command_callback,
             qos_joint_cmds,
         )
-        self.get_logger().info("SO101 Follower ROS2 Bridge initialized.")
+        self.get_logger().info('SO101 Follower ROS2 Bridge initialized.')
 
     def read_parameters(self) -> dict:
-        self.declare_parameter("port", "/dev/ttyACM1")
-        self.declare_parameter("id", "Tzili")
-        self.declare_parameter("calibration_dir", str(CALIBRATION_BASE_DIR))
-        self.declare_parameter("use_degrees", True)
-        self.declare_parameter("max_relative_target", 0)
-        self.declare_parameter("disable_torque_on_disconnect", True)
-        self.declare_parameter("publish_rate", 30.0)
+        self.declare_parameter('port', '/dev/ttyACM1')
+        self.declare_parameter('id', 'Tzili')
+        self.declare_parameter('calibration_dir', str(CALIBRATION_BASE_DIR))
+        self.declare_parameter('use_degrees', True)
+        self.declare_parameter('max_relative_target', 0)
+        self.declare_parameter('disable_torque_on_disconnect', True)
+        self.declare_parameter('publish_rate', 30.0)
 
         max_relative_target = (
-            self.get_parameter("max_relative_target")
-            .get_parameter_value()
-            .integer_value
+            self.get_parameter('max_relative_target').get_parameter_value().integer_value
         )
         max_relative_target = max_relative_target if max_relative_target != 0 else None
 
         return {
-            "port": self.get_parameter("port").get_parameter_value().string_value,
-            "id": self.get_parameter("id").get_parameter_value().string_value,
-            "calibration_dir": Path(
-                self.get_parameter("calibration_dir").get_parameter_value().string_value
+            'port': self.get_parameter('port').get_parameter_value().string_value,
+            'id': self.get_parameter('id').get_parameter_value().string_value,
+            'calibration_dir': Path(
+                self.get_parameter('calibration_dir').get_parameter_value().string_value
             ),
-            "use_degrees": (
-                self.get_parameter("use_degrees").get_parameter_value().bool_value
+            'use_degrees': self.get_parameter('use_degrees').get_parameter_value().bool_value,
+            'max_relative_target': max_relative_target,
+            'disable_torque_on_disconnect': (
+                self.get_parameter('disable_torque_on_disconnect').get_parameter_value().bool_value
             ),
-            "max_relative_target": max_relative_target,
-            "disable_torque_on_disconnect": (
-                self.get_parameter("disable_torque_on_disconnect")
-                .get_parameter_value()
-                .bool_value
-            ),
-            "publish_rate": (
-                self.get_parameter("publish_rate").get_parameter_value().double_value
-            ),
+            'publish_rate': self.get_parameter('publish_rate').get_parameter_value().double_value,
         }
 
     def get_joints_states(self) -> dict:
@@ -307,54 +292,45 @@ class FollowerBridge(SO101ROS2Bridge):
         """
         if len(msg.data) != len(self.JOINT_NAMES):
             self.get_logger().error(
-                f"Received command with {len(msg.data)} joints, but expected {len(self.JOINT_NAMES)}."
+                f'Received command with {len(msg.data)} joints, but expected {len(self.JOINT_NAMES)}.'
             )
             return
 
         target_positions = {}
         for i, joint in enumerate(self.JOINT_NAMES):
             # Convert the incoming radian command to the format the robot expects (degrees or normalized)
-            target_positions[f"{joint}.pos"] = self.radians_to_normalized(
-                joint, msg.data[i]
-            )
+            target_positions[f'{joint}.pos'] = self.radians_to_normalized(joint, msg.data[i])
 
         try:
             self.robot.send_action(target_positions)
         except Exception as e:
-            self.get_logger().error(f"Failed to send commands to robot: {e}")
+            self.get_logger().error(f'Failed to send commands to robot: {e}')
 
 
 class LeaderBridge(SO101ROS2Bridge):
-
     def __init__(self):
-        super().__init__("so101_leader_ros2_bridge")
+        super().__init__('so101_leader_ros2_bridge')
 
         # Type hint of the robot
         if not isinstance(self.robot, SO101Leader):
-            raise TypeError(
-                f"Expected robot type SO101Leader, got {type(self.robot).__name__}"
-            )
-        self.get_logger().info("SO101 Leader ROS2 Bridge initialized.")
+            raise TypeError(f'Expected robot type SO101Leader, got {type(self.robot).__name__}')
+        self.get_logger().info('SO101 Leader ROS2 Bridge initialized.')
 
     def read_parameters(self) -> dict:
-        self.declare_parameter("port", "/dev/ttyACM0")
-        self.declare_parameter("id", "Gili")
-        self.declare_parameter("calibration_dir", str(CALIBRATION_BASE_DIR))
-        self.declare_parameter("use_degrees", True)
-        self.declare_parameter("publish_rate", 30.0)
+        self.declare_parameter('port', '/dev/ttyACM0')
+        self.declare_parameter('id', 'Gili')
+        self.declare_parameter('calibration_dir', str(CALIBRATION_BASE_DIR))
+        self.declare_parameter('use_degrees', True)
+        self.declare_parameter('publish_rate', 30.0)
 
         return {
-            "port": self.get_parameter("port").get_parameter_value().string_value,
-            "id": self.get_parameter("id").get_parameter_value().string_value,
-            "calibration_dir": Path(
-                self.get_parameter("calibration_dir").get_parameter_value().string_value
+            'port': self.get_parameter('port').get_parameter_value().string_value,
+            'id': self.get_parameter('id').get_parameter_value().string_value,
+            'calibration_dir': Path(
+                self.get_parameter('calibration_dir').get_parameter_value().string_value
             ),
-            "use_degrees": (
-                self.get_parameter("use_degrees").get_parameter_value().bool_value
-            ),
-            "publish_rate": (
-                self.get_parameter("publish_rate").get_parameter_value().double_value
-            ),
+            'use_degrees': self.get_parameter('use_degrees').get_parameter_value().bool_value,
+            'publish_rate': self.get_parameter('publish_rate').get_parameter_value().double_value,
         }
 
     def get_joints_states(self) -> dict:

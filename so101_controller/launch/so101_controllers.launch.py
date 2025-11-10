@@ -26,33 +26,33 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    robot_type = LaunchConfiguration("type")
+    robot_type = LaunchConfiguration('type')
 
     arm_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["arm_controller", "--controller-manager", "controller_manager"],
-        output="screen",
+        package='controller_manager',
+        executable='spawner',
+        arguments=['arm_controller', '--controller-manager', 'controller_manager'],
+        output='screen',
         namespace=robot_type,
     )
 
     gripper_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["gripper_controller", "--controller-manager", "controller_manager"],
-        output="screen",
+        package='controller_manager',
+        executable='spawner',
+        arguments=['gripper_controller', '--controller-manager', 'controller_manager'],
+        output='screen',
         namespace=robot_type,
     )
 
     joint_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
+        package='controller_manager',
+        executable='spawner',
         arguments=[
-            "joint_state_broadcaster",
-            "--controller-manager",
-            "controller_manager",
+            'joint_state_broadcaster',
+            '--controller-manager',
+            'controller_manager',
         ],
-        output="screen",
+        output='screen',
         namespace=robot_type,
     )
 

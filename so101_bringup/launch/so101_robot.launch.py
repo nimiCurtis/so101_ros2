@@ -30,57 +30,54 @@ from launch.substitutions import LaunchConfiguration, PythonExpression
 
 
 def generate_launch_description():
-
     # Launch description lists
     args = []
     actions = []
 
     # Paths
-    bringup_pkg = get_package_share_directory("so101_bringup")
-    description_pkg = get_package_share_directory("so101_description")
+    bringup_pkg = get_package_share_directory('so101_bringup')
+    description_pkg = get_package_share_directory('so101_description')
 
     # --- Declare arguments ---
     robot_type_arg = DeclareLaunchArgument(
-        "type",
-        default_value="follower",
-        description="Robot type: follower / leader",
+        'type',
+        default_value='follower',
+        description='Robot type: follower / leader',
     )
     args.append(robot_type_arg)
 
     display_config_arg = DeclareLaunchArgument(
-        "display_config",
+        'display_config',
         default_value=os.path.join(
             description_pkg,
-            "rviz",
-            "display.rviz",
+            'rviz',
+            'display.rviz',
         ),
     )
     args.append(display_config_arg)
 
     display_arg = DeclareLaunchArgument(
-        "display", default_value="false", description="Launch RViz or not"
+        'display', default_value='false', description='Launch RViz or not'
     )
     args.append(display_arg)
 
     model_arg = DeclareLaunchArgument(
-        "model",
-        default_value=os.path.join(
-            description_pkg, "urdf", "so101_new_calib.urdf.xacro"
-        ),
+        'model',
+        default_value=os.path.join(description_pkg, 'urdf', 'so101_new_calib.urdf.xacro'),
     )
     args.append(model_arg)
 
-    model = LaunchConfiguration("model")
-    robot_type = LaunchConfiguration("type")
-    display_config = LaunchConfiguration("display_config")
-    display = LaunchConfiguration("display")
+    model = LaunchConfiguration('model')
+    robot_type = LaunchConfiguration('type')
+    display_config = LaunchConfiguration('display_config')
+    display = LaunchConfiguration('display')
 
     # Include robot ros2 bridge
     follower_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(bringup_pkg, "launch", "include", "follower.launch.py")
+            os.path.join(bringup_pkg, 'launch', 'include', 'follower.launch.py')
         ),
-        launch_arguments={"model": model}.items(),
+        launch_arguments={'model': model}.items(),
         condition=IfCondition(PythonExpression(["'", robot_type, "' == 'follower'"])),
     )
     actions.append(follower_launch)
@@ -88,21 +85,19 @@ def generate_launch_description():
     # Include leader launch
     leader_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(bringup_pkg, "launch", "include", "leader.launch.py")
+            os.path.join(bringup_pkg, 'launch', 'include', 'leader.launch.py')
         ),
-        launch_arguments={"model": model}.items(),
+        launch_arguments={'model': model}.items(),
         condition=IfCondition(PythonExpression(["'", robot_type, "' == 'leader'"])),
     )
     actions.append(leader_launch)
 
     # Include display.launch.py
     display_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(description_pkg, "launch", "display.launch.py")
-        ),
+        PythonLaunchDescriptionSource(os.path.join(description_pkg, 'launch', 'display.launch.py')),
         launch_arguments={
-            "joint_states_gui": "false",
-            "display_config": display_config,
+            'joint_states_gui': 'false',
+            'display_config': display_config,
         }.items(),
     )
 

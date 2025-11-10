@@ -29,22 +29,22 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    robot_type = LaunchConfiguration("type")
+    robot_type = LaunchConfiguration('type')
 
     controller_manager_node = Node(
-        package="controller_manager",
-        executable="ros2_control_node",
+        package='controller_manager',
+        executable='ros2_control_node',
         parameters=[
             os.path.join(
-                get_package_share_directory("so101_controller"),
-                "config",
-                "so101_controllers.yaml",
+                get_package_share_directory('so101_controller'),
+                'config',
+                'so101_controllers.yaml',
             ),
         ],
         remappings=[
-            ("~/robot_description", "robot_description"),
+            ('~/robot_description', 'robot_description'),
         ],
-        output="screen",
+        output='screen',
         namespace=robot_type,
         # Add log level arguments to reduce verbosity of gripper controller for the follower
         arguments=['--ros-args', '--log-level', 'follower.gripper_controller:=warn'],

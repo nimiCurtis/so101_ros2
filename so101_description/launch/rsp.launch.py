@@ -35,11 +35,10 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
-
     # Launch configurations
-    model = LaunchConfiguration("model")
-    mode = LaunchConfiguration("mode")
-    robot_type = LaunchConfiguration("type")
+    model = LaunchConfiguration('model')
+    mode = LaunchConfiguration('mode')
+    robot_type = LaunchConfiguration('type')
 
     # Determine use_sim based on mode
     use_sim = PythonExpression(["'", mode, "' != 'real'"])
@@ -48,11 +47,11 @@ def generate_launch_description():
     robot_description = ParameterValue(
         Command(
             [
-                PathJoinSubstitution([FindExecutable(name="xacro")]),
-                " ",
+                PathJoinSubstitution([FindExecutable(name='xacro')]),
+                ' ',
                 model,
-                " ",
-                "mode:=",
+                ' ',
+                'mode:=',
                 mode,
             ]
         ),
@@ -61,15 +60,15 @@ def generate_launch_description():
 
     # Robot state publisher node
     robot_state_publisher_node = Node(
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
         parameters=[
-            {"robot_description": robot_description},
-            {"use_sim_time": use_sim},
+            {'robot_description': robot_description},
+            {'use_sim_time': use_sim},
             {
-                "frame_prefix": [
+                'frame_prefix': [
                     robot_type,
-                    TextSubstitution(text="/"),
+                    TextSubstitution(text='/'),
                 ]
             },
         ],
@@ -78,19 +77,19 @@ def generate_launch_description():
 
     # Static transform publisher: world -> {robot_type}/base_link
     static_tf_node = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        name="world_to_base_link_publisher",
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='world_to_base_link_publisher',
         namespace=robot_type,
         arguments=[
-            "0",
-            "0",
-            "0",  # x y z
-            "0",
-            "0",
-            "0",  # roll pitch yaw (or qx qy qz qw)
-            "world",  # parent frame
-            [robot_type, TextSubstitution(text="/base_link")],  # child frame
+            '0',
+            '0',
+            '0',  # x y z
+            '0',
+            '0',
+            '0',  # roll pitch yaw (or qx qy qz qw)
+            'world',  # parent frame
+            [robot_type, TextSubstitution(text='/base_link')],  # child frame
         ],
     )
 

@@ -29,25 +29,24 @@ from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
-
     # Paths
-    robot_ros2_bridge_pkg = get_package_share_directory("so101_ros2_bridge")
-    controller_pkg = get_package_share_directory("so101_controller")
-    description_pkg = get_package_share_directory("so101_description")
+    robot_ros2_bridge_pkg = get_package_share_directory('so101_ros2_bridge')
+    controller_pkg = get_package_share_directory('so101_controller')
+    description_pkg = get_package_share_directory('so101_description')
 
-    model = LaunchConfiguration("model")
+    model = LaunchConfiguration('model')
 
     follower_rsp_group = GroupAction(
         scoped=True,
         actions=[
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                    os.path.join(description_pkg, "launch", "rsp.launch.py")
+                    os.path.join(description_pkg, 'launch', 'rsp.launch.py')
                 ),
                 launch_arguments={
-                    "model": model,
-                    "mode": "real",  # leader always hardware
-                    "type": "follower",
+                    'model': model,
+                    'mode': 'real',  # leader always hardware
+                    'type': 'follower',
                 }.items(),
             ),
         ],
@@ -56,34 +55,30 @@ def generate_launch_description():
     # Include robot ros2 bridge
     robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(robot_ros2_bridge_pkg, "launch", "so101_ros2_bridge.launch.py")
+            os.path.join(robot_ros2_bridge_pkg, 'launch', 'so101_ros2_bridge.launch.py')
         ),
-        launch_arguments={"type": "follower"}.items(),
+        launch_arguments={'type': 'follower'}.items(),
     )
 
     # Include controller manger
     controller_manager_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(controller_pkg, "launch", "controller_manager.launch.py")
+            os.path.join(controller_pkg, 'launch', 'controller_manager.launch.py')
         ),
-        launch_arguments={"type": "follower"}.items(),
+        launch_arguments={'type': 'follower'}.items(),
     )
 
     # Include controller spawners
     spawn_controllers_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(controller_pkg, "launch", "so101_controllers.launch.py")
+            os.path.join(controller_pkg, 'launch', 'so101_controllers.launch.py')
         ),
-        launch_arguments={"type": "follower"}.items(),
+        launch_arguments={'type': 'follower'}.items(),
     )
 
-    delayed_controller_manager = TimerAction(
-        period=3.0, actions=[controller_manager_launch]
-    )
+    delayed_controller_manager = TimerAction(period=3.0, actions=[controller_manager_launch])
 
-    delayed_spawn_controllers = TimerAction(
-        period=6.0, actions=[spawn_controllers_launch]
-    )
+    delayed_spawn_controllers = TimerAction(period=6.0, actions=[spawn_controllers_launch])
 
     return LaunchDescription(
         [

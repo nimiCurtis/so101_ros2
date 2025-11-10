@@ -30,7 +30,6 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-
     # Declare the 'type' argument so it can be set from the command line
     # type_arg = DeclareLaunchArgument(
     #     "type",
@@ -38,17 +37,17 @@ def generate_launch_description():
     #     description="The type of the robot bridge to launch (leader or follower)."
     # )
 
-    robot_type = LaunchConfiguration("type")
+    robot_type = LaunchConfiguration('type')
 
     # Use PathJoinSubstitution to build the path to the config file dynamically
     config_path = PathJoinSubstitution(
         [
-            FindPackageShare("so101_ros2_bridge"),
-            "config",
+            FindPackageShare('so101_ros2_bridge'),
+            'config',
             [
-                TextSubstitution(text="so101_"),
+                TextSubstitution(text='so101_'),
                 robot_type,
-                TextSubstitution(text="_params.yaml"),
+                TextSubstitution(text='_params.yaml'),
             ],
         ]
     )
@@ -69,7 +68,7 @@ def generate_launch_description():
         parameters=[
             config_path,
             # Pass the robot_type as a ROS parameter named 'type'
-            {"type": robot_type},
+            {'type': robot_type},
         ],
         namespace=robot_type,
     )

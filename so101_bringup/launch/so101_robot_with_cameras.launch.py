@@ -30,64 +30,59 @@ from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
-
     # Paths
-    bringup_pkg = get_package_share_directory("so101_bringup")
-    description_pkg = get_package_share_directory("so101_description")
+    bringup_pkg = get_package_share_directory('so101_bringup')
+    description_pkg = get_package_share_directory('so101_description')
 
     # --- Declare arguments ---
     robot_type_arg = DeclareLaunchArgument(
-        "type",
-        default_value="follower",
-        description="Robot type: follower / leader",
+        'type',
+        default_value='follower',
+        description='Robot type: follower / leader',
     )
 
     display_config_arg = DeclareLaunchArgument(
-        "display_config",
+        'display_config',
         default_value=os.path.join(
             bringup_pkg,
-            "rviz",
-            "robot_display_with_cameras.rviz",
+            'rviz',
+            'robot_display_with_cameras.rviz',
         ),
     )
     display_arg = DeclareLaunchArgument(
-        "display", default_value="false", description="Launch RViz or not"
+        'display', default_value='false', description='Launch RViz or not'
     )
     model_arg = DeclareLaunchArgument(
-        "model",
-        default_value=os.path.join(
-            description_pkg, "urdf", "so101_new_calib.urdf.xacro"
-        ),
+        'model',
+        default_value=os.path.join(description_pkg, 'urdf', 'so101_new_calib.urdf.xacro'),
     )
 
-    model = LaunchConfiguration("model")
-    robot_type = LaunchConfiguration("type")
-    display_config = LaunchConfiguration("display_config")
-    display = LaunchConfiguration("display")
+    model = LaunchConfiguration('model')
+    robot_type = LaunchConfiguration('type')
+    display_config = LaunchConfiguration('display_config')
+    display = LaunchConfiguration('display')
 
     # Include robot ros2 bridge
     robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(bringup_pkg, "launch", "include", "robot.launch.py")
+            os.path.join(bringup_pkg, 'launch', 'include', 'robot.launch.py')
         ),
-        launch_arguments={"type": robot_type, "model": model}.items(),
+        launch_arguments={'type': robot_type, 'model': model}.items(),
     )
 
     # Include cameras
     cameras_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(bringup_pkg, "launch", "include", "camera.launch.py")
+            os.path.join(bringup_pkg, 'launch', 'include', 'camera.launch.py')
         ),
     )
 
     # Include display.launch.py
     display_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(description_pkg, "launch", "display.launch.py")
-        ),
+        PythonLaunchDescriptionSource(os.path.join(description_pkg, 'launch', 'display.launch.py')),
         launch_arguments={
-            "joint_states_gui": "false",
-            "display_config": display_config,
+            'joint_states_gui': 'false',
+            'display_config': display_config,
         }.items(),
     )
 

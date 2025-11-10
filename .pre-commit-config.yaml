@@ -11,18 +11,14 @@ repos:
     hooks:
       - id: ruff
         args: ["--fix"]
-
-  - repo: https://github.com/pre-commit/mirrors-isort
-    rev: v5.10.1
-    hooks:
-      - id: isort
-        args: ["--profile", "black"]
+      - id: ruff-format
+        args: ["--verbose"]
 
   - repo: https://github.com/psf/black
     rev: 25.9.0
     hooks:
       - id: black
-        args: ["--line-length", "88", "--preview", "--skip-string-normalization"]
+        args: ["--line-length", "100", "--preview", "--skip-string-normalization"]
 
   - repo: local
     hooks:
