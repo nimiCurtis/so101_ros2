@@ -1,7 +1,7 @@
 cameras:
 
   - name: cam_front # name of camera
-    camera_type: usb_camera # name of pkg
+    camera_type: usb_camera # name of pkg # Currently supports 'usb_camera' and 'realsense2_camera'
     param_path: so101_usb_cam.yaml # path to camera specific config file
     namespace: follower # ns (info of cam location)
 

@@ -213,17 +213,12 @@ class SO101ROS2Bridge(Node, ABC):
         """
         converts a command in radians from MoveIt to the format expected by the SO101 API.
         """
-        if joint_name == 'gripper':
-            # Convert radian command [0, pi] to the robot's expected gripper range [10, ~110]
-            normalized = (rad / math.pi) * 100.0 + 10.0
+        if joint_name != 'gripper' and self.use_degrees:
+            return math.degrees(rad)
         else:
-            # Convert radians to degrees for all other joints
-            if self.use_degrees:
-                normalized = math.degrees(rad)
-            else:
-                # Convert radians to normalized range [-100, 100]
-                normalized = (rad / math.pi) * 100.0
-        return normalized
+            # Convert radians to normalized range [-100, 100] for other joints and gripper to normalized [0,100]
+            normalized = (rad / math.pi) * 100.0
+            return normalized
 
 
 class FollowerBridge(SO101ROS2Bridge):

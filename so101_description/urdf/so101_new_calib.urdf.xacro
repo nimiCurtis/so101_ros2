@@ -4,7 +4,7 @@
     <!-- Arguments -->
     <xacro:arg name="initial_positions_file" default="$(find so101_description)/config/initial_positions.yaml" />
     <xacro:arg name="display" default="false"/>
-    <xacro:arg name="mode" default="real"/> <!-- or 'isaac' or 'gazebo' -->
+    <xacro:arg name="mode" default="real"/> <!-- or 'isaac' -->
     <xacro:arg name="joint_states_gui" default="false"/>
 
     <!-- Import base URDF -->
