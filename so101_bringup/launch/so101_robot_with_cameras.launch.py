@@ -30,16 +30,13 @@ from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
+    # Launch description lists
+    args = []
+    actions = []
+
     # Paths
     bringup_pkg = get_package_share_directory('so101_bringup')
     description_pkg = get_package_share_directory('so101_description')
-
-    # --- Declare arguments ---
-    robot_type_arg = DeclareLaunchArgument(
-        'type',
-        default_value='follower',
-        description='Robot type: follower / leader',
-    )
 
     display_config_arg = DeclareLaunchArgument(
         'display_config',
@@ -49,33 +46,41 @@ def generate_launch_description():
             'robot_display_with_cameras.rviz',
         ),
     )
+    args.append(display_config_arg)
+
     display_arg = DeclareLaunchArgument(
         'display', default_value='false', description='Launch RViz or not'
     )
+    args.append(display_arg)
+
     model_arg = DeclareLaunchArgument(
         'model',
         default_value=os.path.join(description_pkg, 'urdf', 'so101_new_calib.urdf.xacro'),
     )
+    args.append(model_arg)
 
     model = LaunchConfiguration('model')
-    robot_type = LaunchConfiguration('type')
     display_config = LaunchConfiguration('display_config')
     display = LaunchConfiguration('display')
 
-    # Include robot ros2 bridge
-    robot_launch = IncludeLaunchDescription(
+    follower_robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(bringup_pkg, 'launch', 'include', 'robot.launch.py')
+            os.path.join(bringup_pkg, 'launch', 'include', 'follower.launch.py')
         ),
-        launch_arguments={'type': robot_type, 'model': model}.items(),
+        launch_arguments={
+            'model': model,
+            'use_sim_time': 'false',
+        }.items(),
     )
+    actions.append(follower_robot_launch)
 
-    # Include cameras
+    # Include cameras - ONLY in real mode
     cameras_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(bringup_pkg, 'launch', 'include', 'camera.launch.py')
         ),
     )
+    actions.append(cameras_launch)
 
     # Include display.launch.py
     display_launch = IncludeLaunchDescription(
@@ -89,15 +94,6 @@ def generate_launch_description():
     delayed_display = TimerAction(
         period=3.0, actions=[display_launch], condition=IfCondition(display)
     )
+    actions.append(delayed_display)
 
-    return LaunchDescription(
-        [
-            model_arg,
-            robot_type_arg,
-            display_arg,
-            display_config_arg,
-            robot_launch,
-            cameras_launch,
-            delayed_display,
-        ]
-    )
+    return LaunchDescription(args + actions)

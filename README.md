@@ -38,10 +38,10 @@ These docs assume that your SO101 is already assembled and all motor IDs and bau
     conda activate lerobot_ros2
     ```
 
-    To avoid "libstdc++.so.6: version GLIBCXX_3.4.30' not found (required by /opt/ros/humble/lib/librosbag2_compression.so)" error update conda’s C++ runtime:
+    **[NOTE]:** To avoid "libstdc++.so.6: version GLIBCXX_3.4.30' not found (required by /opt/ros/humble/lib/librosbag2_compression.so)" error update conda’s C++ runtime:
 
   ```bash
-    conda install -n lerobot_ros -c conda-forge "libstdcxx-ng>=12" "libgcc-ng>=12"
+    conda install -n lerobot_ros2 -c conda-forge "libstdcxx-ng>=12" "libgcc-ng>=12"
   ```
 
 
@@ -90,7 +90,9 @@ Try this tutorial from the [official link](https://huggingface.co/docs/lerobot/i
 
 1. Follow the instructions of the [this link](https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/source_installation.html) to install IsaacSim 5.0 and the most updated IsaacLab.
 
-    **[NOTE]: Install IsaacLab using conda so it can be synced with lerobot dependencies, this is a different conda environment then the lerobot_ros2 installed in the previous steps!!!, because the native python version of isaac is 3.11 and the native python of ros2 humble is 3.10**
+    **[NOTE]**: Install **IsaacLab** in a **separate conda environment** from the one used for `lerobot_ros2`.
+    This separation is required because **IsaacLab uses Python 3.11**, while **ROS 2 Humble and `lerobot_ros2` use Python 3.10**. Keeping them in distinct environments ensures compatibility while allowing dependency synchronization with `lerobot`.
+
 
 2. Activate the environment:
 
@@ -99,7 +101,7 @@ Try this tutorial from the [official link](https://huggingface.co/docs/lerobot/i
     ```
 
 3. Then from the lerobot directory, install the extras required for the IsaacLab
-   utilities (adjust the extras list to match the features you use):
+   utilities, adjust the extras list to match the features you use, for example:
 
     ```bash
     pip install -e ".[feetech,smolvla,pi,async]"
@@ -107,7 +109,7 @@ Try this tutorial from the [official link](https://huggingface.co/docs/lerobot/i
 
 ### Build so101_ros2
 
-Once you can teleoperate so101 leader-follower properly it is time to bridge to ros2 workspace.
+Once you can teleoperate so101 leader-follower properly with lerobot API it is time to bridge to ros2 workspace.
 
 1. **Create the workspace and clone the repository:**
 
@@ -135,9 +137,15 @@ Once you can teleoperate so101 leader-follower properly it is time to bridge to 
     source ~/.bashrc
     ```
 
+    Then create a symbolic link to lerobot package inside the ros2 workspace install site-packages:
+
+    ```bash
+    ln -s $LEROBOT_SRC $SO101BRIDGE_INSTALL_SITE_PACKAGES
+    ```
+
 **3. Known Issues**
 
-  * **Potential NumPy Version Error:** You may encounter an error related to NumPy version. To fix this, please upgrade your installation with the following command:
+  * **Potential NumPy Version Error:** You may encounter an error related to NumPy version of the default python environment. To fix this, please upgrade with the following command:
     ```bash
     pip install --upgrade numpy
     ```
@@ -167,13 +175,74 @@ This package supports the following camera types:
 
 ## Getting Started
 
-To visualise the robot description with the camera pipelines enabled run:
+### Configure bridge parameters
 
+Edit `so101_ros2_bridge/config/so101_leader_params.yaml` and
+`so101_ros2_bridge/config/so101_follower_params.yaml` so they reference the
+correct USB ports, calibration directory and Lerobot identifiers:
+
+```yaml
+so101_follower_ros2_bridge:
+  ros__parameters:
+    port: <your follower robot USB port>
+    id: <your follower robot ID>
+    calibration_dir: "/abs/path/to/calibration" # Optional. If omitted, falls back to config/calibration/
+    use_degrees: true
+    max_relative_target: 10
+    disable_torque_on_disconnect: true
+    publish_rate: 30.0
+```
+
+### Configure Cameras
+
+There are 2 configuration files for the cameras, one is ```so101_bringup/config/so101_cameras.yaml``` which includes the list of cameras to launch, their names and links to their configuration files, and the other, on the same directory is ```so101_usb_camera.yaml``` / ```so101_realsense2.yaml``` which includes the parameters for the specific cameras.
+
+For example setting up a wrist USB camera on so101_bringup/config/so101_cameras.yaml, would look like this:
+```yaml
+cameras:
+
+  - name: cam_front # name of camera
+    camera_type: usb_camera # name of pkg # Currently supports 'usb_camera' and 'realsense2_camera'
+    param_path: so101_usb_cam.yaml # path to camera specific config file
+    namespace: follower # ns (info of cam location)
+```
+
+Then in so101_usb_camera.yaml you can set the parameters for that specific camera:
+
+```yaml
+# config/so101_usb_cam.yaml
+
+# 0) Shared defaults for all usb_cam nodes
+/**:
+  ros__parameters:
+    framerate: 30.0
+    io_method: "mmap"
+    pixel_format: "mjpeg2rgb"
+    av_device_format: "YUV422P"
+    image_width: 640
+    image_height: 480
+    # other shared parameters over all usb_cam nodes...
+
+# 1) node name should be fit the this format: <namespace>/<camera_name> from the so101_cameras.yaml 
+/follower/cam_front: 
+  ros__parameters:
+    video_device: "/dev/video0"
+    frame_id: "cam_front"
+    camera_name: "cam_front"
+    camera_info_url: "package://usb_cam/config/camera_info.yaml" 
+
+```
+### Launch the robot with cameras
+To visualise the robot description with the camera pipelines enabled run:
 ```bash
 ros2 launch so101_bringup so101_robot_with_cameras.launch.py display:=true
 ```
 
-This brings up the SO101 description, controllers and USB/RealSense camera bridges while opening RViz (`display:=true`). You should see the robot model and cameras output matching your follower robot current status.
+This brings up the SO101 description, controllers and USB/RealSense camera bridges while opening RViz (`display:=true`). You should manually manipulate your follower robot to some configuration, launch and see the robot model and cameras output matching your follower robot current status.
+
+![SO101 with Cameras in RViz](media/getting_started.png)
+
+![SO101 with Cameras in RViz](media/getting_started2.jpeg)
 
 ---
 
@@ -185,48 +254,14 @@ demonstrations for imitation learning pipelines.
 
 ### Prerequisites
 
-- Complete the Lerobot calibration procedure for both arms and keep the exported
-  JSON files handy. The bridge looks for them in
-  `so101_ros2_bridge/config/calibration/` by default (see `Gili.json` and
-  `Tzili.json` for the expected naming scheme). Alternatively provide an
+- USB ports for both leader and follower arms. Identify them with
+  `lerobot-find-port` and update the bridge parameter files accordingly.
+- If you didn't complete calibration yet, run the [Lerobot SO101 calibration](https://huggingface.co/docs/lerobot/so101?calibrate_follower=Command#configure-the-motors) procedure for both arms and keep the exported
+  JSON files. The bridge looks for them in
+  `so101_ros2_bridge/config/calibration/` by default or alternatively provide an
   absolute path via the `calibration_dir` parameter.
-- Source your shell initialisation (`source ~/.bashrc`) so the environment
-  variables appended during installation are active. They expose the Lerobot
-  Python packages (via `LECONDA_SITE_PACKAGES`, `LEROBOT_SRC` and
-  `SO101BRIDGE_INSTALL_SITE_PACKAGES`) and set the ROS 2 middleware to Cyclone
-  DDS.
-- Source the workspace in each terminal: `source ~/ros2_ws/install/setup.bash`.
+- Configure the camera parameters as described in the [Cameras](#cameras) section.
 
-### Configure bridge parameters
-
-Edit `so101_ros2_bridge/config/so101_leader_params.yaml` and
-`so101_ros2_bridge/config/so101_follower_params.yaml` so they reference the
-correct USB ports, calibration directory and Lerobot identifiers:
-
-```yaml
-so101_follower_ros2_bridge:
-  ros__parameters:
-    port: "/dev/ttyACM1"
-    id: "Tzili"
-    calibration_dir: "/abs/path/to/calibration"
-    use_degrees: true
-    max_relative_target: 10
-    disable_torque_on_disconnect: true
-    publish_rate: 30.0
-```
-
-If `calibration_dir` is omitted the node falls back to the bundled calibration
-files, which is useful for quick smoke testing.
-
-### Camera configuration (real teleoperation)
-
-When using the physical robot, update `so101_bringup/config/so101_usb_cam_front.yaml`
-with the correct video device path so the camera feed shows up in RViz:
-
-```yaml
-ros__parameters:
-  video_device: "/dev/video4"
-```
 
 ### Run a real teleoperation session
 
@@ -236,29 +271,43 @@ Launch the leader and follower bridges, cameras and RViz in one terminal:
 ros2 launch so101_bringup so101_teleoperate.launch.py mode:=real display:=true
 ```
 
-The launch file brings up the leader bridge immediately, waits for the follower
-to connect, optionally opens RViz (`display:=true`) and starts the teleoperation
-node once both arms publish joint states. Watch the log output for any
-connection errors—most issues stem from missing calibration files or incorrect
+The launch file brings up the leader bridge immediately >> waits for the follower to connect >> optionally opens RViz (`display:=true`) >> starts the teleoperation componenet once both arms publish joint states. 
+
+Watch the log output for any connection errors—most issues stem from missing calibration files or incorrect
 USB port assignments.
+
+You should now be able to move the leader arm and see the follower mimicking its motions in real time and RViz which visualises the follower cameras and follower state comparing to the leader state.
 
 
 ### Run an Isaac teleoperation session
 
-Start Isaac Sim/Isaac Lab following the optional dependency instructions and load the SO101 task. With the simulator running, launch the ROS 2 side:
+Start IsaacSim in one terminal.
+
+```bash
+${ISAACSIM_PATH}/isaac-sim.sh
+```
+
+With the simulator running, launch in a second terminal the teleoperation pipeline connected to the Isaac transport topics:
 
 ```bash
 ros2 launch so101_bringup so101_teleoperate.launch.py mode:=isaac display:=true
 ```
 
-This reuses the teleoperation pipeline while switching the interfaces to the Isaac transport topics so you can stream demonstrations from the leader arm directly into the simulator.
+This reuses the teleoperation pipeline while switching the interfaces to the Isaac transport topics so you can stream demonstrations from the leader arm directly into the simulator using Isaac ROS2 Bridge.
+
+You should now be able to move the leader arm and see the follower in IsaacSim mimicking its motions in real time and RViz which visualises the follower cameras and follower state comparing to the leader state.
+
 
 ### Record demonstrations with `system_data_recorder`
 
-1. Configure the topics you care about in
+This package is compiled and included in the workspace as a submodule to facilitate recording demonstrations for imitation learning. It uses the
+[system_data_recorder](https://github.com/nimiCurtis/system_data_recorder) package to handle the recording process.
+
+
+1. Configure the topics you care about and some other recording parameters in
    `so101_bringup/config/so101_sdr.yaml`.
 
-2. Start teleoperation (real|Gazebo|Isaac) from another terminal.
+2. Start teleoperation (real|isaac) from another terminal.
 
 3. Launch the recorder lifecycle node:
 
@@ -283,7 +332,7 @@ This reuses the teleoperation pipeline while switching the interfaces to the Isa
 
 #### Keyboard Commander Utility
 
-For manual control and testing, an `SDRKeyboardCommander` node is available. This node listens for keyboard presses and sends the corresponding lifecycle transition requests to the `/sdr` node.
+For better user control, an `SDRKeyboardCommander` node is available. This node listens for keyboard presses and sends the corresponding lifecycle transition requests to the `/sdr` node.
 
 
 ##### Running
@@ -294,7 +343,7 @@ For manual control and testing, an `SDRKeyboardCommander` node is available. Thi
     ros2 launch so101_bringup so101_record.launch.py
     ```
 
-2.  In a second terminal, source your workspace and run the commander:
+2.  In a second terminal, run the commander:
 
     ```bash
     ros2 run system_data_recorder sdr_commander

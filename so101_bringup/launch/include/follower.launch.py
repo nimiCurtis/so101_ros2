@@ -37,7 +37,7 @@ def generate_launch_description():
     model = LaunchConfiguration('model')
 
     follower_rsp_group = GroupAction(
-        scoped=True,
+        scoped=True,  # Make namespaces work correctly
         actions=[
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(

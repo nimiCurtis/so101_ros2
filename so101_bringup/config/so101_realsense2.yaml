@@ -103,7 +103,7 @@
 /static_camera/cam_side:
   ros__parameters:
     usb_port_id: ""                                 # optional: pin USB port ID
-    camera_name: " "                         # unique name
+    camera_name: ""                                 # unique name
     camera_namespace: "static"                      # namespace
     serial_no: ""                                   # serial number (use rs-enumerate-devices)
     base_frame_id: "cam_side_link"                  # base link frame

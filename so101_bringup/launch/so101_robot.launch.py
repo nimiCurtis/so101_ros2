@@ -26,7 +26,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
@@ -38,20 +38,12 @@ def generate_launch_description():
     bringup_pkg = get_package_share_directory('so101_bringup')
     description_pkg = get_package_share_directory('so101_description')
 
-    # --- Declare arguments ---
-    robot_type_arg = DeclareLaunchArgument(
-        'type',
-        default_value='follower',
-        description='Robot type: follower / leader',
-    )
-    args.append(robot_type_arg)
-
     display_config_arg = DeclareLaunchArgument(
         'display_config',
         default_value=os.path.join(
-            description_pkg,
+            bringup_pkg,
             'rviz',
-            'display.rviz',
+            'robot_display.rviz',
         ),
     )
     args.append(display_config_arg)
@@ -68,29 +60,19 @@ def generate_launch_description():
     args.append(model_arg)
 
     model = LaunchConfiguration('model')
-    robot_type = LaunchConfiguration('type')
     display_config = LaunchConfiguration('display_config')
     display = LaunchConfiguration('display')
 
-    # Include robot ros2 bridge
-    follower_launch = IncludeLaunchDescription(
+    follower_robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(bringup_pkg, 'launch', 'include', 'follower.launch.py')
         ),
-        launch_arguments={'model': model}.items(),
-        condition=IfCondition(PythonExpression(["'", robot_type, "' == 'follower'"])),
+        launch_arguments={
+            'model': model,
+            'use_sim_time': 'false',
+        }.items(),
     )
-    actions.append(follower_launch)
-
-    # Include leader launch
-    leader_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(bringup_pkg, 'launch', 'include', 'leader.launch.py')
-        ),
-        launch_arguments={'model': model}.items(),
-        condition=IfCondition(PythonExpression(["'", robot_type, "' == 'leader'"])),
-    )
-    actions.append(leader_launch)
+    actions.append(follower_robot_launch)
 
     # Include display.launch.py
     display_launch = IncludeLaunchDescription(
