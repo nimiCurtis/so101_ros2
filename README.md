@@ -177,9 +177,7 @@ This package supports the following camera types:
 
 ### Configure bridge parameters
 
-Edit `so101_ros2_bridge/config/so101_leader_params.yaml` and
-`so101_ros2_bridge/config/so101_follower_params.yaml` so they reference the
-correct USB ports, calibration directory and Lerobot identifiers:
+Edit `so101_ros2_bridge/config/so101_leader_params.yaml` and `so101_ros2_bridge/config/so101_follower_params.yaml` so they reference the correct USB ports, calibration directory and Lerobot identifiers:
 
 ```yaml
 so101_follower_ros2_bridge:
@@ -248,18 +246,12 @@ This brings up the SO101 description, controllers and USB/RealSense camera bridg
 
 ## Imitation Learning with so101_ros2
 
-This workspace connects the Lerobot leader/follower stack with ROS 2 so you can
-teleoperate the hardware, stream observations into ROS tooling and record
-demonstrations for imitation learning pipelines.
+This workspace connects the Lerobot leader/follower stack with ROS 2 so you can teleoperate the hardware, stream observations into ROS tooling and record demonstrations for imitation learning pipelines.
 
 ### Prerequisites
 
-- USB ports for both leader and follower arms. Identify them with
-  `lerobot-find-port` and update the bridge parameter files accordingly.
-- If you didn't complete calibration yet, run the [Lerobot SO101 calibration](https://huggingface.co/docs/lerobot/so101?calibrate_follower=Command#configure-the-motors) procedure for both arms and keep the exported
-  JSON files. The bridge looks for them in
-  `so101_ros2_bridge/config/calibration/` by default or alternatively provide an
-  absolute path via the `calibration_dir` parameter.
+- USB ports for both leader and follower arms. Identify them with `lerobot-find-port` and update the bridge parameter files accordingly.
+- If you didn't complete calibration yet, run the [Lerobot SO101 calibration](https://huggingface.co/docs/lerobot/so101?calibrate_follower=Command#configure-the-motors) procedure for both arms and keep the exported JSON files. The bridge looks for them in `so101_ros2_bridge/config/calibration/` by default or alternatively provide an absolute path via the `calibration_dir` parameter.
 - Configure the camera parameters as described in the [Cameras](#cameras) section.
 
 
@@ -273,25 +265,26 @@ ros2 launch so101_bringup so101_teleoperate.launch.py mode:=real display:=true
 
 The launch file brings up the leader bridge immediately >> waits for the follower to connect >> optionally opens RViz (`display:=true`) >> starts the teleoperation componenet once both arms publish joint states. 
 
-Watch the log output for any connection errors—most issues stem from missing calibration files or incorrect
-USB port assignments.
+Watch the log output for any connection errors—most issues stem from missing calibration files or incorrect USB port assignments.
 
 You should now be able to move the leader arm and see the follower mimicking its motions in real time and RViz which visualises the follower cameras and follower state comparing to the leader state.
 
 
 ### Run an Isaac teleoperation session
 
-Start IsaacSim in one terminal.
+1. Start IsaacSim in one terminal.
 
-```bash
-${ISAACSIM_PATH}/isaac-sim.sh
-```
+  ```bash
+  ${ISAACSIM_PATH}/isaac-sim.sh
+  ```
 
-With the simulator running, launch in a second terminal the teleoperation pipeline connected to the Isaac transport topics:
+2. Launch in a second terminal the teleoperation pipeline connected to the Isaac transport topics:
 
-```bash
-ros2 launch so101_bringup so101_teleoperate.launch.py mode:=isaac display:=true
-```
+  ```bash
+  ros2 launch so101_bringup so101_teleoperate.launch.py mode:=isaac display:=true
+  ```
+
+3. Start simulation.
 
 This reuses the teleoperation pipeline while switching the interfaces to the Isaac transport topics so you can stream demonstrations from the leader arm directly into the simulator using Isaac ROS2 Bridge.
 
@@ -370,6 +363,15 @@ with the prefix defined in `bag_name_prefix`. Inspect the bag with
 tooling. For more options see the
 [system_data_recorder documentation](https://github.com/nimiCurtis/system_data_recorder).
 
+
+### Convert rosbag2lerobot dataset
+
+TBD...
+
+### Trianing VLA
+
+TBD...
+
 ---
 
 ## License
@@ -387,18 +389,12 @@ same hooks on pushes to `main` and `dev`.
 
 ---
 
-## Roadmap
+## Roadmap for v0.1.0
+- [ ] Finish refactoring and docs.
 
-- [x] Add recording keyboard commander node for SDR
-- [x] Check refactored branch for no sim pkg
-- [x] Refactor launch configuration for "mode" arg
-- [x] Ensure `rw_rate > update_rate`
-- [x] Add appropriate QoS profiles for realtime topics
-- [ ] Investigate the MoveIt "No Planning Library Loaded" warning and refactor the configuration
-- [ ] Harden Gazebo teleoperation to match the hardware workflow
-- [ ] Create isaac sim asset, cameras and task.
-- [ ] Setup real env
-- [ ] Create rviz display config for each mode
-- [ ] Check and fix GitHub Actions workflow
-- [ ] General code clean-up and documentation
-- [x] Add realsense top camera
+## Roadmap for v0.2.0
+
+- [ ] Moveit integration
+- [ ] Gazebo integration + teleop
+- [ ] IsaacLab
+
