@@ -207,7 +207,7 @@ Training
 
    Document the process used to fine-tune a VLA model on the converted dataset.
 
-Deployment (placeholder)
+Deployment
 ------------------------
 
 .. admonition:: TBD ...
