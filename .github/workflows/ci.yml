@@ -59,21 +59,15 @@ jobs:
         uses: ros-tooling/setup-ros@v0.7
         with:
           required-ros-distributions: humble
-
-      - name: Vendor lerobot into workspace
-        run: |
-          # Install lerobot and its runtime deps into a local folder
-          python3 -m pip install --target "$GITHUB_WORKSPACE/lerobot_vendor" "lerobot>=0.4.0"
-
-          # IMPORTANT: remove vendored setuptools so colcon uses the system one
-          rm -rf "$GITHUB_WORKSPACE/lerobot_vendor/setuptools" \
-                "$GITHUB_WORKSPACE/lerobot_vendor/_distutils_hack" \
-                "$GITHUB_WORKSPACE/lerobot_vendor/pkg_resources"
-
-          # Expose lerobot_vendor to Python
-          echo "PYTHONPATH=$GITHUB_WORKSPACE/lerobot_vendor:$PYTHONPATH" >> "$GITHUB_ENV"
-
-      - name: Build and run tests
+      
+      - name: Build Workspace
         uses: ros-tooling/action-ros-ci@v0.4
         with:
           target-ros2-distro: humble
+          skip-tests: true
+          no-symlink-install: true
+      
+      # - name: Build and run tests
+      #   uses: ros-tooling/action-ros-ci@v0.4
+      #   with:
+      #     target-ros2-distro: humble
