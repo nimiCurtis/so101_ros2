@@ -149,13 +149,19 @@ You can inspect the produced bag using:
 For additional options and advanced usage, refer to the
 `system_data_recorder documentation <https://github.com/nimiCurtis/system_data_recorder>`_ .
 
-.. video:: ../media/video/il_data_recording.mp4
+.. video:: ../media/video/il_sdr.mp4
    :width: 600
    :height: 400
    :muted:
    :align: center
    :alt: SDR video
 
+.. video:: ../media/video/il_sdr2.mp4
+   :width: 600
+   :height: 400
+   :muted:
+   :align: center
+   :alt: SDR video2
 
 Convert rosbag2 datasets
 ------------------------
@@ -185,6 +191,13 @@ Convert captured rosbag2 files into Lerobot datasets with the
    :muted:
    :align: center
    :alt: Data conversion video
+
+.. video:: ../media/video/il_data_conversion2.mp4
+   :width: 600
+   :height: 400
+   :muted:
+   :align: center
+   :alt: Data conversion video2
 
 
 Training

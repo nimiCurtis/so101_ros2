@@ -11,11 +11,18 @@ sdr:
 
     # List of topics and their types to record.
     topic_names: [
-      "/joint_states",
+      "/follower/joint_states",
+      "/leader/joint_states",
+      "/follower/cam_front/image_raw",
+      "/static_camera/cam_side/color/image_raw"
+
     ]
     topic_types: [
       "sensor_msgs/msg/JointState",
+      "sensor_msgs/msg/JointState",
+      "sensor_msgs/msg/Image",
+      "sensor_msgs/msg/Image"
     ]
     
     # The task description which will be used for language model prompts for the robot's agent.
-    task: "pick and place the green cube from the table to the blue box"
+    task: ""
