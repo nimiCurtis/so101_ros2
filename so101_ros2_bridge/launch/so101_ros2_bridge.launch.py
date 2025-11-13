@@ -30,13 +30,6 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    # Declare the 'type' argument so it can be set from the command line
-    # type_arg = DeclareLaunchArgument(
-    #     "type",
-    #     default_value="leader",
-    #     description="The type of the robot bridge to launch (leader or follower)."
-    # )
-
     robot_type = LaunchConfiguration('type')
 
     # Use PathJoinSubstitution to build the path to the config file dynamically
@@ -75,8 +68,6 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
-            # type_arg,
             so101_bridge_node,
-            # node_monitor,
         ]
     )

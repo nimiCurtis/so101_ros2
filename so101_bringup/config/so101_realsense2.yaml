@@ -1,7 +1,4 @@
-# config/so101_realsense2.yaml
-# ==========================================================
 # Shared defaults for all realsense2_camera nodes
-# ==========================================================
 /**:
   ros__parameters:
     camera_name: "camera"                           # camera unique name
@@ -95,11 +92,9 @@
     depth_mapping_camera.occupancy_profile: "0,0,0" # occupancy stream profile
 
 
-# ==========================================================
-# Per-node overrides (use your actual namespaces & names)
-# ==========================================================
 
-# Example 1: static/cam_side  → /static/cam_side/color/image_raw
+# Per-node overrides (use your actual namespaces & names)
+# Example 1: static_camera/cam_side  → /static_camera/cam_side/color/image_raw
 /static_camera/cam_side:
   ros__parameters:
     usb_port_id: ""                                 # optional: pin USB port ID

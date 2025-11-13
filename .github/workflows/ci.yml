@@ -60,6 +60,12 @@ jobs:
         uses: ros-tooling/setup-ros@v0.7
         with:
           required-ros-distributions: humble
+
+      - name: Install Python dependencies (lerobot)
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install "lerobot>=0.4.0"
+
       - name: Build and run tests
         uses: ros-tooling/action-ros-ci@v0.4
         with:

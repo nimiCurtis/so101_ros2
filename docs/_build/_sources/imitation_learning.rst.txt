@@ -65,7 +65,7 @@ You should now be able to move the leader arm and see the follower in IsaacSim m
 
 .. video:: ../media/video/il_isaac_teleop2.mp4
    :width: 600
-   :height: 400
+   :height: 300
    :muted:
    :align: center
    :alt: Isaac Sim teleoperation video 2
@@ -149,20 +149,6 @@ You can inspect the produced bag using:
 For additional options and advanced usage, refer to the
 `system_data_recorder documentation <https://github.com/nimiCurtis/system_data_recorder>`_ .
 
-.. video:: ../media/video/il_sdr.mp4
-   :width: 600
-   :height: 400
-   :muted:
-   :align: center
-   :alt: SDR video
-
-.. video:: ../media/video/il_sdr2.mp4
-   :width: 600
-   :height: 400
-   :muted:
-   :align: center
-   :alt: SDR video2
-
 Convert rosbag2 datasets
 ------------------------
 Convert captured rosbag2 files into Lerobot datasets with the
@@ -185,13 +171,6 @@ Convert captured rosbag2 files into Lerobot datasets with the
 
 3. Inspect results with ``lerobot-dataset-viz`` or online with `Huggingface Lerobot Dataset Visualizer <https://huggingface.co/spaces/lerobot/visualize_dataset>`_.
 
-.. video:: ../media/video/il_data_conversion.mp4
-   :width: 600
-   :height: 400
-   :muted:
-   :align: center
-   :alt: Data conversion video
-
 .. video:: ../media/video/il_data_conversion2.mp4
    :width: 600
    :height: 400
@@ -203,11 +182,11 @@ Convert captured rosbag2 files into Lerobot datasets with the
 Training
 ----------------------
 
-.. admonition:: TBD ...
+Finetune a VLA model on the collected dataset using directly the ``lerobot`` package.
+Check out the official tutorials on `imitation learning with lerobot <https://huggingface.co/docs/lerobot/il_robots#train-a-policy>`_.
 
-   Document the process used to fine-tune a VLA model on the converted dataset.
 
-Deployment (placeholder)
+Deployment
 ------------------------
 
 .. admonition:: TBD ...

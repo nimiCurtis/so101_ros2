@@ -1,6 +1,6 @@
 <div align="center">
   <h1>so101_ros2</h1>
-  <p>ROS 2 integration for the Lerobot SO101 manipulator.</p>
+  <p>ROS2 integration for the Lerobot SO101 manipulator.</p>
   <p>
     <a href="docs/index.rst"><img src="https://img.shields.io/badge/docs-latest-blue?logo=readthedocs" alt="Documentation"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
@@ -9,19 +9,14 @@
     <a href="https://huggingface.co/docs/lerobot/"><img src="https://img.shields.io/badge/Lerobot-orange.svg" alt="Lerobot"></a>
     <a href="https://developer.nvidia.com/isaac-sim"><img src="https://img.shields.io/badge/Isaac--Sim-orange.svg" alt="IsaacSim"></a>
   </p>
+  <p><a href="https://so101-ros2.readthedocs.io/latest/">See the full documentation for more information!</a></p>
 </div>
 
 ---
 
 ## Overview
 
-This workspace contains several packages that provide description files, controllers
-and ROS 2 integrations for the SO101 arm. The current focus is on the
-Lerobot ↔ ROS 2 bridge, teleoperation workflows and recording datasets for
-imitation learning. MoveIt motion planning and Gazebo simulation support are a
-work in progress, while Isaac Sim integration is already available for
-teleoperating the leader/follower arms and streaming observations for data
-collection.
+This workspace contains several packages that provide description files, controllers and ROS2 integrations for the SO101 arm. The current focus is on the Lerobot ↔ ROS2 bridge, teleoperation workflows and recording datasets for imitation learning. MoveIt motion planning and Gazebo simulation support are a work in progress, while Isaac Sim integration is already available for teleoperating the leader/follower arms and streaming observations for data collection.
 
 ---
 
@@ -100,7 +95,7 @@ Try this tutorial from the [official link](https://huggingface.co/docs/lerobot/i
 1. Follow the instructions of the [this link](https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/source_installation.html) to install IsaacSim 5.0 and the most updated IsaacLab.
 
     **[NOTE]**: Install **IsaacLab** in a **separate conda environment** from the one used for `lerobot_ros2`.
-    This separation is required because **IsaacLab uses Python 3.11**, while **ROS 2 Humble and `lerobot_ros2` use Python 3.10**. Keeping them in distinct environments ensures compatibility while allowing dependency synchronization with `lerobot`.
+    This separation is required because **IsaacLab uses Python 3.11**, while **ROS2 Humble and `lerobot_ros2` use Python 3.10**. Keeping them in distinct environments ensures compatibility while allowing dependency synchronization with `lerobot`.
 
 
 2. Activate the environment:
@@ -135,7 +130,7 @@ Once you can teleoperate so101 leader-follower properly with lerobot API it is t
     ./build.sh
     ```
 
-    The script can be invoked again safely, but it is intended for the first-time initialisation of the project. After that, regular development workflows only need incremental `colcon build` invocations inside `~/ros2_ws`. It appends the ROS 2 Humble environment, `RMW_IMPLEMENTATION=rmw_cyclonedds_cpp` and the workspace overlay sourcing statements to your `~/.bashrc` so new shells are ready to use.
+    The script can be invoked again safely, but it is intended for the first-time initialisation of the project. After that, regular development workflows only need incremental `colcon build` invocations inside `~/ros2_ws`. It appends the ROS2 Humble environment, `RMW_IMPLEMENTATION=rmw_cyclonedds_cpp` and the workspace overlay sourcing statements to your `~/.bashrc` so new shells are ready to use.
 
 3. Because lerebot env is managed by conda package manager, a workaround to compile the ros2 workspace and utilize the lerobot virtual env is to export the required variables in your shell initialisation file:
 
@@ -255,7 +250,7 @@ This brings up the SO101 description, controllers and USB/RealSense camera bridg
 
 ## Imitation Learning with so101_ros2
 
-This workspace connects the Lerobot leader/follower stack with ROS 2 so you can teleoperate the hardware, stream observations into ROS tooling and record demonstrations for imitation learning pipelines.
+This workspace connects the Lerobot leader/follower stack with ROS2 so you can teleoperate the hardware, stream observations into ROS tooling and record demonstrations for imitation learning pipelines.
 
 ### Prerequisites
 
@@ -424,14 +419,9 @@ full license text.
 
 ## Contributions
 
-Contributions are welcome. Fork the repository, create a feature branch and run
-`pre-commit run --all-files` before opening a pull request. The CI triggers the
-same hooks on pushes to `main` and `dev`.
+Contributions are welcome. Check out the [CONTRIBUTING.md](CONTRIBUTING.md) file for guidelines on how to contribute.
 
 ---
-
-## Roadmap for v0.1.0
-- [ ] Finish refactoring and docs.
 
 ## Roadmap for v0.1.1
 - [ ] Write a VLA inference node.

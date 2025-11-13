@@ -5,8 +5,7 @@
   <name>so101_teleop</name>
   <version>0.1.0</version>
   <description>Teleoperation nodes for controlling the SO101 manipulator via joystick or keyboard.</description>
-  <maintainer email="nimicu21@gmail.com">nimiCurtis</maintainer>
-
+  <maintainer email="nimicu21@gmail.com">Nimrod</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

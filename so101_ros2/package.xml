@@ -4,7 +4,7 @@
   <name>so101_ros2</name>
   <version>0.1.0</version>
   <description>Metapackage for the SO101 ROS 2 workspace.</description>
-  <maintainer email="nimicu21@gmail.com">nimrod</maintainer>
+  <maintainer email="nimicu21@gmail.com">Nimrod</maintainer>
   <license>MIT</license>
   <!-- packages in so101_ros2 -->
   <exec_depend>so101_controller</exec_depend>

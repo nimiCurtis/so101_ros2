@@ -61,7 +61,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#convert-rosbag2-datasets">Convert rosbag2 datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#training">Training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#deployment-placeholder">Deployment (placeholder)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deployment">Deployment</a></li>
 </ul>
 </li>
 </ul>
@@ -133,7 +133,7 @@ leader motions while RViz visualises the joint states and cameras feeds.</p>
 </ol>
 <p>This reuses the teleoperation pipeline while switching the interfaces to the Isaac transport topics so you can stream demonstrations from the leader arm directly into the simulator using Isaac ROS2 Bridge.</p>
 <p>You should now be able to move the leader arm and see the follower in IsaacSim mimicking its motions in real time and RViz which visualises the follower cameras and follower state comparing to the leader state.</p>
-<div  class="sphinx-contrib-video-container align-center"><video controls="True" height="400" muted="True" preload="auto" width="600"><source src="_images/il_isaac_teleop.mp4" type="video/mp4">Isaac Sim teleoperation video</video></div><div  class="sphinx-contrib-video-container align-center"><video controls="True" height="400" muted="True" preload="auto" width="600"><source src="_images/il_isaac_teleop2.mp4" type="video/mp4">Isaac Sim teleoperation video 2</video></div><section id="record-demonstrations-with-system-data-recorder">
+<div  class="sphinx-contrib-video-container align-center"><video controls="True" height="400" muted="True" preload="auto" width="600"><source src="_images/il_isaac_teleop.mp4" type="video/mp4">Isaac Sim teleoperation video</video></div><div  class="sphinx-contrib-video-container align-center"><video controls="True" height="300" muted="True" preload="auto" width="600"><source src="_images/il_isaac_teleop2.mp4" type="video/mp4">Isaac Sim teleoperation video 2</video></div><section id="record-demonstrations-with-system-data-recorder">
 <h3>Record demonstrations with <code class="docutils literal notranslate"><span class="pre">system_data_recorder</span></code><a class="headerlink" href="#record-demonstrations-with-system-data-recorder" title="Link to this heading"></a></h3>
 <p>The workspace ships with launch files for the
 <code class="docutils literal notranslate"><span class="pre">system_data_recorder</span></code> package to capture rosbag2 datasets.</p>
@@ -236,7 +236,7 @@ corresponding lifecycle transitions on the <code class="docutils literal notrans
 </div>
 <p>For additional options and advanced usage, refer to the
 <a class="reference external" href="https://github.com/nimiCurtis/system_data_recorder">system_data_recorder documentation</a> .</p>
-<div  class="sphinx-contrib-video-container align-center"><video controls="True" height="400" muted="True" preload="auto" width="600"><source src="_images/il_sdr.mp4" type="video/mp4">SDR video</video></div><div  class="sphinx-contrib-video-container align-center"><video controls="True" height="400" muted="True" preload="auto" width="600"><source src="_images/il_sdr2.mp4" type="video/mp4">SDR video2</video></div></section>
+</section>
 </section>
 </section>
 <section id="convert-rosbag2-datasets">
@@ -261,16 +261,14 @@ pip<span class="w"> </span>install<span class="w"> </span>so101_rosbag2lerobot_d
 <ol class="arabic simple" start="3">
 <li><p>Inspect results with <code class="docutils literal notranslate"><span class="pre">lerobot-dataset-viz</span></code> or online with <a class="reference external" href="https://huggingface.co/spaces/lerobot/visualize_dataset">Huggingface Lerobot Dataset Visualizer</a>.</p></li>
 </ol>
-<div  class="sphinx-contrib-video-container align-center"><video controls="True" height="400" muted="True" preload="auto" width="600"><source src="_images/il_data_conversion.mp4" type="video/mp4">Data conversion video</video></div><div  class="sphinx-contrib-video-container align-center"><video controls="True" height="400" muted="True" preload="auto" width="600"><source src="_images/il_data_conversion2.mp4" type="video/mp4">Data conversion video2</video></div></section>
+<div  class="sphinx-contrib-video-container align-center"><video controls="True" height="400" muted="True" preload="auto" width="600"><source src="_images/il_data_conversion2.mp4" type="video/mp4">Data conversion video2</video></div></section>
 <section id="training">
 <h2>Training<a class="headerlink" href="#training" title="Link to this heading"></a></h2>
-<div class="admonition-tbd admonition">
-<p class="admonition-title">TBD …</p>
-<p>Document the process used to fine-tune a VLA model on the converted dataset.</p>
-</div>
+<p>Finetune a VLA model on the collected dataset using directly the <code class="docutils literal notranslate"><span class="pre">lerobot</span></code> package.
+Check out the official tutorials on <a class="reference external" href="https://huggingface.co/docs/lerobot/il_robots#train-a-policy">imitation learning with lerobot</a>.</p>
 </section>
-<section id="deployment-placeholder">
-<h2>Deployment (placeholder)<a class="headerlink" href="#deployment-placeholder" title="Link to this heading"></a></h2>
+<section id="deployment">
+<h2>Deployment<a class="headerlink" href="#deployment" title="Link to this heading"></a></h2>
 <div class="admonition-tbd admonition">
 <p class="admonition-title">TBD …</p>
 <p>Describe how to deploy the trained policy back to the SO101 hardware.</p>

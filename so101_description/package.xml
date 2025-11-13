@@ -3,9 +3,9 @@
 <package format="3">
   <name>so101_description</name>
   <version>0.1.0</version>
-  <description>SO-ARM101 DESCRIPTION Resources</description>
+  <description>SO-ARM101 Description Resources</description>
 
-  <maintainer email="nimicu21@gmail.com">nimiCurtis</maintainer>
+  <maintainer email="nimicu21@gmail.com">Nimrod</maintainer>
 
   <license>BSD</license>
   <buildtool_depend>ament_cmake</buildtool_depend>

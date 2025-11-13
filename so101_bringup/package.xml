@@ -3,8 +3,8 @@
 <package format="3">
   <name>so101_bringup</name>
   <version>0.1.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="nimicu21@gmail.com">nimrod</maintainer>
+  <description>Bringup configuration for the SO101 robot</description>
+  <maintainer email="nimicu21@gmail.com">Nimrod</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
