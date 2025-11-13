@@ -242,9 +242,9 @@ ros2 launch so101_bringup so101_robot_with_cameras.launch.py display:=true
 
 This brings up the SO101 description, controllers and USB/RealSense camera bridges while opening RViz (`display:=true`). You should manually manipulate your follower robot to some configuration, launch and see the robot model and cameras output matching your follower robot current status.
 
-![SO101 with Cameras in RViz](media/getting_started.png)
+![SO101 with Cameras in RViz](media/images/getting_started.png)
 
-![SO101 with Cameras in RViz](media/getting_started2.jpeg)
+![SO101 with Cameras in RViz](media/images/getting_started2.jpeg)
 
 ---
 
