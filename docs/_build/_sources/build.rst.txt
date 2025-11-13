@@ -1,10 +1,5 @@
-Build the Workspace
+Build so101_ros2
 ===================
-
-System requirements
--------------------
-* ROS 2 Humble with ``rmw_cyclonedds_cpp`` configured as the middleware.
-* A working ``colcon`` toolchain with build dependencies installed via ``rosdep``.
 
 Bootstrap the workspace
 -----------------------
@@ -23,15 +18,8 @@ Bootstrap the workspace
 
    The script can be safely rerun if you need to refresh dependencies.
 
-Incremental builds
-------------------
-Deactivate the ``lerobot_ros2`` Conda environment before compiling so ``colcon``
-uses the system Python interpreter::
-
-   cd ~/ros2_ws
-   rosdep install --from-paths src --ignore-src -r -y
-   colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
-   source install/setup.bash
+3. Source your shell configuration or open a new terminal to load the ROS2
+   environment.
 
 Expose Lerobot to ROS 2
 -----------------------
@@ -54,14 +42,19 @@ Camera support
 --------------
 Two camera backends are supported out of the box:
 
-* **USB cameras** – installed automatically through ``rosdep`` when available.
+* **USB cameras** – installed automatically through ``rosdep`` in the initial build.
   Install manually if required::
 
      sudo apt install ros-humble-usb-cam
 
-* **Intel RealSense cameras** – install the librealsense SDK and ROS 2 wrapper::
+* **Intel RealSense cameras**
+   * Install the librealsense SDK from the `official repo <https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md#installing-the-packages>`_.
+   
+   * The ROS2 RealSense lib is installed automatically through ``rosdep`` in the initial build.
+   
+      Install manually if required:: 
 
-     sudo apt install ros-humble-realsense2-*
+         sudo apt install ros-humble-realsense2-*
 
 Adjust the camera parameter files in ``so101_bringup/config`` to select the
 correct device paths and settings before launching.

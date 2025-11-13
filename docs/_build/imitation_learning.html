@@ -44,17 +44,23 @@
               <p class="caption" role="heading"><span class="caption-text">Guides</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="build.html">Build the Workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build.html">Build so101_ros2</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ros2controlarch.html">ROS 2 Control Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Imitation Learning</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#real-teleoperation">Real teleoperation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#isaac-sim-teleoperation">Isaac Sim teleoperation</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#record-demonstrations-with-system-data-recorder">Record demonstrations with <code class="docutils literal notranslate"><span class="pre">system_data_recorder</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-the-keyboard-commander">Using the Keyboard Commander</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#running-the-commander">Running the Commander</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#keyboard-controls">Keyboard Controls</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#convert-rosbag2-datasets">Convert rosbag2 datasets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#training-placeholder">Training (placeholder)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#training">Training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#deployment-placeholder">Deployment (placeholder)</a></li>
 </ul>
 </li>
@@ -89,6 +95,16 @@
 <p>The SO101 ROS 2 workspace integrates teleoperation, recording, and dataset
 conversion tools so you can generate demonstrations for downstream imitation
 learning pipelines.</p>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>A working SO101 ROS 2 setup with leader and follower communication verified. Follow
+the <a class="reference external" href="./getting_started.html">getting started guide</a> to prepare and launch the
+system.</p></li>
+<li><p>Bridge and camera configurations updated to match your hardware setup.</p></li>
+<li><p>(Optional) NVIDIA Isaac Sim 5.0 installed for simulator-based teleoperation. You can use the source code <a class="reference external" href="https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/source_installation.html">installation guide</a>.</p></li>
+</ul>
+</section>
 <section id="real-teleoperation">
 <h2>Real teleoperation<a class="headerlink" href="#real-teleoperation" title="Link to this heading"></a></h2>
 <p>Launch the bridge with the physical leader and follower hardware:</p>
@@ -96,25 +112,28 @@ learning pipelines.</p>
 </pre></div>
 </div>
 <p>Monitor the logs for connection issues and confirm that the follower mirrors the
-leader motions while RViz visualises the joint states and camera feeds.</p>
-<div class="admonition-demo-video-mp4 admonition">
-<p class="admonition-title">Demo video (MP4)</p>
-<p>Placeholder for the real teleoperation walkthrough video.</p>
-</div>
-</section>
+leader motions while RViz visualises the joint states and cameras feeds.</p>
+<div  class="sphinx-contrib-video-container align-center"><video controls="True" height="400" muted="True" preload="auto" width="600"><source src="_images/il_real_teleop.mp4" type="video/mp4">Real teleoperation video</video></div><div  class="sphinx-contrib-video-container align-center"><video controls="True" height="400" muted="True" preload="auto" width="600"><source src="_images/il_real_teleop2.mp4" type="video/mp4">Real teleoperation video 2</video></div></section>
 <section id="isaac-sim-teleoperation">
 <h2>Isaac Sim teleoperation<a class="headerlink" href="#isaac-sim-teleoperation" title="Link to this heading"></a></h2>
-<p>Use the simulator workflow to stream demonstrations into Isaac Sim:</p>
+<p>Use the simulator workflow to stream demonstrations into Isaac Sim.</p>
+<ol class="arabic">
+<li><p>Bringup IsaacSim in one terminal:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>${ISAACSIM_PATH}/isaac-sim.sh
+</pre></div>
+</div>
+</li>
+<li><p>Load your ready-made usd file or use the provided example scene located at <code class="docutils literal notranslate"><span class="pre">so101_description/usd/so101_new_calib.usd</span></code>.</p></li>
+<li><p>Launch in a second terminal the teleoperation pipeline connected to the Isaac transport topics:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ros2</span> <span class="n">launch</span> <span class="n">so101_bringup</span> <span class="n">so101_teleoperate</span><span class="o">.</span><span class="n">launch</span><span class="o">.</span><span class="n">py</span> <span class="n">mode</span><span class="o">:=</span><span class="n">isaac</span> <span class="n">display</span><span class="o">:=</span><span class="n">true</span>
 </pre></div>
 </div>
-<p>Start Isaac Sim separately, load the SO101 scene, and then enable simulation to
-mirror the leader arm in the virtual environment.</p>
-<div class="admonition-demo-video-mp4 admonition">
-<p class="admonition-title">Demo video (MP4)</p>
-<p>Placeholder for the Isaac Sim teleoperation walkthrough video.</p>
-</div>
-<section id="record-demonstrations-with-system-data-recorder">
+</li>
+<li><p>Start simulation.</p></li>
+</ol>
+<p>This reuses the teleoperation pipeline while switching the interfaces to the Isaac transport topics so you can stream demonstrations from the leader arm directly into the simulator using Isaac ROS2 Bridge.</p>
+<p>You should now be able to move the leader arm and see the follower in IsaacSim mimicking its motions in real time and RViz which visualises the follower cameras and follower state comparing to the leader state.</p>
+<div  class="sphinx-contrib-video-container align-center"><video controls="True" height="400" muted="True" preload="auto" width="600"><source src="_images/il_isaac_teleop.mp4" type="video/mp4">Isaac Sim teleoperation video</video></div><div  class="sphinx-contrib-video-container align-center"><video controls="True" height="400" muted="True" preload="auto" width="600"><source src="_images/il_isaac_teleop2.mp4" type="video/mp4">Isaac Sim teleoperation video 2</video></div><section id="record-demonstrations-with-system-data-recorder">
 <h3>Record demonstrations with <code class="docutils literal notranslate"><span class="pre">system_data_recorder</span></code><a class="headerlink" href="#record-demonstrations-with-system-data-recorder" title="Link to this heading"></a></h3>
 <p>The workspace ships with launch files for the
 <code class="docutils literal notranslate"><span class="pre">system_data_recorder</span></code> package to capture rosbag2 datasets.</p>
@@ -140,46 +159,121 @@ record, set <code class="docutils literal notranslate"><span class="pre">bag_nam
 </div>
 </li>
 </ol>
-<p>The optional <code class="docutils literal notranslate"><span class="pre">SDRKeyboardCommander</span></code> node provides hotkeys for these
-transitions.</p>
-<div class="admonition-demo-video-mp4 admonition">
-<p class="admonition-title">Demo video (MP4)</p>
-<p>Placeholder for the system data recorder tutorial video.</p>
+</section>
+<section id="using-the-keyboard-commander">
+<h3>Using the Keyboard Commander<a class="headerlink" href="#using-the-keyboard-commander" title="Link to this heading"></a></h3>
+<p>For improved usability, the <code class="docutils literal notranslate"><span class="pre">system_data_recorder</span></code> package includes an
+<code class="docutils literal notranslate"><span class="pre">SDRKeyboardCommander</span></code> node that sends lifecycle transition requests to the
+<code class="docutils literal notranslate"><span class="pre">/sdr</span></code> node based on keyboard input.</p>
+<p>This allows you to control the recorder without manually typing lifecycle
+commands.</p>
+<section id="running-the-commander">
+<h4>Running the Commander<a class="headerlink" href="#running-the-commander" title="Link to this heading"></a></h4>
+<ol class="arabic">
+<li><p>In one terminal, launch the recorder:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ros2<span class="w"> </span>launch<span class="w"> </span>so101_bringup<span class="w"> </span>so101_record.launch.py
+</pre></div>
 </div>
+</li>
+<li><p>In a second terminal, start the keyboard commander:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ros2<span class="w"> </span>run<span class="w"> </span>system_data_recorder<span class="w"> </span>sdr_commander
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="keyboard-controls">
+<h4>Keyboard Controls<a class="headerlink" href="#keyboard-controls" title="Link to this heading"></a></h4>
+<p>Once running, the commander listens for key presses and triggers the
+corresponding lifecycle transitions on the <code class="docutils literal notranslate"><span class="pre">/sdr</span></code> node.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Action</p></th>
+<th class="head"><p>Lifecycle Transition</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">c</span></code></p></td>
+<td><p>Configure</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CONFIGURE</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">a</span></code></p></td>
+<td><p>Activate (start recording)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ACTIVATE</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">d</span></code></p></td>
+<td><p>Deactivate (pause recording)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DEACTIVATE</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l</span></code></p></td>
+<td><p>Cleanup</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CLEANUP</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">s</span></code></p></td>
+<td><p>Shutdown</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SHUTDOWN</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">g</span></code></p></td>
+<td><p>Get State</p></td>
+<td><p>Query and print state</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">h</span></code></p></td>
+<td><p>Help</p></td>
+<td><p>Print help menu</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">q</span></code></p></td>
+<td><p>Quit</p></td>
+<td><p>Exit commander node</p></td>
+</tr>
+</tbody>
+</table>
+<p>The resulting rosbag2 dataset is saved under the directory specified in
+<code class="docutils literal notranslate"><span class="pre">copy_destination</span></code> with the prefix from <code class="docutils literal notranslate"><span class="pre">bag_name_prefix</span></code>.</p>
+<p>You can inspect the produced bag using:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ros2<span class="w"> </span>bag<span class="w"> </span>info<span class="w"> </span>&lt;bag_path&gt;
+</pre></div>
+</div>
+<p>For additional options and advanced usage, refer to the
+<a class="reference external" href="https://github.com/nimiCurtis/system_data_recorder">system_data_recorder documentation</a> .</p>
+<div  class="sphinx-contrib-video-container align-center"><video controls="True" height="400" muted="True" preload="auto" width="600"><source src="_images/il_data_recording.mp4" type="video/mp4">SDR video</video></div></section>
 </section>
 </section>
 <section id="convert-rosbag2-datasets">
 <h2>Convert rosbag2 datasets<a class="headerlink" href="#convert-rosbag2-datasets" title="Link to this heading"></a></h2>
 <p>Convert captured rosbag2 files into Lerobot datasets with the
-<code class="docutils literal notranslate"><span class="pre">so101_rosbag2lerobot_dataset</span></code> utilities:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">activate</span> <span class="n">lerobot_ros2</span>
-<span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">nimiCurtis</span><span class="o">/</span><span class="n">so101_rosbag2lerobot_dataset</span><span class="o">.</span><span class="n">git</span>
-<span class="n">cd</span> <span class="n">so101_rosbag2lerobot_dataset</span>
-<span class="n">pip</span> <span class="n">install</span> <span class="n">so101_rosbag2lerobot_dataset</span>
-<span class="n">so101</span><span class="o">-</span><span class="n">rosbag2lerobot</span> <span class="o">--</span><span class="n">config</span> <span class="o">&lt;</span><span class="n">path_to_config</span><span class="o">.</span><span class="n">yaml</span><span class="o">&gt;</span>
+<a class="reference external" href="https://github.com/nimiCurtis/so101_rosbag2lerobot_dataset">so101_rosbag2lerobot_dataset</a> utilities.</p>
+<ol class="arabic simple">
+<li><p>First install the package:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>lerobot_ros2
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/nimiCurtis/so101_rosbag2lerobot_dataset.git
+<span class="nb">cd</span><span class="w"> </span>so101_rosbag2lerobot_dataset
+pip<span class="w"> </span>install<span class="w"> </span>so101_rosbag2lerobot_dataset
 </pre></div>
 </div>
-<p>Prepare a YAML configuration describing the topics and output directory. Inspect
-results with <code class="docutils literal notranslate"><span class="pre">lerobot</span></code> after conversion.</p>
-<div class="admonition-demo-video-mp4 admonition">
-<p class="admonition-title">Demo video (MP4)</p>
-<p>Placeholder for the rosbag conversion tutorial video.</p>
+<ol class="arabic simple" start="2">
+<li><p>Prepare a YAML configuration describing the topics and output directory. An example config is shown in the package config directory.</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>so101-rosbag2lerobot<span class="w"> </span>--config<span class="w"> </span>&lt;path_to_your_config.yaml&gt;
+</pre></div>
 </div>
-</section>
-<section id="training-placeholder">
-<h2>Training (placeholder)<a class="headerlink" href="#training-placeholder" title="Link to this heading"></a></h2>
+<ol class="arabic simple" start="3">
+<li><p>Inspect results with <code class="docutils literal notranslate"><span class="pre">lerobot-dataset-viz</span></code> or online with <a class="reference external" href="https://huggingface.co/spaces/lerobot/visualize_dataset">Huggingface Lerobot Dataset Visualizer</a>.</p></li>
+</ol>
+<div  class="sphinx-contrib-video-container align-center"><video controls="True" height="400" muted="True" preload="auto" width="600"><source src="_images/il_data_conversion.mp4" type="video/mp4">Data conversion video</video></div></section>
+<section id="training">
+<h2>Training<a class="headerlink" href="#training" title="Link to this heading"></a></h2>
+<div class="admonition-tbd admonition">
+<p class="admonition-title">TBD …</p>
 <p>Document the process used to fine-tune a VLA model on the converted dataset.</p>
-<div class="admonition-demo-video-mp4 admonition">
-<p class="admonition-title">Demo video (MP4)</p>
-<p>Placeholder for the training pipeline video.</p>
 </div>
 </section>
 <section id="deployment-placeholder">
 <h2>Deployment (placeholder)<a class="headerlink" href="#deployment-placeholder" title="Link to this heading"></a></h2>
+<div class="admonition-tbd admonition">
+<p class="admonition-title">TBD …</p>
 <p>Describe how to deploy the trained policy back to the SO101 hardware.</p>
-<div class="admonition-demo-video-mp4 admonition">
-<p class="admonition-title">Demo video (MP4)</p>
-<p>Placeholder for the deployment demonstration video.</p>
 </div>
 </section>
 </section>

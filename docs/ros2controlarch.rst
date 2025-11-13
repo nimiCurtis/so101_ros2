@@ -18,17 +18,71 @@ Controller layout
 -----------------
 Controller definitions live in ``so101_controller/config/so101_controllers.yaml``.
 The follower namespace loads a ``joint_trajectory_controller`` for the arm, a
-``GripperActionController`` and a joint state broadcaster. The leader namespace
-runs only a joint state broadcaster, reflecting its use as a sensing device. The
+``GripperActionController`` and a ``joint state broadcaster``. The leader namespace
+runs only a ``joint state broadcaster``, reflecting its use as a sensing device. The
 configuration keeps both command and state interfaces in position mode to match
 the bridge expectations.
 
-Launch files
-------------
-``so101_controller/launch/controller_manager.launch.py`` starts the
-``ros2_control_node`` with the controller configuration. The separate launch file
-``so101_controller/launch/so101_controllers.launch.py`` spawns the joint state
-broadcaster before the arm and gripper controllers under the namespace provided
-through the ``type`` launch argument. The bring-up launch descriptions use timer
-actions to delay controller spawning until the hardware interfaces and bridge
-nodes are online.
+.. code-block:: yaml
+
+    /follower:
+    controller_manager:
+        ros__parameters:
+        update_rate: 50  # Hz
+
+        arm_controller:
+            type: joint_trajectory_controller/JointTrajectoryController
+
+        gripper_controller:
+            type: position_controllers/GripperActionController
+
+        joint_state_broadcaster:
+            type: joint_state_broadcaster/JointStateBroadcaster
+
+    arm_controller:
+    
+        ros__parameters:
+        update_rate: 25
+        type: joint_trajectory_controller/JointTrajectoryController
+        joints:
+            - shoulder_pan
+            - shoulder_lift
+            - elbow_flex
+            - wrist_flex
+            - wrist_roll
+        command_interfaces:
+            - position
+        state_interfaces:
+            - position
+            - velocity
+        
+        state_publish_rate: 50.0  
+        action_monitor_rate: 20.0 
+        time_scaling: 1.1  
+
+    gripper_controller:
+        ros__parameters:
+        type: position_controllers/GripperActionController
+        joint: gripper
+
+    /leader:
+    controller_manager:
+        ros__parameters:
+        update_rate: 50  # Hz
+
+        joint_state_broadcaster:
+            type: joint_state_broadcaster/JointStateBroadcaster
+
+    joint_state_broadcaster:
+        ros__parameters:
+        type: joint_state_broadcaster/JointStateBroadcaster
+        joints:
+            - shoulder_pan
+            - shoulder_lift
+            - elbow_flex
+            - wrist_flex
+            - wrist_roll
+            - gripper
+
+        interfaces:
+            - position

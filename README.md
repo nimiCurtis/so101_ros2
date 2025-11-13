@@ -287,7 +287,7 @@ You should now be able to move the leader arm and see the follower mimicking its
   ${ISAACSIM_PATH}/isaac-sim.sh
   ```
 
-2. Load your ready-made usd file or use the provided example scene located at `src/so101_ros2/so101_description/usd/so101_new_calib.usd`.
+2. Load your ready-made usd file or use the provided example scene located at `so101_description/usd/so101_new_calib.usd`.
 
 3. Launch in a second terminal the teleoperation pipeline connected to the Isaac transport topics:
 

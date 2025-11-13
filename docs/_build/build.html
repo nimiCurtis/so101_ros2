@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Build the Workspace &mdash; SO101 ROS2  documentation</title>
+  <title>Build so101_ros2 &mdash; SO101 ROS2  documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
@@ -45,10 +45,8 @@
               <p class="caption" role="heading"><span class="caption-text">Guides</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Build the Workspace</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#system-requirements">System requirements</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Build so101_ros2</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#bootstrap-the-workspace">Bootstrap the workspace</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#incremental-builds">Incremental builds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#expose-lerobot-to-ros-2">Expose Lerobot to ROS 2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#camera-support">Camera support</a></li>
 </ul>
@@ -72,7 +70,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Build the Workspace</li>
+      <li class="breadcrumb-item active">Build so101_ros2</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/build.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -82,15 +80,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="build-the-workspace">
-<h1>Build the Workspace<a class="headerlink" href="#build-the-workspace" title="Link to this heading"></a></h1>
-<section id="system-requirements">
-<h2>System requirements<a class="headerlink" href="#system-requirements" title="Link to this heading"></a></h2>
-<ul class="simple">
-<li><p>ROS 2 Humble with <code class="docutils literal notranslate"><span class="pre">rmw_cyclonedds_cpp</span></code> configured as the middleware.</p></li>
-<li><p>A working <code class="docutils literal notranslate"><span class="pre">colcon</span></code> toolchain with build dependencies installed via <code class="docutils literal notranslate"><span class="pre">rosdep</span></code>.</p></li>
-</ul>
-</section>
+  <section id="build-so101-ros2">
+<h1>Build so101_ros2<a class="headerlink" href="#build-so101-ros2" title="Link to this heading"></a></h1>
 <section id="bootstrap-the-workspace">
 <h2>Bootstrap the workspace<a class="headerlink" href="#bootstrap-the-workspace" title="Link to this heading"></a></h2>
 <ol class="arabic">
@@ -110,18 +101,9 @@ sourcing statements to your shell configuration:</p>
 </div>
 <p>The script can be safely rerun if you need to refresh dependencies.</p>
 </li>
+<li><p>Source your shell configuration or open a new terminal to load the ROS2
+environment.</p></li>
 </ol>
-</section>
-<section id="incremental-builds">
-<h2>Incremental builds<a class="headerlink" href="#incremental-builds" title="Link to this heading"></a></h2>
-<p>Deactivate the <code class="docutils literal notranslate"><span class="pre">lerobot_ros2</span></code> Conda environment before compiling so <code class="docutils literal notranslate"><span class="pre">colcon</span></code>
-uses the system Python interpreter:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">~/</span><span class="n">ros2_ws</span>
-<span class="n">rosdep</span> <span class="n">install</span> <span class="o">--</span><span class="n">from</span><span class="o">-</span><span class="n">paths</span> <span class="n">src</span> <span class="o">--</span><span class="n">ignore</span><span class="o">-</span><span class="n">src</span> <span class="o">-</span><span class="n">r</span> <span class="o">-</span><span class="n">y</span>
-<span class="n">colcon</span> <span class="n">build</span> <span class="o">--</span><span class="n">cmake</span><span class="o">-</span><span class="n">args</span> <span class="o">-</span><span class="n">DCMAKE_BUILD_TYPE</span><span class="o">=</span><span class="n">Release</span>
-<span class="n">source</span> <span class="n">install</span><span class="o">/</span><span class="n">setup</span><span class="o">.</span><span class="n">bash</span>
-</pre></div>
-</div>
 </section>
 <section id="expose-lerobot-to-ros-2">
 <h2>Expose Lerobot to ROS 2<a class="headerlink" href="#expose-lerobot-to-ros-2" title="Link to this heading"></a></h2>
@@ -144,16 +126,26 @@ folder.</p>
 <h2>Camera support<a class="headerlink" href="#camera-support" title="Link to this heading"></a></h2>
 <p>Two camera backends are supported out of the box:</p>
 <ul>
-<li><p><strong>USB cameras</strong> – installed automatically through <code class="docutils literal notranslate"><span class="pre">rosdep</span></code> when available.
+<li><p><strong>USB cameras</strong> – installed automatically through <code class="docutils literal notranslate"><span class="pre">rosdep</span></code> in the initial build.
 Install manually if required:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">ros</span><span class="o">-</span><span class="n">humble</span><span class="o">-</span><span class="n">usb</span><span class="o">-</span><span class="n">cam</span>
 </pre></div>
 </div>
 </li>
-<li><p><strong>Intel RealSense cameras</strong> – install the librealsense SDK and ROS 2 wrapper:</p>
+<li><dl>
+<dt><strong>Intel RealSense cameras</strong></dt><dd><ul>
+<li><p>Install the librealsense SDK from the <a class="reference external" href="https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md#installing-the-packages">official repo</a>.</p></li>
+<li><p>The ROS2 RealSense lib is installed automatically through <code class="docutils literal notranslate"><span class="pre">rosdep</span></code> in the initial build.</p>
+<blockquote>
+<div><p>Install manually if required:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">ros</span><span class="o">-</span><span class="n">humble</span><span class="o">-</span><span class="n">realsense2</span><span class="o">-*</span>
 </pre></div>
 </div>
+</div></blockquote>
+</li>
+</ul>
+</dd>
+</dl>
 </li>
 </ul>
 <p>Adjust the camera parameter files in <code class="docutils literal notranslate"><span class="pre">so101_bringup/config</span></code> to select the

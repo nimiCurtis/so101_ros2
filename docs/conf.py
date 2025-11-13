@@ -8,6 +8,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx_rtd_theme',
+    'sphinxcontrib.video',
 ]
 templates_path = ['_templates']
 exclude_patterns = []

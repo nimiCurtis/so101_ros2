@@ -52,9 +52,12 @@ the ROS 2 workspace.
 
 Optional: Isaac Lab environment
 -------------------------------
-If you are using Isaac Sim 5.0, install Isaac Lab in a separate Conda environment following the `official instructions <https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/source_installation.html>`_. Isaac Lab requires Python 3.11, so keeping it separate
+If you are using Isaac Sim 5.0, install Isaac Lab in a separate Conda environment following the `official instructions <https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/source_installation.html>`_ . Isaac Lab requires Python 3.11, so keeping it separate
 from ``lerobot_ros2`` (Python 3.10) avoids dependency conflicts. Activate the
 environment when working with the simulator-specific teleoperation tools::
-
+   
    conda activate lerobot_isaaclab
-   pip install -e ".[feetech,smolvla,pi,async]"
+
+Then from the previously cloned lerobot repo::
+   cd lerobot
+   pip install -e ".[<your extras here>]" # e.g. ".[all] or ".[feetech,smolvla,pi,async]" etc. 

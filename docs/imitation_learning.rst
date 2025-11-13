@@ -5,6 +5,14 @@ The SO101 ROS 2 workspace integrates teleoperation, recording, and dataset
 conversion tools so you can generate demonstrations for downstream imitation
 learning pipelines.
 
+Prerequisites
+---------------------
+- A working SO101 ROS 2 setup with leader and follower communication verified. Follow
+  the `getting started guide <./getting_started.html>`_ to prepare and launch the
+  system.
+- Bridge and camera configurations updated to match your hardware setup.
+- (Optional) NVIDIA Isaac Sim 5.0 installed for simulator-based teleoperation. You can use the source code `installation guide <https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/source_installation.html>`_.
+
 Real teleoperation
 ------------------
 Launch the bridge with the physical leader and follower hardware::
@@ -12,24 +20,56 @@ Launch the bridge with the physical leader and follower hardware::
    ros2 launch so101_bringup so101_teleoperate.launch.py mode:=real display:=true
 
 Monitor the logs for connection issues and confirm that the follower mirrors the
-leader motions while RViz visualises the joint states and camera feeds.
+leader motions while RViz visualises the joint states and cameras feeds.
 
-.. admonition:: Demo video (MP4)
+.. video:: ../media/video/il_real_teleop.mp4
+   :width: 600
+   :height: 400
+   :muted:
+   :align: center
+   :alt: Real teleoperation video
 
-   Placeholder for the real teleoperation walkthrough video.
+.. video:: ../media/video/il_real_teleop2.mp4
+   :width: 600
+   :height: 400
+   :muted:
+   :align: center
+   :alt: Real teleoperation video 2
 
 Isaac Sim teleoperation
 -----------------------
-Use the simulator workflow to stream demonstrations into Isaac Sim::
+Use the simulator workflow to stream demonstrations into Isaac Sim.
 
-   ros2 launch so101_bringup so101_teleoperate.launch.py mode:=isaac display:=true
+1. Bringup IsaacSim in one terminal::
 
-Start Isaac Sim separately, load the SO101 scene, and then enable simulation to
-mirror the leader arm in the virtual environment.
+      ${ISAACSIM_PATH}/isaac-sim.sh
 
-.. admonition:: Demo video (MP4)
+2. Load your ready-made usd file or use the provided example scene located at ``so101_description/usd/so101_new_calib.usd``.
 
-   Placeholder for the Isaac Sim teleoperation walkthrough video.
+3. Launch in a second terminal the teleoperation pipeline connected to the Isaac transport topics::
+
+      ros2 launch so101_bringup so101_teleoperate.launch.py mode:=isaac display:=true
+
+4. Start simulation.
+
+This reuses the teleoperation pipeline while switching the interfaces to the Isaac transport topics so you can stream demonstrations from the leader arm directly into the simulator using Isaac ROS2 Bridge.
+
+You should now be able to move the leader arm and see the follower in IsaacSim mimicking its motions in real time and RViz which visualises the follower cameras and follower state comparing to the leader state.
+
+.. video:: ../media/video/il_isaac_teleop.mp4
+   :width: 600
+   :height: 400
+   :muted:
+   :align: center
+   :alt: Isaac Sim teleoperation video
+
+.. video:: ../media/video/il_isaac_teleop2.mp4
+   :width: 600
+   :height: 400
+   :muted:
+   :align: center
+   :alt: Isaac Sim teleoperation video 2
+
 
 Record demonstrations with ``system_data_recorder``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -53,43 +93,111 @@ The workspace ships with launch files for the
        ros2 lifecycle set /sdr deactivate
        ros2 lifecycle set /sdr shutdown
 
-The optional ``SDRKeyboardCommander`` node provides hotkeys for these
-transitions.
+Using the Keyboard Commander
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. admonition:: Demo video (MP4)
+For improved usability, the ``system_data_recorder`` package includes an
+``SDRKeyboardCommander`` node that sends lifecycle transition requests to the
+``/sdr`` node based on keyboard input.
 
-   Placeholder for the system data recorder tutorial video.
+This allows you to control the recorder without manually typing lifecycle
+commands.
+
+Running the Commander
+^^^^^^^^^^^^^^^^^^^^^
+
+1. In one terminal, launch the recorder:
+
+   .. code-block:: bash
+
+      ros2 launch so101_bringup so101_record.launch.py
+
+2. In a second terminal, start the keyboard commander:
+
+   .. code-block:: bash
+
+      ros2 run system_data_recorder sdr_commander
+
+Keyboard Controls
+^^^^^^^^^^^^^^^^^
+
+Once running, the commander listens for key presses and triggers the
+corresponding lifecycle transitions on the ``/sdr`` node.
+
+=================  ==============================  ===============================
+Key                Action                          Lifecycle Transition
+=================  ==============================  ===============================
+``c``              Configure                       ``CONFIGURE``
+``a``              Activate (start recording)      ``ACTIVATE``
+``d``              Deactivate (pause recording)    ``DEACTIVATE``
+``l``              Cleanup                         ``CLEANUP``
+``s``              Shutdown                        ``SHUTDOWN``
+``g``              Get State                       Query and print state
+``h``              Help                            Print help menu
+``q``              Quit                            Exit commander node
+=================  ==============================  ===============================
+
+The resulting rosbag2 dataset is saved under the directory specified in
+``copy_destination`` with the prefix from ``bag_name_prefix``.
+
+You can inspect the produced bag using:
+
+.. code-block:: bash
+
+   ros2 bag info <bag_path>
+
+For additional options and advanced usage, refer to the
+`system_data_recorder documentation <https://github.com/nimiCurtis/system_data_recorder>`_ .
+
+.. video:: ../media/video/il_data_recording.mp4
+   :width: 600
+   :height: 400
+   :muted:
+   :align: center
+   :alt: SDR video
+
 
 Convert rosbag2 datasets
 ------------------------
 Convert captured rosbag2 files into Lerobot datasets with the
-``so101_rosbag2lerobot_dataset`` utilities::
+`so101_rosbag2lerobot_dataset <https://github.com/nimiCurtis/so101_rosbag2lerobot_dataset>`_ utilities.
+
+1. First install the package:
+
+.. code-block:: bash
 
    conda activate lerobot_ros2
    git clone https://github.com/nimiCurtis/so101_rosbag2lerobot_dataset.git
    cd so101_rosbag2lerobot_dataset
    pip install so101_rosbag2lerobot_dataset
-   so101-rosbag2lerobot --config <path_to_config.yaml>
 
-Prepare a YAML configuration describing the topics and output directory. Inspect
-results with ``lerobot`` after conversion.
+2. Prepare a YAML configuration describing the topics and output directory. An example config is shown in the package config directory.
 
-.. admonition:: Demo video (MP4)
+.. code-block:: bash
 
-   Placeholder for the rosbag conversion tutorial video.
+   so101-rosbag2lerobot --config <path_to_your_config.yaml>
 
-Training (placeholder)
+3. Inspect results with ``lerobot-dataset-viz`` or online with `Huggingface Lerobot Dataset Visualizer <https://huggingface.co/spaces/lerobot/visualize_dataset>`_.
+
+.. video:: ../media/video/il_data_conversion.mp4
+   :width: 600
+   :height: 400
+   :muted:
+   :align: center
+   :alt: Data conversion video
+
+
+Training
 ----------------------
-Document the process used to fine-tune a VLA model on the converted dataset.
 
-.. admonition:: Demo video (MP4)
+.. admonition:: TBD ...
 
-   Placeholder for the training pipeline video.
+   Document the process used to fine-tune a VLA model on the converted dataset.
 
 Deployment (placeholder)
 ------------------------
-Describe how to deploy the trained policy back to the SO101 hardware.
 
-.. admonition:: Demo video (MP4)
+.. admonition:: TBD ...
 
-   Placeholder for the deployment demonstration video.
+   Describe how to deploy the trained policy back to the SO101 hardware.
+

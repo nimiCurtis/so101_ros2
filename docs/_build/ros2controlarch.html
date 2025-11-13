@@ -20,7 +20,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Getting Started" href="getting_started.html" />
-    <link rel="prev" title="Build the Workspace" href="build.html" /> 
+    <link rel="prev" title="Build so101_ros2" href="build.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -45,11 +45,10 @@
               <p class="caption" role="heading"><span class="caption-text">Guides</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="build.html">Build the Workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build.html">Build so101_ros2</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">ROS 2 Control Architecture</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#hardware-interface">Hardware interface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#controller-layout">Controller layout</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#launch-files">Launch files</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
@@ -97,20 +96,73 @@ set-points back to the Python layer. The plugin is exported in
 <h2>Controller layout<a class="headerlink" href="#controller-layout" title="Link to this heading"></a></h2>
 <p>Controller definitions live in <code class="docutils literal notranslate"><span class="pre">so101_controller/config/so101_controllers.yaml</span></code>.
 The follower namespace loads a <code class="docutils literal notranslate"><span class="pre">joint_trajectory_controller</span></code> for the arm, a
-<code class="docutils literal notranslate"><span class="pre">GripperActionController</span></code> and a joint state broadcaster. The leader namespace
-runs only a joint state broadcaster, reflecting its use as a sensing device. The
+<code class="docutils literal notranslate"><span class="pre">GripperActionController</span></code> and a <code class="docutils literal notranslate"><span class="pre">joint</span> <span class="pre">state</span> <span class="pre">broadcaster</span></code>. The leader namespace
+runs only a <code class="docutils literal notranslate"><span class="pre">joint</span> <span class="pre">state</span> <span class="pre">broadcaster</span></code>, reflecting its use as a sensing device. The
 configuration keeps both command and state interfaces in position mode to match
 the bridge expectations.</p>
-</section>
-<section id="launch-files">
-<h2>Launch files<a class="headerlink" href="#launch-files" title="Link to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">so101_controller/launch/controller_manager.launch.py</span></code> starts the
-<code class="docutils literal notranslate"><span class="pre">ros2_control_node</span></code> with the controller configuration. The separate launch file
-<code class="docutils literal notranslate"><span class="pre">so101_controller/launch/so101_controllers.launch.py</span></code> spawns the joint state
-broadcaster before the arm and gripper controllers under the namespace provided
-through the <code class="docutils literal notranslate"><span class="pre">type</span></code> launch argument. The bring-up launch descriptions use timer
-actions to delay controller spawning until the hardware interfaces and bridge
-nodes are online.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">/follower</span><span class="p">:</span>
+<span class="nt">controller_manager</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">ros__parameters</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">update_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span><span class="w">  </span><span class="c1"># Hz</span>
+
+<span class="w">    </span><span class="nt">arm_controller</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">joint_trajectory_controller/JointTrajectoryController</span>
+
+<span class="w">    </span><span class="nt">gripper_controller</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">position_controllers/GripperActionController</span>
+
+<span class="w">    </span><span class="nt">joint_state_broadcaster</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">joint_state_broadcaster/JointStateBroadcaster</span>
+
+<span class="nt">arm_controller</span><span class="p">:</span>
+
+<span class="w">    </span><span class="nt">ros__parameters</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">update_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">joint_trajectory_controller/JointTrajectoryController</span>
+<span class="w">    </span><span class="nt">joints</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">shoulder_pan</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">shoulder_lift</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">elbow_flex</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wrist_flex</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wrist_roll</span>
+<span class="w">    </span><span class="nt">command_interfaces</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">position</span>
+<span class="w">    </span><span class="nt">state_interfaces</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">position</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">velocity</span>
+
+<span class="w">    </span><span class="nt">state_publish_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50.0</span>
+<span class="w">    </span><span class="nt">action_monitor_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20.0</span>
+<span class="w">    </span><span class="nt">time_scaling</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.1</span>
+
+<span class="nt">gripper_controller</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">ros__parameters</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">position_controllers/GripperActionController</span>
+<span class="w">    </span><span class="nt">joint</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gripper</span>
+
+<span class="nt">/leader</span><span class="p">:</span>
+<span class="nt">controller_manager</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">ros__parameters</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">update_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span><span class="w">  </span><span class="c1"># Hz</span>
+
+<span class="w">    </span><span class="nt">joint_state_broadcaster</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">joint_state_broadcaster/JointStateBroadcaster</span>
+
+<span class="nt">joint_state_broadcaster</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">ros__parameters</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">joint_state_broadcaster/JointStateBroadcaster</span>
+<span class="w">    </span><span class="nt">joints</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">shoulder_pan</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">shoulder_lift</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">elbow_flex</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wrist_flex</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wrist_roll</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gripper</span>
+
+<span class="w">    </span><span class="nt">interfaces</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">position</span>
+</pre></div>
+</div>
 </section>
 </section>
 
@@ -118,7 +170,7 @@ nodes are online.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="build.html" class="btn btn-neutral float-left" title="Build the Workspace" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="build.html" class="btn btn-neutral float-left" title="Build so101_ros2" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="getting_started.html" class="btn btn-neutral float-right" title="Getting Started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

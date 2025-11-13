@@ -19,7 +19,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Build the Workspace" href="build.html" />
+    <link rel="next" title="Build so101_ros2" href="build.html" />
     <link rel="prev" title="SO101 ROS 2 Workspace" href="index.html" /> 
 </head>
 
@@ -53,7 +53,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#optional-isaac-lab-environment">Optional: Isaac Lab environment</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="build.html">Build the Workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build.html">Build so101_ros2</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ros2controlarch.html">ROS 2 Control Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="imitation_learning.html">Imitation Learning</a></li>
@@ -139,13 +139,17 @@ the ROS 2 workspace.</p>
 </section>
 <section id="optional-isaac-lab-environment">
 <h2>Optional: Isaac Lab environment<a class="headerlink" href="#optional-isaac-lab-environment" title="Link to this heading"></a></h2>
-<p>If you are using Isaac Sim 5.0, install Isaac Lab in a separate Conda environment following the <a class="reference external" href="https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/source_installation.html">official instructions</a>. Isaac Lab requires Python 3.11, so keeping it separate
+<p>If you are using Isaac Sim 5.0, install Isaac Lab in a separate Conda environment following the <a class="reference external" href="https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/source_installation.html">official instructions</a> . Isaac Lab requires Python 3.11, so keeping it separate
 from <code class="docutils literal notranslate"><span class="pre">lerobot_ros2</span></code> (Python 3.10) avoids dependency conflicts. Activate the
 environment when working with the simulator-specific teleoperation tools:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">activate</span> <span class="n">lerobot_isaaclab</span>
-<span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;.[feetech,smolvla,pi,async]&quot;</span>
 </pre></div>
 </div>
+<dl class="simple">
+<dt>Then from the previously cloned lerobot repo::</dt><dd><p>cd lerobot
+pip install -e “.[&lt;your extras here&gt;]” # e.g. “.[all] or “.[feetech,smolvla,pi,async]” etc.</p>
+</dd>
+</dl>
 </section>
 </section>
 
@@ -154,7 +158,7 @@ environment when working with the simulator-specific teleoperation tools:</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="index.html" class="btn btn-neutral float-left" title="SO101 ROS 2 Workspace" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="build.html" class="btn btn-neutral float-right" title="Build the Workspace" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="build.html" class="btn btn-neutral float-right" title="Build so101_ros2" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

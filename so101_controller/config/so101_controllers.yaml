@@ -1,4 +1,3 @@
-# This config file is used by ros2_control
 /follower:
   controller_manager:
     ros__parameters:
@@ -30,7 +29,6 @@
         - position
         - velocity
       
-      # GAINS CONFIGURATION ADDED HERE
       gains:
         shoulder_pan:  {p: 0.0, i: 0.0, d: 0.0}
         shoulder_lift: {p: 0.0, i: 0.0, d: 0.0}
@@ -38,19 +36,15 @@
         wrist_flex:    {p: 0.0, i: 0.0, d: 0.0}
         wrist_roll:    {p: 0.0, i: 0.0, d: 0.0}
       
-      # --- HERE ARE THE PARAMETERS ---
-      state_publish_rate: 50.0  # <-- Change this to your desired value [Expected double]
-      action_monitor_rate: 20.0 # <-- Change this to your desired value [Expected double]
+      state_publish_rate: 50.0  
+      action_monitor_rate: 20.0 
 
-      time_scaling: 1.1  # <-- Change this to your desired value [Expected double]
+      time_scaling: 1.1  
 
   gripper_controller:
     ros__parameters:
       type: position_controllers/GripperActionController
       joint: gripper
-      # You can add other relevant gripper parameters here if needed
-      # goal_tolerance: 0.01
-      # max_effort: 10.0 ## No Force sensing
 
 /leader:
   controller_manager:
