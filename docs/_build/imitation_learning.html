@@ -1,0 +1,309 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Imitation Learning &mdash; SO101 ROS2  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Getting Started" href="getting_started.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            SO101 ROS2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Guides</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build.html">Build so101_ros2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ros2controlarch.html">ROS 2 Control Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Imitation Learning</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#real-teleoperation">Real teleoperation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#isaac-sim-teleoperation">Isaac Sim teleoperation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#record-demonstrations-with-system-data-recorder">Record demonstrations with <code class="docutils literal notranslate"><span class="pre">system_data_recorder</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-the-keyboard-commander">Using the Keyboard Commander</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#running-the-commander">Running the Commander</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#keyboard-controls">Keyboard Controls</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#convert-rosbag2-datasets">Convert rosbag2 datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deployment">Deployment</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">SO101 ROS2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Imitation Learning</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/imitation_learning.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="imitation-learning">
+<h1>Imitation Learning<a class="headerlink" href="#imitation-learning" title="Link to this heading"></a></h1>
+<p>The SO101 ROS 2 workspace integrates teleoperation, recording, and dataset
+conversion tools so you can generate demonstrations for downstream imitation
+learning pipelines.</p>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>A working SO101 ROS 2 setup with leader and follower communication verified. Follow
+the <a class="reference external" href="./getting_started.html">getting started guide</a> to prepare and launch the
+system.</p></li>
+<li><p>Bridge and camera configurations updated to match your hardware setup.</p></li>
+<li><p>(Optional) NVIDIA Isaac Sim 5.0 installed for simulator-based teleoperation. You can use the source code <a class="reference external" href="https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/source_installation.html">installation guide</a>.</p></li>
+</ul>
+</section>
+<section id="real-teleoperation">
+<h2>Real teleoperation<a class="headerlink" href="#real-teleoperation" title="Link to this heading"></a></h2>
+<p>Launch the bridge with the physical leader and follower hardware:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ros2</span> <span class="n">launch</span> <span class="n">so101_bringup</span> <span class="n">so101_teleoperate</span><span class="o">.</span><span class="n">launch</span><span class="o">.</span><span class="n">py</span> <span class="n">mode</span><span class="o">:=</span><span class="n">real</span> <span class="n">display</span><span class="o">:=</span><span class="n">true</span>
+</pre></div>
+</div>
+<p>Monitor the logs for connection issues and confirm that the follower mirrors the
+leader motions while RViz visualises the joint states and cameras feeds.</p>
+<div  class="sphinx-contrib-video-container align-center"><video controls="True" height="400" muted="True" preload="auto" width="600"><source src="_images/il_real_teleop.mp4" type="video/mp4">Real teleoperation video</video></div><div  class="sphinx-contrib-video-container align-center"><video controls="True" height="400" muted="True" preload="auto" width="600"><source src="_images/il_real_teleop2.mp4" type="video/mp4">Real teleoperation video 2</video></div></section>
+<section id="isaac-sim-teleoperation">
+<h2>Isaac Sim teleoperation<a class="headerlink" href="#isaac-sim-teleoperation" title="Link to this heading"></a></h2>
+<p>Use the simulator workflow to stream demonstrations into Isaac Sim.</p>
+<ol class="arabic">
+<li><p>Bringup IsaacSim in one terminal:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>${ISAACSIM_PATH}/isaac-sim.sh
+</pre></div>
+</div>
+</li>
+<li><p>Load your ready-made usd file or use the provided example scene located at <code class="docutils literal notranslate"><span class="pre">so101_description/usd/so101_new_calib.usd</span></code>.</p></li>
+<li><p>Launch in a second terminal the teleoperation pipeline connected to the Isaac transport topics:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ros2</span> <span class="n">launch</span> <span class="n">so101_bringup</span> <span class="n">so101_teleoperate</span><span class="o">.</span><span class="n">launch</span><span class="o">.</span><span class="n">py</span> <span class="n">mode</span><span class="o">:=</span><span class="n">isaac</span> <span class="n">display</span><span class="o">:=</span><span class="n">true</span>
+</pre></div>
+</div>
+</li>
+<li><p>Start simulation.</p></li>
+</ol>
+<p>This reuses the teleoperation pipeline while switching the interfaces to the Isaac transport topics so you can stream demonstrations from the leader arm directly into the simulator using Isaac ROS2 Bridge.</p>
+<p>You should now be able to move the leader arm and see the follower in IsaacSim mimicking its motions in real time and RViz which visualises the follower cameras and follower state comparing to the leader state.</p>
+<div  class="sphinx-contrib-video-container align-center"><video controls="True" height="400" muted="True" preload="auto" width="600"><source src="_images/il_isaac_teleop.mp4" type="video/mp4">Isaac Sim teleoperation video</video></div><div  class="sphinx-contrib-video-container align-center"><video controls="True" height="300" muted="True" preload="auto" width="600"><source src="_images/il_isaac_teleop2.mp4" type="video/mp4">Isaac Sim teleoperation video 2</video></div><section id="record-demonstrations-with-system-data-recorder">
+<h3>Record demonstrations with <code class="docutils literal notranslate"><span class="pre">system_data_recorder</span></code><a class="headerlink" href="#record-demonstrations-with-system-data-recorder" title="Link to this heading"></a></h3>
+<p>The workspace ships with launch files for the
+<code class="docutils literal notranslate"><span class="pre">system_data_recorder</span></code> package to capture rosbag2 datasets.</p>
+<ol class="arabic">
+<li><p>Adjust <code class="docutils literal notranslate"><span class="pre">so101_bringup/config/so101_sdr.yaml</span></code> to list the topics you want to
+record, set <code class="docutils literal notranslate"><span class="pre">bag_name_prefix</span></code> and <code class="docutils literal notranslate"><span class="pre">copy_destination</span></code>.</p></li>
+<li><p>Start your teleoperation session (real or Isaac).</p></li>
+<li><p>Launch the recorder:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ros2</span> <span class="n">launch</span> <span class="n">so101_bringup</span> <span class="n">so101_record</span><span class="o">.</span><span class="n">launch</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+</li>
+<li><p>Drive the lifecycle transitions from another terminal:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ros2</span> <span class="n">lifecycle</span> <span class="nb">set</span> <span class="o">/</span><span class="n">sdr</span> <span class="n">configure</span>
+<span class="n">ros2</span> <span class="n">lifecycle</span> <span class="nb">set</span> <span class="o">/</span><span class="n">sdr</span> <span class="n">activate</span>
+</pre></div>
+</div>
+</li>
+<li><p>Stop the recording when the demonstration is complete:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ros2</span> <span class="n">lifecycle</span> <span class="nb">set</span> <span class="o">/</span><span class="n">sdr</span> <span class="n">deactivate</span>
+<span class="n">ros2</span> <span class="n">lifecycle</span> <span class="nb">set</span> <span class="o">/</span><span class="n">sdr</span> <span class="n">shutdown</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="using-the-keyboard-commander">
+<h3>Using the Keyboard Commander<a class="headerlink" href="#using-the-keyboard-commander" title="Link to this heading"></a></h3>
+<p>For improved usability, the <code class="docutils literal notranslate"><span class="pre">system_data_recorder</span></code> package includes an
+<code class="docutils literal notranslate"><span class="pre">SDRKeyboardCommander</span></code> node that sends lifecycle transition requests to the
+<code class="docutils literal notranslate"><span class="pre">/sdr</span></code> node based on keyboard input.</p>
+<p>This allows you to control the recorder without manually typing lifecycle
+commands.</p>
+<section id="running-the-commander">
+<h4>Running the Commander<a class="headerlink" href="#running-the-commander" title="Link to this heading"></a></h4>
+<ol class="arabic">
+<li><p>In one terminal, launch the recorder:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ros2<span class="w"> </span>launch<span class="w"> </span>so101_bringup<span class="w"> </span>so101_record.launch.py
+</pre></div>
+</div>
+</li>
+<li><p>In a second terminal, start the keyboard commander:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ros2<span class="w"> </span>run<span class="w"> </span>system_data_recorder<span class="w"> </span>sdr_commander
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="keyboard-controls">
+<h4>Keyboard Controls<a class="headerlink" href="#keyboard-controls" title="Link to this heading"></a></h4>
+<p>Once running, the commander listens for key presses and triggers the
+corresponding lifecycle transitions on the <code class="docutils literal notranslate"><span class="pre">/sdr</span></code> node.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Action</p></th>
+<th class="head"><p>Lifecycle Transition</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">c</span></code></p></td>
+<td><p>Configure</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CONFIGURE</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">a</span></code></p></td>
+<td><p>Activate (start recording)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ACTIVATE</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">d</span></code></p></td>
+<td><p>Deactivate (pause recording)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DEACTIVATE</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l</span></code></p></td>
+<td><p>Cleanup</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CLEANUP</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">s</span></code></p></td>
+<td><p>Shutdown</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SHUTDOWN</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">g</span></code></p></td>
+<td><p>Get State</p></td>
+<td><p>Query and print state</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">h</span></code></p></td>
+<td><p>Help</p></td>
+<td><p>Print help menu</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">q</span></code></p></td>
+<td><p>Quit</p></td>
+<td><p>Exit commander node</p></td>
+</tr>
+</tbody>
+</table>
+<p>The resulting rosbag2 dataset is saved under the directory specified in
+<code class="docutils literal notranslate"><span class="pre">copy_destination</span></code> with the prefix from <code class="docutils literal notranslate"><span class="pre">bag_name_prefix</span></code>.</p>
+<p>You can inspect the produced bag using:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ros2<span class="w"> </span>bag<span class="w"> </span>info<span class="w"> </span>&lt;bag_path&gt;
+</pre></div>
+</div>
+<p>For additional options and advanced usage, refer to the
+<a class="reference external" href="https://github.com/nimiCurtis/system_data_recorder">system_data_recorder documentation</a> .</p>
+</section>
+</section>
+</section>
+<section id="convert-rosbag2-datasets">
+<h2>Convert rosbag2 datasets<a class="headerlink" href="#convert-rosbag2-datasets" title="Link to this heading"></a></h2>
+<p>Convert captured rosbag2 files into Lerobot datasets with the
+<a class="reference external" href="https://github.com/nimiCurtis/so101_rosbag2lerobot_dataset">so101_rosbag2lerobot_dataset</a> utilities.</p>
+<ol class="arabic simple">
+<li><p>First install the package:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>lerobot_ros2
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/nimiCurtis/so101_rosbag2lerobot_dataset.git
+<span class="nb">cd</span><span class="w"> </span>so101_rosbag2lerobot_dataset
+pip<span class="w"> </span>install<span class="w"> </span>so101_rosbag2lerobot_dataset
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Prepare a YAML configuration describing the topics and output directory. An example config is shown in the package config directory.</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>so101-rosbag2lerobot<span class="w"> </span>--config<span class="w"> </span>&lt;path_to_your_config.yaml&gt;
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Inspect results with <code class="docutils literal notranslate"><span class="pre">lerobot-dataset-viz</span></code> or online with <a class="reference external" href="https://huggingface.co/spaces/lerobot/visualize_dataset">Huggingface Lerobot Dataset Visualizer</a>.</p></li>
+</ol>
+<div  class="sphinx-contrib-video-container align-center"><video controls="True" height="400" muted="True" preload="auto" width="600"><source src="_images/il_data_conversion2.mp4" type="video/mp4">Data conversion video2</video></div></section>
+<section id="training">
+<h2>Training<a class="headerlink" href="#training" title="Link to this heading"></a></h2>
+<p>Finetune a VLA model on the collected dataset using directly the <code class="docutils literal notranslate"><span class="pre">lerobot</span></code> package.
+Check out the official tutorials on <a class="reference external" href="https://huggingface.co/docs/lerobot/il_robots#train-a-policy">imitation learning with lerobot</a>.</p>
+</section>
+<section id="deployment">
+<h2>Deployment<a class="headerlink" href="#deployment" title="Link to this heading"></a></h2>
+<div class="admonition-tbd admonition">
+<p class="admonition-title">TBD …</p>
+<p>Describe how to deploy the trained policy back to the SO101 hardware.</p>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="getting_started.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

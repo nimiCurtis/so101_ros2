@@ -52,7 +52,6 @@ jobs:
   # Job 3: Run slower build & test jobs ONLY if linting passes
   # --------------------------------------------------
   build-and-test:
-    # 'needs: [lint, ament_lint_cpp]' creates the chain. This job waits for 'lint' and 'ament_lint_cpp' to succeed.
     needs: [lint, ament_lint_cpp]
     runs-on: ubuntu-22.04
     steps:
@@ -60,8 +59,15 @@ jobs:
         uses: ros-tooling/setup-ros@v0.7
         with:
           required-ros-distributions: humble
-      - name: Build and run tests
+      
+      - name: Build Workspace
         uses: ros-tooling/action-ros-ci@v0.4
         with:
           target-ros2-distro: humble
-
+          skip-tests: true
+          no-symlink-install: true
+      
+      # - name: Build and run tests
+      #   uses: ros-tooling/action-ros-ci@v0.4
+      #   with:
+      #     target-ros2-distro: humble

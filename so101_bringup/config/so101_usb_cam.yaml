@@ -1,6 +1,4 @@
-# config/so101_usb_cam.yaml
-
-# 0) Shared defaults for all usb_cam nodes
+# Shared defaults for all usb_cam nodes
 /**:
   ros__parameters:
     framerate: 30.0
@@ -21,7 +19,7 @@
     autofocus: false
     focus: -1
 
-# 1) node name should be fit the this format: <namespace>/<camera_name> from the so101_cameras.yaml 
+# Node name should be fit the this format: <namespace>/<camera_name> from the so101_cameras.yaml 
 /follower/cam_front: 
   ros__parameters:
     video_device: "/dev/video0"

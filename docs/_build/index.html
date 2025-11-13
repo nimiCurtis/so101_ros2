@@ -1,0 +1,186 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SO101 ROS 2 Workspace &mdash; SO101 ROS2  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Setup" href="setup.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            SO101 ROS2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build.html">Build so101_ros2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ros2controlarch.html">ROS 2 Control Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imitation_learning.html">Imitation Learning</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">SO101 ROS2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">SO101 ROS 2 Workspace</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="so101-ros-2-workspace">
+<h1>SO101 ROS 2 Workspace<a class="headerlink" href="#so101-ros-2-workspace" title="Link to this heading"></a></h1>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading"></a></h2>
+<p>The SO101 ROS 2 workspace connects Lerobot’s leader and follower controllers to
+the ROS 2 ecosystem. It packages the bridge nodes, bring-up launch files,
+teleoperation utilities, and documentation for building datasets that support
+imitation learning research.</p>
+</section>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>This documentation walks through the full workflow:</p>
+<ul class="simple">
+<li><p>Preparing the Lerobot and Python environments required by the bridge.</p></li>
+<li><p>Building the ROS 2 workspace and enabling camera pipelines.</p></li>
+<li><p>Configuring the bridge parameters and launching the system end-to-end.</p></li>
+<li><p>Capturing demonstrations and preparing them for imitation learning pipelines.</p></li>
+</ul>
+</section>
+<section id="packages">
+<h2>Packages<a class="headerlink" href="#packages" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ros2_externals/system_data_recording</span></code> – Nodes and launch files for capturing datasets for imitation learning using bag files.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">so101_bringup</span></code> – End-to-end bring-up launch files for the SO101 robot.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">so101_controller</span></code> – ROS 2 control launches and configurations.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">so101_description</span></code> – URDF, xacro, meshes, usd files for the robot + <code class="docutils literal notranslate"><span class="pre">robot_state_publisher</span></code> launch file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">so101_hardware_interface</span></code> – Hardware interface for the SO101 robot.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">so101_ros2</span></code> – Meta package for the SO101 ROS 2 workspace.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">so101_ros2_bridge</span></code> – Bridge nodes connecting Lerobot APIs to ROS 2 topics and services.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">so101_teleop</span></code> – Teleoperation component and launch file.</p></li>
+</ul>
+</section>
+<section id="acknowledgments">
+<h2>Acknowledgments<a class="headerlink" href="#acknowledgments" title="Link to this heading"></a></h2>
+<p>This project builds directly on the excellent <a class="reference external" href="https://github.com/huggingface/lerobot">Lerobot</a> framework from Hugging Face.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#python-environment">Python environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#usb-access">USB access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#calibration">Calibration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#verification">Verification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#optional-isaac-lab-environment">Optional: Isaac Lab environment</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="build.html">Build so101_ros2</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="build.html#bootstrap-the-workspace">Bootstrap the workspace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html#expose-lerobot-to-ros-2">Expose Lerobot to ROS 2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html#camera-support">Camera support</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ros2controlarch.html">ROS 2 Control Architecture</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ros2controlarch.html#hardware-interface">Hardware interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ros2controlarch.html#controller-layout">Controller layout</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#bridge-configuration">Bridge configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#camera-configuration">Camera configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#launch-the-system">Launch the system</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="imitation_learning.html">Imitation Learning</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imitation_learning.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imitation_learning.html#real-teleoperation">Real teleoperation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imitation_learning.html#isaac-sim-teleoperation">Isaac Sim teleoperation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imitation_learning.html#convert-rosbag2-datasets">Convert rosbag2 datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imitation_learning.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imitation_learning.html#deployment">Deployment</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="setup.html" class="btn btn-neutral float-right" title="Setup" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

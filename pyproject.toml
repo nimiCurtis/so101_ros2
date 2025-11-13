@@ -11,6 +11,3 @@ ignore = ["E203", "E501", "Q000", "E402", "F401"]
 quote-style = "single"
 indent-style = "space"
 line-ending = "lf"
-
-[tool.black]
-line-length = 100

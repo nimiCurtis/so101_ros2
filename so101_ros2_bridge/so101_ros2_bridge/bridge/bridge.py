@@ -46,7 +46,6 @@ ensure_conda_site_packages_from_env()
 from lerobot.robots.so101_follower import SO101Follower
 from lerobot.teleoperators.so101_leader import SO101Leader
 
-# from .registry import ROBOT_FACTORY_REGISTRY
 from so101_ros2_bridge import CALIBRATION_BASE_DIR  # defined in __init__.py
 from so101_ros2_bridge.bridge.registry import ROBOT_FACTORY_REGISTRY
 

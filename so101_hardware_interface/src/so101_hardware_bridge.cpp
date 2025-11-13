@@ -122,9 +122,9 @@ hardware_interface::return_type So101HardwareBridge::write(
 {
   // Create and publish the command message to the Python node
   auto msg = std::make_unique<std_msgs::msg::Float64MultiArray>();
-  
+
   //Fill the message with a timestamp
-  
+
   // Ensure commands are not NaN before sending
   for (size_t i = 0; i < hw_commands_.size(); ++i) {
     if (std::isnan(hw_commands_[i])) {

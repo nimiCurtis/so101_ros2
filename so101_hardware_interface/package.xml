@@ -4,8 +4,8 @@
   <name>so101_hardware_interface</name>
   <version>0.1.0</version>
   <description>ros2_control hardware interface for the SO101 robot.</description>
-  <maintainer email="nimicu21@gmail.com">nimrod</maintainer>
-  <license>TODO: License declaration</license>
+  <maintainer email="nimicu21@gmail.com">Nimrod</maintainer>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

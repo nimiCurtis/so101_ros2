@@ -1,5 +1,22 @@
-# MIT License
-# Copyright ...
+# Copyright 2025 nimiCurtis
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
 
 import os
 from dataclasses import dataclass
@@ -23,7 +40,7 @@ TYPE_REGISTRY: Dict[str, Tuple[str, str]] = {
 
 
 def load_yaml_from_pkg(package_name: str, rel_path: str) -> Any:
-    """Loads YAML at <share(package)>/<rel_path>."""
+    """Load YAML at <share(package)>/<rel_path>."""
     package_path = get_package_share_directory(package_name)
     abs_path = os.path.join(package_path, rel_path)
     with open(abs_path, 'r') as f:
