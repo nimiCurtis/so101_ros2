@@ -1,6 +1,15 @@
-# so101_ros2
-
-A ROS 2 driver for the Lerobot SO101 manipulator.
+<div align="center">
+  <h1>so101_ros2</h1>
+  <p>ROS 2 integration for the Lerobot SO101 manipulator.</p>
+  <p>
+    <a href="docs/index.rst"><img src="https://img.shields.io/badge/docs-latest-blue?logo=readthedocs" alt="Documentation"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+    <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10+-blue.svg" alt="Python Version"></a>
+    <a href="https://docs.ros.org/en/humble/Installation.html"><img src="https://img.shields.io/badge/ROS2-Humble-green.svg"     alt="ROS2 Version"></a>
+    <a href="https://huggingface.co/docs/lerobot/"><img src="https://img.shields.io/badge/Lerobot-orange.svg" alt="Lerobot"></a>
+    <a href="https://developer.nvidia.com/isaac-sim"><img src="https://img.shields.io/badge/IsaacSim-orange.svg" alt="IsaacSim"></a>
+  </p>
+</div>
 
 ---
 
@@ -73,7 +82,7 @@ These docs assume that your SO101 is already assembled and all motor IDs and bau
 
     Alternatively, you can manually change permissions:
 
-        ```bash
+    ```bash
     sudo chmod 666 /dev/<leader port>
     sudo chmod 666 /dev/<follower port>
     ```
