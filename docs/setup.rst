@@ -1,11 +1,12 @@
 Setup
 =====
 
-Lerobot prerequisites
+Prerequisites
 ---------------------
-Install ROS 2 Humble on Ubuntu 22.04 with the Cyclone DDS RMW implementation.
-(Optional) Isaac Sim 5.0 or later is required only for the simulator
-teleoperation workflows.
+- An assembled Lerobot SO101 leader + follower kits.
+- A computer running Ubuntu 22.04 with `ROS2 Humble <https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html>`_ installed.
+- `Conda <https://docs.conda.io/en/latest/miniconda.html>`_ installed for Python environment management.
+- (Optional) `NVIDIA Isaac Sim 5.0 <https://developer.nvidia.com/isaac-sim>`_ .
 
 Python environment
 ------------------
@@ -35,9 +36,9 @@ fallback you can change the permissions on the detected device paths::
    sudo chmod 666 /dev/<leader port>
    sudo chmod 666 /dev/<follower port>
 
-Calibration workflow
+Calibration
 --------------------
-Follow the Lerobot SO101 calibration guide to generate JSON calibration files
+Follow the Lerobot SO101 `calibration guide <https://huggingface.co/docs/lerobot/so101?calibrate_follower=Command#calibrate>`_ to generate JSON calibration files
 for each manipulator. Save them to a known directory and reference that path
 from the bridge parameter files. The bundled defaults under
 ``so101_ros2_bridge/config/calibration`` provide an initial reference but should
@@ -45,17 +46,18 @@ be replaced with your measured values.
 
 Verification
 ------------
-Use ``lerobot-find-port`` to list the connected leader and follower USB ports
-and confirm that the Conda environment can access both arms. Then execute the
+Use ``lerobot-find-port`` to list the connected leader and follower USB ports. Then execute the
 Lerobot tutorials to validate communication and calibration before continuing to
 the ROS 2 workspace.
 
 Optional: Isaac Lab environment
 -------------------------------
-Install Isaac Sim 5.0 and Isaac Lab in a separate Conda environment using the
-official instructions. Isaac Lab requires Python 3.11, so keeping it separate
+If you are using Isaac Sim 5.0, install Isaac Lab in a separate Conda environment following the `official instructions <https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/source_installation.html>`_ . Isaac Lab requires Python 3.11, so keeping it separate
 from ``lerobot_ros2`` (Python 3.10) avoids dependency conflicts. Activate the
 environment when working with the simulator-specific teleoperation tools::
-
+   
    conda activate lerobot_isaaclab
-   pip install -e ".[feetech,smolvla,pi,async]"
+
+Then from the previously cloned lerobot repo::
+   cd lerobot
+   pip install -e ".[<your extras here>]" # e.g. ".[all] or ".[feetech,smolvla,pi,async]" etc. 

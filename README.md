@@ -7,7 +7,7 @@
     <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10+-blue.svg" alt="Python Version"></a>
     <a href="https://docs.ros.org/en/humble/Installation.html"><img src="https://img.shields.io/badge/ROS2-Humble-green.svg"     alt="ROS2 Version"></a>
     <a href="https://huggingface.co/docs/lerobot/"><img src="https://img.shields.io/badge/Lerobot-orange.svg" alt="Lerobot"></a>
-    <a href="https://developer.nvidia.com/isaac-sim"><img src="https://img.shields.io/badge/IsaacSim-orange.svg" alt="IsaacSim"></a>
+    <a href="https://developer.nvidia.com/isaac-sim"><img src="https://img.shields.io/badge/Isaac--Sim-orange.svg" alt="IsaacSim"></a>
   </p>
 </div>
 
@@ -89,7 +89,7 @@ These docs assume that your SO101 is already assembled and all motor IDs and bau
 
 #### Calibrate
 
-Check out [this link](https://huggingface.co/docs/lerobot/so101?calibrate_follower=Command#configure-the-motors) and skip to the *Calibrate* section to calibrate your leader/follower arms correctly and save the calibration files in a known directoy.
+Check out [this link](https://huggingface.co/docs/lerobot/so101?calibrate_follower=Command#calibrate) and calibrate your leader/follower arms correctly. Finally save the calibration files in a known directoy.
 
 #### Validate installation and calibration
 
@@ -113,7 +113,7 @@ Try this tutorial from the [official link](https://huggingface.co/docs/lerobot/i
    utilities, adjust the extras list to match the features you use, for example:
 
     ```bash
-    pip install -e ".[feetech,smolvla,pi,async]"
+    pip install -e ".[<your extras here>]" # e.g. ".[all] or ".[feetech,smolvla,pi,async]" etc.
     ```
 
 ### Build so101_ros2
@@ -440,4 +440,3 @@ same hooks on pushes to `main` and `dev`.
 - [ ] Moveit integration
 - [ ] Gazebo integration + teleop
 - [ ] IsaacLab
-
