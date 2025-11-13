@@ -1,58 +1,61 @@
 Setup
 =====
 
-Bridge configuration
---------------------
-The ROS 2 bridge nodes read their default parameters from the YAML files in
-``so101_ros2_bridge/config``. Update the serial port, robot identifier and
-calibration directory to match the hardware that is connected to the machine::
-
-   so101_ros2_bridge/config/so101_follower_params.yaml
-   so101_ros2_bridge/config/so101_leader_params.yaml
-
-Each file defines the ``port``, ``id`` and ``publish_rate`` fields used by the
-Python bridge node. The follower configuration additionally exposes
-``max_relative_target`` and ``disable_torque_on_disconnect`` to bound commands
-sent to the arm. Set ``calibration_dir`` to the directory that contains the
-calibration JSON files generated during the Lerobot setup. When the field is
-omitted the bridge defaults to the bundled assets inside the package.
-
-Calibration assets
-------------------
-Default calibration JSON files are installed with the package under
-``so101_ros2_bridge/config/calibration``. Replace or extend these files with the
-calibration data generated for your manipulators and point the parameter files
-to the desired directory when launching. The naming convention ``<id>.json`` is
-used throughout the workspace and matches the examples provided in the Lerobot
-tutorials.
+Lerobot prerequisites
+---------------------
+Install ROS 2 Humble on Ubuntu 22.04 with the Cyclone DDS RMW implementation.
+(Optional) Isaac Sim 5.0 or later is required only for the simulator
+teleoperation workflows.
 
 Python environment
 ------------------
-Source the workspace in every terminal before launching any nodes::
+Create an isolated Conda environment for Lerobot and install the forked
+repository that the ROS 2 bridge depends on::
 
-   source ~/ros2_ws/install/setup.bash
+   conda create -n lerobot_ros2 python=3.10
+   conda activate lerobot_ros2
+   conda install -n lerobot_ros2 -c conda-forge "libstdcxx-ng>=12" "libgcc-ng>=12"
+   git clone https://github.com/nimiCurtis/lerobot.git
+   cd lerobot
+   pip install -e ".[all]"
 
-Then export ``LECONDA_SITE_PACKAGES`` so the Lerobot Conda environment is added
-to ``sys.path`` at runtime::
+The additional ``libstdcxx-ng`` and ``libgcc-ng`` packages avoid missing GLIBCXX
+symbols when importing ROS 2 Python modules from Conda.
 
-   export LECONDA_SITE_PACKAGES=<conda_root>/envs/lerobot_ros2/lib/python3.10/site-packages
+USB access
+----------
+Add your user to the ``dialout`` group so the bridge can communicate with the
+serial-connected arms::
 
-If you created a symbolic link from the Lerobot sources into the
-``so101_ros2_bridge`` install directory (see :doc:`installation`), verify that
-the link still exists after rebuilding the workspace.
+   sudo usermod -aG dialout $USER
 
-Cameras
--------
-USB camera support is defined in ``so101_bringup/config/so101_cameras.yaml``.
-Each entry references a USB camera parameter file such as
-``so101_bringup/config/so101_usb_cam_front.yaml`` where the device path,
-resolution and exposure settings are declared. Update ``video_device`` to match
-the enumerated device (for example ``/dev/video4``) so the live feed appears in
-RViz during teleoperation.
+Log out and back in for the group membership to take effect. As a temporary
+fallback you can change the permissions on the detected device paths::
 
-System data recorder
+   sudo chmod 666 /dev/<leader port>
+   sudo chmod 666 /dev/<follower port>
+
+Calibration workflow
 --------------------
-The data recording launch file loads ``so101_bringup/config/so101_sdr.yaml`` to
-configure the ``system_data_recorder`` node. Adjust the ``copy_destination``,
-``bag_name_prefix`` and the list of topics to capture the information required
-for your workflows before running a recording session.
+Follow the Lerobot SO101 calibration guide to generate JSON calibration files
+for each manipulator. Save them to a known directory and reference that path
+from the bridge parameter files. The bundled defaults under
+``so101_ros2_bridge/config/calibration`` provide an initial reference but should
+be replaced with your measured values.
+
+Verification
+------------
+Use ``lerobot-find-port`` to list the connected leader and follower USB ports
+and confirm that the Conda environment can access both arms. Then execute the
+Lerobot tutorials to validate communication and calibration before continuing to
+the ROS 2 workspace.
+
+Optional: Isaac Lab environment
+-------------------------------
+Install Isaac Sim 5.0 and Isaac Lab in a separate Conda environment using the
+official instructions. Isaac Lab requires Python 3.11, so keeping it separate
+from ``lerobot_ros2`` (Python 3.10) avoids dependency conflicts. Activate the
+environment when working with the simulator-specific teleoperation tools::
+
+   conda activate lerobot_isaaclab
+   pip install -e ".[feetech,smolvla,pi,async]"
