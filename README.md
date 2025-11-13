@@ -9,7 +9,7 @@
     <a href="https://huggingface.co/docs/lerobot/"><img src="https://img.shields.io/badge/Lerobot-orange.svg" alt="Lerobot"></a>
     <a href="https://developer.nvidia.com/isaac-sim"><img src="https://img.shields.io/badge/Isaac--Sim-orange.svg" alt="IsaacSim"></a>
   </p>
-  <p><a href="https://so101-ros2.readthedocs.io/latest/">See the full documentation for more information!</a></p>
+  <p><a href="https://so101-ros2.readthedocs.io/latest/#">See the full documentation for more information!</a></p>
 </div>
 
 ---
