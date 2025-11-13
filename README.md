@@ -252,7 +252,7 @@ This workspace connects the Lerobot leader/follower stack with ROS 2 so you can 
 
 - USB ports for both leader and follower arms. Identify them with `lerobot-find-port` and update the bridge parameter files accordingly.
 - If you didn't complete calibration yet, run the [Lerobot SO101 calibration](https://huggingface.co/docs/lerobot/so101?calibrate_follower=Command#configure-the-motors) procedure for both arms and keep the exported JSON files. The bridge looks for them in `so101_ros2_bridge/config/calibration/` by default or alternatively provide an absolute path via the `calibration_dir` parameter.
-- Configure the camera parameters as described in the [Cameras](#cameras) section.
+- Configure the camera parameters as described in the [Configure Cameras](#configure-cameras) section.
 
 
 ### Run a real teleoperation session
@@ -278,13 +278,15 @@ You should now be able to move the leader arm and see the follower mimicking its
   ${ISAACSIM_PATH}/isaac-sim.sh
   ```
 
-2. Launch in a second terminal the teleoperation pipeline connected to the Isaac transport topics:
+2. Load your ready-made usd file or use the provided example scene located at `src/so101_ros2/so101_description/usd/so101_new_calib.usd`.
+
+3. Launch in a second terminal the teleoperation pipeline connected to the Isaac transport topics:
 
   ```bash
   ros2 launch so101_bringup so101_teleoperate.launch.py mode:=isaac display:=true
   ```
 
-3. Start simulation.
+4. Start simulation.
 
 This reuses the teleoperation pipeline while switching the interfaces to the Isaac transport topics so you can stream demonstrations from the leader arm directly into the simulator using Isaac ROS2 Bridge.
 
@@ -366,9 +368,39 @@ tooling. For more options see the
 
 ### Convert rosbag2lerobot dataset
 
-TBD...
+#### Prerequisites
 
-### Trianing VLA
+- A recorded rosbag2 dataset using the `system_data_recorder` as described in the previous section.
+- Install the [so101_rosbag2lerobot_dataset](https://github.com/nimiCurtis/so101_rosbag2lerobot_dataset) package:
+
+    ```bash
+    conda activate lerobot_ros2
+    git clone https://github.com/nimiCurtis/so101_rosbag2lerobot_dataset.git
+    cd so101_rosbag2lerobot_dataset
+    pip install so101_rosbag2lerobot_dataset
+    ```
+
+#### Conversion
+Use the `rosbag2lerobot_convert` CLI tool to convert your rosbag2 dataset into the
+`lerobot` imitation learning dataset format.
+
+1. Create a config file with the conversion parameters. An example config is shown in the package config directory. 
+
+2. Run the conversion command:
+
+   ```bash
+   so101-rosbag2lerobot --config <path_to_your_config.yaml>
+   ```
+
+3. The converted dataset will be saved in the specified output directory. Now you should be able to visualize and use it with the `lerobot` imitation learning framework.
+
+
+### Trianing a VLA
+
+Finetune a VLA model on the collected dataset using directly the `lerobot` package.
+Check out the official tutorials on [imitation learning with lerobot](https://huggingface.co/docs/lerobot/il_robots#train-a-policy).
+
+### Deploying a VLA
 
 TBD...
 
@@ -392,8 +424,10 @@ same hooks on pushes to `main` and `dev`.
 ## Roadmap for v0.1.0
 - [ ] Finish refactoring and docs.
 
-## Roadmap for v0.2.0
+## Roadmap for v0.1.1
+- [ ] Write a VLA inference node.
 
+## Roadmap for v0.2.0
 - [ ] Moveit integration
 - [ ] Gazebo integration + teleop
 - [ ] IsaacLab
