@@ -63,7 +63,7 @@ jobs:
       - name: Vendor lerobot into workspace
         run: |
           # Install lerobot and its runtime deps into a local folder
-          python3 -m pip install --target "$GITHUB_WORKSPACE/lerobot_vendor" "lerobot>=0.3.0"
+          python3 -m pip install --target "$GITHUB_WORKSPACE/lerobot_vendor" "lerobot>=0.4.0"
 
           # IMPORTANT: remove vendored setuptools so colcon uses the system one
           rm -rf "$GITHUB_WORKSPACE/lerobot_vendor/setuptools" \
