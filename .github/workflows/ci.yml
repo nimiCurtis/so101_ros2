@@ -52,7 +52,6 @@ jobs:
   # Job 3: Run slower build & test jobs ONLY if linting passes
   # --------------------------------------------------
   build-and-test:
-    # 'needs: [lint, ament_lint_cpp]' creates the chain. This job waits for 'lint' and 'ament_lint_cpp' to succeed.
     needs: [lint, ament_lint_cpp]
     runs-on: ubuntu-22.04
     steps:
@@ -61,13 +60,14 @@ jobs:
         with:
           required-ros-distributions: humble
 
-      - name: Install Python dependencies (lerobot)
+      - name: Vendor lerobot into workspace
         run: |
-          python3 -m pip install --upgrade pip
-          pip install "lerobot>=0.4.0"
+          # Install lerobot and its runtime deps into a local folder
+          python3 -m pip install --target "$GITHUB_WORKSPACE/lerobot_vendor" "lerobot>=0.4.0"
+          # Make that folder visible to Python for all subsequent steps
+          echo "PYTHONPATH=$GITHUB_WORKSPACE/lerobot_vendor:$PYTHONPATH" >> "$GITHUB_ENV"
 
       - name: Build and run tests
         uses: ros-tooling/action-ros-ci@v0.4
         with:
           target-ros2-distro: humble
-
