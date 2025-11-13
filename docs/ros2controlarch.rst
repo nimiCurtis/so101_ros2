@@ -1,3 +1,5 @@
+:orphan:
+
 ROS 2 Control Architecture
 ==========================
 
