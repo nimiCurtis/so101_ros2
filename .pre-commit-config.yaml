@@ -14,12 +14,6 @@ repos:
       - id: ruff-format
         args: ["--verbose"]
 
-  - repo: https://github.com/psf/black
-    rev: 25.9.0
-    hooks:
-      - id: black
-        args: ["--line-length", "100", "--preview", "--skip-string-normalization"]
-
   - repo: local
     hooks:
       - id: fix-tabs-in-cmakelists

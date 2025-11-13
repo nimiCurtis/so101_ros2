@@ -53,7 +53,15 @@ These docs assume that your SO101 is already assembled and all motor IDs and bau
     pip install -e ".[all]"
     ```
 
-3. Grant access to USB ports (for robot communication)
+3. Verify robot connections
+
+    After connecting the robots via USB, detect their ports:
+
+    ```bash
+    lerobot-find-port
+    ```
+
+4. Grant access to USB ports (for robot communication)
 
     Add your user to the dialout group (recommended):
 
@@ -65,17 +73,9 @@ These docs assume that your SO101 is already assembled and all motor IDs and bau
 
     Alternatively, you can manually change permissions:
 
-    ```bash
-    sudo chmod 666 /dev/ttyACM0
-    sudo chmod 666 /dev/ttyACM1
-    ```
-
-4. Verify robot connections
-
-    After connecting the robots via USB, detect their ports:
-
-    ```bash
-    lerobot-find-port
+        ```bash
+    sudo chmod 666 /dev/<leader port>
+    sudo chmod 666 /dev/<follower port>
     ```
 
 #### Calibrate
