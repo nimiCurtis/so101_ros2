@@ -59,5 +59,6 @@ environment when working with the simulator-specific teleoperation tools::
    conda activate lerobot_isaaclab
 
 Then from the previously cloned lerobot repo::
+
    cd lerobot
    pip install -e ".[<your extras here>]" # e.g. ".[all] or ".[feetech,smolvla,pi,async]" etc. 
