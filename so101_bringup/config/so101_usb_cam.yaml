@@ -1,0 +1,28 @@
+# Shared defaults for all usb_cam nodes
+/**:
+  ros__parameters:
+    framerate: 30.0
+    io_method: "mmap"
+    pixel_format: "mjpeg2rgb"
+    av_device_format: "YUV422P"
+    image_width: 640
+    image_height: 480
+    brightness: -1
+    contrast: -1
+    saturation: -1
+    sharpness: -1
+    gain: -1
+    auto_white_balance: true
+    white_balance: 4000
+    autoexposure: true
+    exposure: 100
+    autofocus: false
+    focus: -1
+
+# Node name should be fit the this format: <namespace>/<camera_name> from the so101_cameras.yaml 
+/follower/cam_front: 
+  ros__parameters:
+    video_device: "/dev/video0"
+    frame_id: "cam_front"
+    camera_name: "cam_front"
+    camera_info_url: "package://usb_cam/config/camera_info.yaml" 

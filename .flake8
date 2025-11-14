@@ -1,0 +1,9 @@
+[flake8]
+extend-ignore = E203,E501,D401
+max-line-length = 100
+
+# Make flake8-quotes require single quotes
+inline-quotes = single
+multiline-quotes = single
+docstring-quotes = single
+avoid-escape = true

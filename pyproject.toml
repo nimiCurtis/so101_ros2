@@ -1,0 +1,13 @@
+[tool.ruff]
+line-length = 100
+fix = true
+
+[tool.ruff.lint]
+extend-select = ["I"]  # enable import sorting (replaces isort)
+select = ["E", "F", "W", "I"]  # E: pycodestyle, F: pyflakes, W: warnings, I: isort
+ignore = ["E203", "E501", "Q000", "E402", "F401"]
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+line-ending = "lf"

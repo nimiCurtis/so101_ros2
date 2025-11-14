@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="so101_new_calib">
+    
+    <!-- Arguments -->
+    <xacro:arg name="initial_positions_file" default="$(find so101_description)/config/initial_positions.yaml" />
+    <xacro:arg name="display" default="false"/>
+    <xacro:arg name="mode" default="real"/> <!-- or 'isaac' -->
+    <xacro:arg name="joint_states_gui" default="false"/>
+
+    <!-- Import base URDF -->
+    <xacro:include filename="$(find so101_description)/urdf/so101_new_calib.urdf" />
+    <xacro:include filename="$(find so101_description)/urdf/so101_new_calib_with_transmission.xacro"/>
+
+    <!-- Conditionally include control if not GUI -->
+    <xacro:if value="$(eval not joint_states_gui)">
+        <xacro:include filename="$(find so101_description)/urdf/so101_new_calib.ros2_control.xacro" />
+        <xacro:so101_new_calib_ros2_control name="RobotSystem" initial_positions_file="$(arg initial_positions_file)"/>
+    </xacro:if>
+
+</robot>

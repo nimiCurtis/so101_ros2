@@ -1,0 +1,64 @@
+Setup
+=====
+
+Prerequisites
+---------------------
+- An assembled Lerobot SO101 leader + follower kits.
+- A computer running Ubuntu 22.04 with `ROS2 Humble <https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html>`_ installed.
+- `Conda <https://docs.conda.io/en/latest/miniconda.html>`_ installed for Python environment management.
+- (Optional) `NVIDIA Isaac Sim 5.0 <https://developer.nvidia.com/isaac-sim>`_ .
+
+Python environment
+------------------
+Create an isolated Conda environment for Lerobot and install the forked
+repository that the ROS 2 bridge depends on::
+
+   conda create -n lerobot_ros2 python=3.10
+   conda activate lerobot_ros2
+   conda install -n lerobot_ros2 -c conda-forge "libstdcxx-ng>=12" "libgcc-ng>=12"
+   git clone https://github.com/nimiCurtis/lerobot.git
+   cd lerobot
+   pip install -e ".[all]"
+
+The additional ``libstdcxx-ng`` and ``libgcc-ng`` packages avoid missing GLIBCXX
+symbols when importing ROS 2 Python modules from Conda.
+
+USB access
+----------
+Add your user to the ``dialout`` group so the bridge can communicate with the
+serial-connected arms::
+
+   sudo usermod -aG dialout $USER
+
+Log out and back in for the group membership to take effect. As a temporary
+fallback you can change the permissions on the detected device paths::
+
+   sudo chmod 666 /dev/<leader port>
+   sudo chmod 666 /dev/<follower port>
+
+Calibration
+--------------------
+Follow the Lerobot SO101 `calibration guide <https://huggingface.co/docs/lerobot/so101?calibrate_follower=Command#calibrate>`_ to generate JSON calibration files
+for each manipulator. Save them to a known directory and reference that path
+from the bridge parameter files. The bundled defaults under
+``so101_ros2_bridge/config/calibration`` provide an initial reference but should
+be replaced with your measured values.
+
+Verification
+------------
+Use ``lerobot-find-port`` to list the connected leader and follower USB ports. Then execute the
+Lerobot tutorials to validate communication and calibration before continuing to
+the ROS 2 workspace.
+
+Optional: Isaac Lab environment
+-------------------------------
+If you are using Isaac Sim 5.0, install Isaac Lab in a separate Conda environment following the `official instructions <https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/source_installation.html>`_ . Isaac Lab requires Python 3.11, so keeping it separate
+from ``lerobot_ros2`` (Python 3.10) avoids dependency conflicts. Activate the
+environment when working with the simulator-specific teleoperation tools::
+   
+   conda activate lerobot_isaaclab
+
+Then from the previously cloned lerobot repo::
+
+   cd lerobot
+   pip install -e ".[<your extras here>]" # e.g. ".[all] or ".[feetech,smolvla,pi,async]" etc. 

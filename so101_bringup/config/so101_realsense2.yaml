@@ -1,0 +1,111 @@
+# Shared defaults for all realsense2_camera nodes
+/**:
+  ros__parameters:
+    camera_name: "camera"                           # camera unique name
+    camera_namespace: "camera"                      # namespace for camera
+    serial_no: ""                                   # choose device by serial number
+    usb_port_id: ""                                 # choose device by usb port id
+    device_type: ""                                 # choose device by type
+    config_file: ""                                 # yaml config file
+    json_file_path: ""                              # allows advanced configuration
+    initial_reset: false                            # reset the device on startup
+    accelerate_gpu_with_glsl: false                 # enable GPU acceleration with GLSL
+    rosbag_filename: ""                             # run from realsense bagfile
+    rosbag_loop: false                              # enable loop playback for bagfile
+    log_level: "info"                               # debug log level [DEBUG|INFO|WARN|ERROR|FATAL]
+    output: "screen"                                # pipe node output [screen|log]
+
+    enable_color: true                              # enable color stream
+    rgb_camera.color_profile: "0,0,0"               # color stream profile <width,height,fps>
+    rgb_camera.color_format: "RGB8"                 # color stream format
+    rgb_camera.enable_auto_exposure: true           # enable/disable auto exposure for color
+
+    enable_depth: true                              # enable depth stream
+    enable_infra: false                             # enable infra0 stream
+    enable_infra1: false                            # enable infra1 stream
+    enable_infra2: false                            # enable infra2 stream
+
+    depth_module.depth_profile: "0,0,0"             # depth stream profile
+    depth_module.depth_format: "Z16"                # depth stream format
+    depth_module.infra_profile: "0,0,0"             # infra streams (0/1/2) profile
+    depth_module.infra_format: "RGB8"               # infra0 stream format
+    depth_module.infra1_format: "Y8"                # infra1 stream format
+    depth_module.infra2_format: "Y8"                # infra2 stream format
+    depth_module.color_profile: "0,0,0"             # depth module color stream profile for D405
+    depth_module.color_format: "RGB8"               # color stream format for D405
+
+    depth_module.exposure: 8500                     # depth module manual exposure
+    depth_module.gain: 16                           # depth module manual gain
+    depth_module.hdr_enabled: false                 # enable HDR (hdr_merge filter)
+    depth_module.enable_auto_exposure: true         # auto exposure for depth
+    depth_module.exposure.1: 7500                   # first HDR exposure
+    depth_module.gain.1: 16                         # first HDR gain
+    depth_module.exposure.2: 1                      # second HDR exposure
+    depth_module.gain.2: 16                         # second HDR gain
+
+    enable_sync: false                              # enable sync mode
+    depth_module.inter_cam_sync_mode: 0             # [0-Default, 1-Master, 2-Slave]
+    enable_rgbd: false                              # publish RGB-D combined topic
+    enable_gyro: false                              # enable gyro stream
+    enable_accel: false                             # enable accel stream
+    gyro_fps: 0                                     # gyro frame rate
+    enable_motion: false                            # enable motion stream (for DDS devices)
+    accel_fps: 0                                    # accel frame rate
+    unite_imu_method: 0                             # [0-None, 1-copy, 2-linear_interpolation]
+
+    clip_distance: -2.0                             # clipping distance (meters)
+    angular_velocity_cov: 0.01                      # angular velocity covariance
+    linear_accel_cov: 0.01                          # linear acceleration covariance
+    diagnostics_period: 0.0                         # diagnostics publish rate (0=disabled)
+
+    publish_tf: true                                # publish static & dynamic TFs
+    tf_publish_rate: 0.0                            # rate (Hz) for dynamic TF
+    base_frame_id: "link"                           # root frame of the sensors tree
+    tf_prefix: ""                                   # prefix for all frame IDs
+
+    pointcloud.enable: false                        # enable point cloud
+    pointcloud.stream_filter: 2                     # texture stream for pointcloud
+    pointcloud.stream_index_filter: 0               # texture stream index
+    pointcloud.ordered_pc: false                    # ordered point cloud flag
+    pointcloud.allow_no_texture_points: false       # allow untextured points
+
+    align_depth.enable: false                       # enable align-depth filter
+    colorizer.enable: false                         # enable colorizer filter
+    decimation_filter.enable: false                 # enable decimation filter
+    rotation_filter.enable: false                   # enable rotation filter
+    rotation_filter.rotation: 0.0                   # rotation value (0.0, 90.0, -90.0, 180.0)
+    spatial_filter.enable: false                    # enable spatial filter
+    temporal_filter.enable: false                   # enable temporal filter
+    disparity_filter.enable: false                  # enable disparity filter
+    hole_filling_filter.enable: false               # enable hole-filling filter
+    hdr_merge.enable: false                         # enable HDR merge filter
+    decimation_filter.filter_magnitude: 2           # decimation magnitude
+
+    wait_for_device_timeout: -1.0                   # timeout waiting for device (s)
+    reconnect_timeout: 6.0                          # timeout between reconnection attempts (s)
+
+    enable_safety: false                            # enable safety stream
+    safety_camera.safety_mode: 0                    # 0-Run, 1-Standby, 2-Service
+    enable_labeled_point_cloud: false               # enable labeled point cloud
+    depth_mapping_camera.labeled_point_cloud_profile: "0,0,0"  # labeled PC profile
+    enable_occupancy: false                         # enable occupancy stream
+    depth_mapping_camera.occupancy_profile: "0,0,0" # occupancy stream profile
+
+
+
+# Per-node overrides (use your actual namespaces & names)
+# Example 1: static_camera/cam_side  → /static_camera/cam_side/color/image_raw
+/static_camera/cam_side:
+  ros__parameters:
+    usb_port_id: ""                                 # optional: pin USB port ID
+    camera_name: ""                                 # unique name
+    camera_namespace: "static"                      # namespace
+    serial_no: ""                                   # serial number (use rs-enumerate-devices)
+    base_frame_id: "cam_side_link"                  # base link frame
+    tf_prefix: "cam_side"                           # TF prefix
+    enable_color: true                              # enable color stream
+    enable_depth: false                              # enable depth stream
+    align_depth.enable: false                        # align depth to color
+    rgb_camera.color_profile: "640,480,30"          # color stream profile
+    depth_module.depth_profile: "640,480,30"        # depth stream profile
+    depth_module.infra_profile: "640,480,30"

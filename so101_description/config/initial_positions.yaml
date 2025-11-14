@@ -1,0 +1,9 @@
+# Default initial positions for so101_new_calib's ros2_control fake system
+initial_positions:
+  shoulder_pan: 0
+  shoulder_lift: 0
+  elbow_flex: 0
+  wrist_flex: 0
+  wrist_roll: 0
+  gripper: 0
+

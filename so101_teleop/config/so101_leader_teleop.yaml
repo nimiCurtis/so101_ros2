@@ -1,0 +1,7 @@
+# Parameters for the LeaderTeleopComponent
+leader_teleop_component:
+  ros__parameters:
+    leader_joint_states_topic: "/leader/joint_states"
+    follower_arm_trajectory_topic: "/follower/arm_controller/joint_trajectory"
+    follower_gripper_command_topic: "/follower/gripper_controller/gripper_cmd"
+    gripper_deadband: 0.01 # In radians
