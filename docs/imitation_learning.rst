@@ -22,12 +22,6 @@ Launch the bridge with the physical leader and follower hardware::
 Monitor the logs for connection issues and confirm that the follower mirrors the
 leader motions while RViz visualises the joint states and cameras feeds.
 
-.. video:: ../media/video/il_real_teleop.mp4
-   :width: 600
-   :height: 400
-   :muted:
-   :align: center
-   :alt: Real teleoperation video
 
 .. video:: ../media/video/il_real_teleop2.mp4
    :width: 600
@@ -56,12 +50,6 @@ This reuses the teleoperation pipeline while switching the interfaces to the Isa
 
 You should now be able to move the leader arm and see the follower in IsaacSim mimicking its motions in real time and RViz which visualises the follower cameras and follower state comparing to the leader state.
 
-.. video:: ../media/video/il_isaac_teleop.mp4
-   :width: 600
-   :height: 400
-   :muted:
-   :align: center
-   :alt: Isaac Sim teleoperation video
 
 .. video:: ../media/video/il_isaac_teleop2.mp4
    :width: 600
