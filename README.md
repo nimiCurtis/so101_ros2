@@ -385,7 +385,7 @@ tooling. For more options see the
     ```
 
 #### Conversion
-Use the `rosbag2lerobot_convert` CLI tool to convert your rosbag2 dataset into the
+Use the `so101-rosbag2lerobot` CLI tool to convert your rosbag2 dataset into the
 `lerobot` imitation learning dataset format.
 
 1. Create a config file with the conversion parameters. An example config is shown in the package config directory. 

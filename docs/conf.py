@@ -14,3 +14,11 @@ templates_path = ['_templates']
 exclude_patterns = []
 
 html_theme = 'sphinx_rtd_theme'
+
+html_context = {
+    'display_github': True,
+    'github_user': 'nimicurtis',
+    'github_repo': 'so101_ros2',
+    'github_version': 'docs',
+    'conf_py_path': '/docs/',
+}
