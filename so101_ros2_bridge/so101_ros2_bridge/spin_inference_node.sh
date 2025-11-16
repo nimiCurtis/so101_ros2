@@ -16,6 +16,5 @@ source /home/anton/ros2_ws/install/setup.bash
 
 # Run the node
 
-
 ros2 run so101_ros2_bridge smolvla_inference_node   --ros-args   -p task:="Pick up the white cube and insert it on the green peg"   -p publisher_rate:=2   -p model_id:="lerobot/smolvla_base" "$@"
 # ros2 run so101_ros2_bridge smolvla_inference_node "$@"

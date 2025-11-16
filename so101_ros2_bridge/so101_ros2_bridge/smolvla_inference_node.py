@@ -367,35 +367,34 @@ class SmolVLAInferenceNode(Node):
             # Preprocess
             # self.get_logger().info('Starting preprocessing...', throttle_duration_sec=5.0)
             preprocess_start = time.time()
-            processed_transition = self.pre_processor._forward(transition)
-            # obs = self.pre_processor(obs_frame)
+            # processed_transition = self.pre_processor._forward(transition)
+            obs = self.pre_processor(obs_frame)
 
             preprocess_time = (time.time() - preprocess_start) * 1000
             # self.get_logger().info(f'Preprocessed in {preprocess_time:.1f}ms', throttle_duration_sec=5.0)
             
             # Flatten transition
-            flattened_transition = {}
+            # flattened_transition = {}
             
-            if "observation" in processed_transition and isinstance(processed_transition["observation"], dict):
-                for key, value in processed_transition["observation"].items():
-                    if key.startswith("observation."):
-                        flat_key = key
-                    else:
-                        flat_key = f"observation.{key}"
-                    flattened_transition[flat_key] = value
+            # if "observation" in processed_transition and isinstance(processed_transition["observation"], dict):
+            #     for key, value in processed_transition["observation"].items():
+            #         if key.startswith("observation."):
+            #             flat_key = key
+            #         else:
+            #             flat_key = f"observation.{key}"
+            #         flattened_transition[flat_key] = value
             
-            for key in ["action", "complementary_data", "reward", "done", "truncated", "info"]:
-                if key in processed_transition:
-                    flattened_transition[key] = processed_transition[key]
+            # for key in ["action", "complementary_data", "reward", "done", "truncated", "info"]:
+            #     if key in processed_transition:
+            #         flattened_transition[key] = processed_transition[key]
             
             # Model inference
             model_inference_start = time.time()
 
             
-            
-            # action = self.model.select_action(obs)
             # predic 50 actions ahead 50 [actions]*0.033 [sec/action] = 1.65 [sec] ahead assuming 33ms per step
-            action_tensor = self.model.predict_action_chunk(flattened_transition) # TODO check if can use select action with observation_dict directly
+            # action_tensor = self.model.select_action(obs)
+            action_tensor = self.model.predict_action_chunk(obs) # TODO check if can use select action with observation_dict directly
 
             model_inference_time = (time.time() - model_inference_start) * 1000
 
