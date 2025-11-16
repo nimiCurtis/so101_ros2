@@ -134,7 +134,7 @@ class SO101ROS2Bridge(Node, ABC):
             # Update the pre-allocated lists instead of creating new ones
             for i, joint in enumerate(self.JOINT_NAMES):
                 if joint == "gripper":
-                    pos = ((obs.get(f"{joint}.pos", 0.0) - 10.0) / 100.0) * math.pi
+                    pos = ((obs.get(f"{joint}.pos", 0.0)) / 100.0) * math.pi
                 else:
                     pos = math.radians(obs.get(f"{joint}.pos", 0.0))
                 self._positions[i] = pos

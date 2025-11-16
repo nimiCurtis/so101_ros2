@@ -146,6 +146,7 @@ void LeaderTeleopComponent::joint_state_callback(const sensor_msgs::msg::JointSt
       }
 
       auto goal_msg = control_msgs::action::GripperCommand::Goal();
+      current_gripper_pos = std::max(current_gripper_pos, 0.26); // Clamp to min open position
       goal_msg.command.position = current_gripper_pos;
       goal_msg.command.max_effort = 10.0;
 
