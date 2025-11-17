@@ -7,7 +7,7 @@ sdr:
     copy_destination: "/home/nimrod/ros2_ws/src/so101_ros2/bag"
 
     # Maximum size of each individual .db3 file in bytes before splitting.
-    max_file_size: 268435456  # 256 MiB
+    max_file_size: 1073741824  # 1024 MiB * 1024 * 1024
 
     # List of topics and their types to record.
     topic_names: [
