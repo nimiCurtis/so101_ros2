@@ -1,0 +1,57 @@
+# Shared parameters for all policy nodes
+# --------------------------------------
+/**:
+  ros__parameters:
+    # Sync / timing
+    inference_rate: 5.0          # Hz, how often to run policy
+    publish_rate: 25.0           # Hz, how often to publish JointState commands
+    queue_size: 10               # message_filters queue_size
+    slop: 0.05                   # ApproximateTimeSynchronizer slop [sec]
+
+    # Action sequence handling
+    action0_index: 0             # index into predicted sequence to start from
+
+    # Velocity filtering
+    velocity_lowpass_alpha: 0.2  # [0,1], 0.2 = fairly smooth
+
+    # General LeRobot / obs config (adapters can read these)
+    observation_image_size: [256, 256]
+    normalize_observations: true
+
+    # Safety knobs, if you want to use them inside adapters
+    max_joint_delta: 5.0         # per-step bound (deg or rad)
+    max_joint_velocity: 30.0     # for velocity-based controllers
+    action_scaling: 1.0
+
+# -------------------------------------------------------------------
+# Per-policy sections (node-specific).
+# The key MUST match the node name used in the launch file.
+# -------------------------------------------------------------------
+
+smolvla:
+  ros__parameters:
+    policy_name: "smolvla"
+    device: "cuda:0"
+    checkpoint_path: "lerobot/smolvla_base"
+
+
+pi0:
+  ros__parameters:
+    policy_name: "pi0"
+    device: "cuda:0"
+    checkpoint_path: "lerobot/pi0_base"
+
+
+pi05:
+  ros__parameters:
+    policy_name: "pi0.5"
+    device: "cuda:0"
+    checkpoint_path: "lerobot/pi0_5_base"
+
+
+groot:
+  ros__parameters:
+    policy_name: "groot"
+    device: "cuda:0"
+    checkpoint_path: "lerobot/groot_base"
+
