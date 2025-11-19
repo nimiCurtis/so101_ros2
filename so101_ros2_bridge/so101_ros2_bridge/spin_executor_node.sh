@@ -8,11 +8,11 @@ conda activate lerobot_ros2
 source /opt/ros/humble/setup.bash
 source /home/anton/ros2_ws/install/setup.bash
 
-# # CRITICAL: Put system library paths FIRST to override conda's libstdc++
-# export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+# CRITICAL: Put system library paths FIRST to override conda's libstdc++
+export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 
-# # Also ensure system libs are used for other potential conflicts
-# export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+# Also ensure system libs are used for other potential conflicts
+export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
 
 # Run the node
 

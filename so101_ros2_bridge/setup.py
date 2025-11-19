@@ -32,9 +32,6 @@ setup(
             'smolvla_inference_node = so101_ros2_bridge.smolvla_inference_node:main',
             'smolvla_test_node = so101_ros2_bridge.smolvla_test_node:main',
             'action_chunk_executor_node = so101_ros2_bridge.action_chunk_executor_node:main',
-            # # python scripts
-            # 'smolvla_inference_node.py = so101_ros2_bridge.smolvla_inference_node:main',
-            # 'action_chunk_executor_node.py = so101_ros2_bridge.action_chunk_executor_node:main',
         ],
     },
 )

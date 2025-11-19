@@ -38,7 +38,7 @@ def generate_launch_description():
 
     model_id_arg = DeclareLaunchArgument(
         'model_id',
-        default_value='lerobot/smolvla_base',
+        default_value='/home/anton/outputs/train/pi05_train_mgpu_001/checkpoints/last/pretrained_model',#'lerobot/smolvla_base',
         description='HuggingFace model ID for SmolVLA policy'
     )
     
@@ -62,25 +62,25 @@ def generate_launch_description():
     
     camera2_topic_arg = DeclareLaunchArgument(
         'camera2_topic',
-        default_value='/follower/cam_top1/image_raw',
+        default_value='/static_camera/cam_side/image_raw',
         description='Topic for top camera 1 feed'
     )
     
-    camera3_topic_arg = DeclareLaunchArgument(
-        'camera3_topic',
-        default_value='/follower/cam_top2/image_raw',
-        description='Topic for top camera 2 feed'
-    )
+    # camera3_topic_arg = DeclareLaunchArgument(
+    #     'camera3_topic',
+    #     default_value='/static_camera/cam_side/image_raw',
+    #     description='Topic for top camera 2 feed'
+    # )
     
     joint_state_topic_arg = DeclareLaunchArgument(
         'joint_state_topic',
-        default_value='/isaac/isaac_joint_states',
+        default_value='/follower/joint_states',
         description='Topic for robot joint states'
     )
     
     action_topic_arg = DeclareLaunchArgument(
         'action_topic',
-        default_value='/isaac/isaac_joint_command_test',
+        default_value='/leader/joint_states',
         description='Topic for publishing single actions (JointState)'
     )
     
@@ -167,7 +167,7 @@ def generate_launch_description():
     # SmolVLA Inference Node
     smolvla_inference_node = Node(
         package='so101_ros2_bridge',
-        executable='smolvla_inference_node.py',
+        executable='smolvla_inference_node',
         name='smolvla_inference_node',
         output='screen',
         parameters=[{
@@ -176,7 +176,7 @@ def generate_launch_description():
             'robot_type': LaunchConfiguration('robot_type'),
             'camera1_topic': LaunchConfiguration('camera1_topic'),
             'camera2_topic': LaunchConfiguration('camera2_topic'),
-            'camera3_topic': LaunchConfiguration('camera3_topic'),
+            # 'camera3_topic': LaunchConfiguration('camera3_topic'),
             'joint_state_topic': LaunchConfiguration('joint_state_topic'),
             'action_topic': LaunchConfiguration('action_topic'),
             'action_chunk_topic': LaunchConfiguration('action_chunk_topic'),
@@ -194,7 +194,7 @@ def generate_launch_description():
     # Action Chunk Executor Node
     action_chunk_executor_node = Node(
         package='so101_ros2_bridge',
-        executable='action_chunk_executor_node.py',
+        executable='action_chunk_executor_node',
         name='action_chunk_executor_node',
         output='screen',
         parameters=[{
@@ -247,7 +247,7 @@ def generate_launch_description():
         robot_type_arg,
         camera1_topic_arg,
         camera2_topic_arg,
-        camera3_topic_arg,
+        # camera3_topic_arg,
         joint_state_topic_arg,
         action_topic_arg,
         inference_rate_arg,

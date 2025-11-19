@@ -39,7 +39,7 @@ def ensure_conda_site_packages_from_env(var_name="LECONDA_SITE_PACKAGES"):
         raise EnvironmentError(f"{var_name} path '{conda_site}' does not exist.")
 
     if conda_site not in sys.path:
-        sys.path.append(conda_site)
+        sys.path.insert(0, conda_site)
         print(f"Added {conda_site} to sys.path")
     else:
         print(f"{conda_site} is already in sys.path")

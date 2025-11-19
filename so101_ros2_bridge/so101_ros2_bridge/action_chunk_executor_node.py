@@ -12,8 +12,8 @@ import time
 
 class  ActionChunkExecutor(Node):
     def __init__(self):
-        super().__init__('action_chunk_executor_simplified')
-        self.get_logger().info('Action Chunk Executor (Simplified) Node starting...')
+        super().__init__('action_chunk_executor')
+        self.get_logger().info('Action Chunk Executor Node starting...')
 
         # Declare parameters
         self.declare_parameter('action_chunk_topic', '/smolvla_inference/action_chunk')

@@ -20,6 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+# Ensure the conda site-packages directory is in the system path
+from so101_ros2_bridge.utils import ensure_conda_site_packages_from_env
+
+ensure_conda_site_packages_from_env()
 
 import math
 import threading
@@ -38,10 +42,7 @@ from rclpy.qos import (
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Float64MultiArray  # Import message type for commands
 
-# Ensure the conda site-packages directory is in the system path
-from so101_ros2_bridge.utils import ensure_conda_site_packages_from_env
 
-ensure_conda_site_packages_from_env()
 
 from lerobot.robots.so101_follower import SO101Follower
 from lerobot.teleoperators.so101_leader import SO101Leader

@@ -1,3 +1,8 @@
+# Ensure the conda site-packages directory is in the system path
+from so101_ros2_bridge.utils import ensure_conda_site_packages_from_env
+
+ensure_conda_site_packages_from_env()
+
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image, JointState
@@ -8,15 +13,13 @@ import sys
 import os
 import time
 
+
 # Add the lerobot src directory to the Python path
 # lerobot_src_path = '/home/anton/lerobot/src'
 # if lerobot_src_path not in sys.path:
 #     sys.path.insert(0, lerobot_src_path)
 
-# Ensure the conda site-packages directory is in the system path
-from so101_ros2_bridge.utils import ensure_conda_site_packages_from_env
 
-ensure_conda_site_packages_from_env()
 from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
 from lerobot.policies.factory import make_pre_post_processors
 from lerobot.policies.utils import build_inference_frame, make_robot_action
@@ -28,9 +31,8 @@ class SmolVLAInferenceNode(Node):
 
         # Declare parameters
         self.declare_parameter('model_id', 'lerobot/smolvla_base')  # Using base model by default
-        self.declare_parameter('camera1_topic', '/follower/cam_front/image_raw') 
+        self.declare_parameter('camera1_topic', '/follower/cam_front/image_raw')
         self.declare_parameter('camera2_topic', '/follower/cam_top1/image_raw')
-        self.declare_parameter('camera3_topic', '/follower/cam_top2/image_raw')
         self.declare_parameter('joint_state_topic', '/isaac/isaac_joint_states') # /isaac/isaac_joint_states 
         self.declare_parameter('action_topic', '/isaac/isaac_joint_command_test') # /smolvla_inference/action
         self.declare_parameter('action_chunk_topic', '/smolvla_inference/action_chunk')
@@ -44,7 +46,6 @@ class SmolVLAInferenceNode(Node):
         model_id = self.get_parameter('model_id').get_parameter_value().string_value
         camera1_topic = self.get_parameter('camera1_topic').get_parameter_value().string_value
         camera2_topic = self.get_parameter('camera2_topic').get_parameter_value().string_value
-        camera3_topic = self.get_parameter('camera3_topic').get_parameter_value().string_value
         joint_state_topic = self.get_parameter('joint_state_topic').get_parameter_value().string_value
         action_topic = self.get_parameter('action_topic').get_parameter_value().string_value
         action_chunk_topic = self.get_parameter('action_chunk_topic').get_parameter_value().string_value
@@ -125,7 +126,6 @@ class SmolVLAInferenceNode(Node):
 
         self.latest_camera1_msg = None
         self.latest_camera2_msg = None
-        self.latest_camera3_msg = None
         self.latest_joint_state_msg = None
 
         if self.use_dummy_input:
@@ -146,14 +146,6 @@ class SmolVLAInferenceNode(Node):
                 image_qos
             )
             self.get_logger().info(f'Subscribing to camera2: {camera2_topic} (QoS: {image_qos})')
-
-            self.camera3_subscriber = self.create_subscription(
-                Image,
-                camera3_topic,
-                self.camera3_callback,
-                image_qos
-            )
-            self.get_logger().info(f'Subscribing to camera3: {camera3_topic} (QoS: {image_qos})')
 
             self.joint_state_subscriber = self.create_subscription(
                 JointState,
@@ -204,10 +196,6 @@ class SmolVLAInferenceNode(Node):
         self.latest_camera2_msg = msg
         # self.get_logger().debug('Camera2 image received', throttle_duration_sec=10.0)
 
-    def camera3_callback(self, msg):
-        self.latest_camera3_msg = msg
-        # self.get_logger().debug('Camera3 image received', throttle_duration_sec=10.0)
-
     def joint_state_subscriber_callback(self, msg):
         self.latest_joint_state_msg = msg
         # self.get_logger().debug('Joint state received', throttle_duration_sec=10.0)
@@ -238,14 +226,13 @@ class SmolVLAInferenceNode(Node):
     def get_images_from_dummy_input(self):
         # Use the actual dimensions expected by the model for dummy images
         import cv2
-        
+
         # Generate dummy images with expected dimensions
         # SmolVLA typically expects 224x224 RGB images
         dummy_image1 = np.random.randint(0, 255, (224, 224, 3), dtype=np.uint8)
         dummy_image2 = np.random.randint(0, 255, (224, 224, 3), dtype=np.uint8)
-        dummy_image3 = np.random.randint(0, 255, (224, 224, 3), dtype=np.uint8)
-        
-        return dummy_image1, dummy_image2, dummy_image3
+
+        return dummy_image1, dummy_image2
 
     def image_msg_to_numpy(self, img_msg):
         """Convert ROS Image message to numpy array."""
@@ -292,27 +279,24 @@ class SmolVLAInferenceNode(Node):
             # Get observation data
             if self.use_dummy_input:
                 # Use dummy data for testing
-                camera1, camera2, camera3 = self.get_images_from_dummy_input()
+                camera1, camera2 = self.get_images_from_dummy_input()
                 joint_states = self.get_joint_states_from_dummy_input()
             else:
                 # Check if we have all required data
-                if (self.latest_camera1_msg is None or 
-                    self.latest_camera2_msg is None or 
-                    self.latest_camera3_msg is None or 
+                if (self.latest_camera1_msg is None or
+                    self.latest_camera2_msg is None or
                     self.latest_joint_state_msg is None):
                     self.get_logger().info(
                         f'Waiting for data - Camera1: {self.latest_camera1_msg is not None}, '
                         f'Camera2: {self.latest_camera2_msg is not None}, '
-                        f'Camera3: {self.latest_camera3_msg is not None}, '
                         f'Joint: {self.latest_joint_state_msg is not None}',
                         throttle_duration_sec=5.0
                     )
                     return
-                
+
                 # Convert images to numpy arrays
                 camera1 = self.image_msg_to_numpy(self.latest_camera1_msg)
                 camera2 = self.image_msg_to_numpy(self.latest_camera2_msg)
-                camera3 = self.image_msg_to_numpy(self.latest_camera3_msg)
                 
                 # Get joint positions
                 joint_states = np.array(self.latest_joint_state_msg.position[:6])
@@ -328,7 +312,6 @@ class SmolVLAInferenceNode(Node):
             # Add camera images
             raw_obs['camera1'] = camera1
             raw_obs['camera2'] = camera2
-            raw_obs['camera3'] = camera3
             
             # Build inference frame
             # self.get_logger().info('Building inference frame...', throttle_duration_sec=5.0)
