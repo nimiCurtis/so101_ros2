@@ -22,6 +22,7 @@ class PolicyConfig:
     policy_name: str
     device: str = 'cuda:0'
     checkpoint_path: Optional[str] = None
+    task: Optional[str] = None
     extra: Dict[str, Any] = field(default_factory=dict)
 
     @classmethod
@@ -48,6 +49,7 @@ class PolicyConfig:
         else:
             checkpoint_path = None
 
+        task = node.get_parameter('task').get_parameter_value().string_value
         # Optional: read a small set of known extras
         extra: Dict[str, Any] = {}
 
@@ -101,6 +103,7 @@ class PolicyConfig:
             device=device,
             checkpoint_path=checkpoint_path,
             extra=extra,
+            task=task,
         )
 
 

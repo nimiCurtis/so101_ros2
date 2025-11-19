@@ -14,14 +14,6 @@
     # Velocity filtering
     velocity_lowpass_alpha: 0.2  # [0,1], 0.2 = fairly smooth
 
-    # General LeRobot / obs config (adapters can read these)
-    observation_image_size: [256, 256]
-    normalize_observations: true
-
-    # Safety knobs, if you want to use them inside adapters
-    max_joint_delta: 5.0         # per-step bound (deg or rad)
-    max_joint_velocity: 30.0     # for velocity-based controllers
-    action_scaling: 1.0
 
 # -------------------------------------------------------------------
 # Per-policy sections (node-specific).
