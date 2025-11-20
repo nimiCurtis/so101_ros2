@@ -39,7 +39,7 @@ class SmolVLAInferenceNode(Node):
         self.declare_parameter('task', 'Pick up the white block and insertit on the green peg')
         self.declare_parameter('robot_type', 'so101')
         self.declare_parameter('use_dummy_input', False)  # Changed to False - use real topics by default
-        self.declare_parameter('publisher_rate', 2)  # Hz for action publishing
+        self.declare_parameter('publisher_rate', 1)  # Hz for action publishing
         self.declare_parameter('image_subscription_qos', 2)  # QoS depth for image subscription
         self.declare_parameter('joint_state_subscription_qos', 2)  # QoS depth for joint state subscription
 
@@ -100,7 +100,7 @@ class SmolVLAInferenceNode(Node):
 
         # Convert PolicyFeature objects to dictionary format for build_dataset_frame
         self.dataset_features = {}
-        
+
         for key, feature in self.input_features.items():
             if feature.type.value == "STATE":
                 state_dim = feature.shape[0]
@@ -501,7 +501,6 @@ class SmolVLAInferenceNode(Node):
             
             self.action_chunk_publisher.publish(action_chunk_msg)
 
-            
             total_inference_time = (time.time() - inference_start_time) * 1000
             
             self.get_logger().info(

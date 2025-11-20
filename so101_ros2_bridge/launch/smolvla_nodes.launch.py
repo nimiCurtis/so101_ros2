@@ -38,13 +38,13 @@ def generate_launch_description():
 
     model_id_arg = DeclareLaunchArgument(
         'model_id',
-        default_value='/home/anton/outputs/train/pi05_train_mgpu_001/checkpoints/last/pretrained_model',#'lerobot/smolvla_base',
+        default_value='/home/anton/outputs/train/isaac_pick_and_place_train/checkpoints/005000/pretrained_model',# '/home/anton/outputs/train/pi05_train_mgpu_001/checkpoints/last/pretrained_model',#'lerobot/smolvla_base',
         description='HuggingFace model ID for SmolVLA policy'
     )
     
     task_arg = DeclareLaunchArgument(
         'task',
-        default_value='Pick up the white block and insert it on the green peg',
+        default_value='First, identify the cube position. Then, reach out and grasp the cube. Finally, move the cube and release it into the bowl.',
         description='Task description for the robot'
     )
     
@@ -86,7 +86,7 @@ def generate_launch_description():
     
     inference_rate_arg = DeclareLaunchArgument(
         'inference_rate',
-        default_value='2',
+        default_value='1',
         description='Publishing rate for inference node in Hz (typically 1-5 Hz)'
     )
     

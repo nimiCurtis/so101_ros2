@@ -19,7 +19,7 @@ class  ActionChunkExecutor(Node):
         self.declare_parameter('action_chunk_topic', '/smolvla_inference/action_chunk')
         self.declare_parameter('joint_command_topic', '/leader/isaac_joint_command')
         self.declare_parameter('publish_rate', 30.0)  # Hz
-        self.declare_parameter('inference_delay', 0.5)  # seconds - how long inference takes
+        self.declare_parameter('inference_delay', 0.3)  # seconds - how long inference takes
         self.declare_parameter('chunk_size', 50)  # Expected number of actions in a chunk
         self.declare_parameter('action_dim', 6)  # Number of joints
         self.declare_parameter('use_delay_compensation', True)  # Whether to skip actions based on delay
@@ -108,6 +108,7 @@ class  ActionChunkExecutor(Node):
             has_timestamp = msg.layout.data_offset == 2
             chunk_timestamp = None
             
+            # extract action data and timestamp if present
             if has_timestamp and len(msg.data) >= 2:
                 # Extract timestamp from first two values
                 timestamp_sec = int(msg.data[0])
@@ -134,6 +135,10 @@ class  ActionChunkExecutor(Node):
                 
                 # Parse the flat array into individual actions
                 new_chunk = []
+
+                self.get_logger().info(f'num actions: {num_actions}')
+
+                # parse actions of a new chunk to list new_chunk
                 for i in range(num_actions):
                     start_idx = i * action_dim
                     end_idx = start_idx + action_dim
@@ -141,11 +146,13 @@ class  ActionChunkExecutor(Node):
                         action = action_data[start_idx:end_idx]
                         new_chunk.append(action)
                 
+                # update idx of the current action to be published
                 with self.chunk_lock:
                     # SIMPLIFIED: Immediately replace current chunk with new one
                     self.current_chunk = new_chunk
+                    self.get_logger().info(f'old timestamp: {self.chunk_timestamp}, new timestamp: {chunk_timestamp}')
                     self.chunk_timestamp = chunk_timestamp
-                    
+
                     # Start from the action that corresponds to "now" 
                     # (skip actions that would have been executed during inference delay)
                     initial_skip = self.skip_actions
@@ -156,12 +163,13 @@ class  ActionChunkExecutor(Node):
 
                     # CRITICAL: Ensure the index is within valid bounds
                     # If delay is too large, we might need to skip the entire chunk
+                
                     if actual_skip >= len(new_chunk):
                         self.get_logger().warn(
                             f'Delay too large! Would skip {actual_skip} actions but chunk only has {len(new_chunk)}. '
                             f'Starting from last action.'
                         )
-                        self.current_action_index = len(new_chunk) - 1
+                        self.current_action_index = 0
                     elif actual_skip < 0:
                         self.get_logger().warn(
                             f'Negative skip calculated ({actual_skip})! Starting from beginning.'
@@ -169,7 +177,8 @@ class  ActionChunkExecutor(Node):
                         self.current_action_index = 0
                     else:
                         self.current_action_index = actual_skip
-                    
+
+
                     self.chunks_received += 1
                     self.total_actions_skipped += self.current_action_index
                     
@@ -199,7 +208,7 @@ class  ActionChunkExecutor(Node):
                         throttle_duration_sec=5.0
                     )
                     return
-                
+
                 # Get the current action
                 current_action = self.current_chunk[self.current_action_index]
                 
@@ -230,18 +239,18 @@ class  ActionChunkExecutor(Node):
                 # Publish the message
                 self.joint_command_publisher.publish(joint_msg)
                 
-                # Update counters
+                # Only increment if chunk didn't change
                 self.current_action_index += 1
                 self.actions_published += 1
                 
                 # Log current action periodically
-                if self.actions_published % int(self.publish_rate) == 0:  # Log every second
-                    remaining = len(self.current_chunk) - self.current_action_index
-                    self.get_logger().debug(
-                        f'Action {self.current_action_index}/{len(self.current_chunk)}, '
-                        f'Remaining: {remaining}, '
-                        f'Positions: [{joint_msg.position[0]:.3f}, {joint_msg.position[1]:.3f}, ...]'
-                    )
+
+                remaining = len(self.current_chunk) - self.current_action_index
+                self.get_logger().info(
+                    f'Action {self.current_action_index}/{len(self.current_chunk)}, '
+                    f'Remaining: {remaining}, '
+                    f'Positions: [{joint_msg.position[0]:.3f}, {joint_msg.position[1]:.3f}, ...]'
+                )
                     
         except Exception as e:
             self.get_logger().error(f'Error publishing action: {e}')
