@@ -11,7 +11,7 @@ def main(args=None) -> None:
     """Run the PolicyRunner Node."""
     rclpy.init(args=args)
     node = SO101PolicyRunner()
-    executor = MultiThreadedExecutor()
+    executor = MultiThreadedExecutor(num_threads=4)
     executor.add_node(node)
     try:
         executor.spin()
