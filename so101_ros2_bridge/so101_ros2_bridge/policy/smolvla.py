@@ -210,6 +210,7 @@ def ros_image_to_hwc_float01(msg) -> np.ndarray:
     ch = 3 if enc in ('rgb8', 'bgr8') else 1
     arr = np.frombuffer(msg.data, dtype=np.uint8).reshape(msg.height, msg.width, ch)
     if enc == 'bgr8':
+        # Convert BGR to RGB
         arr = arr[..., ::-1]
     if ch == 1:
         arr = np.repeat(arr, 3, axis=2)
@@ -240,7 +241,7 @@ def ros_jointstate_to_vec6(
     js_msg,
     joint_order: Optional[List[str]] = None,
     use_lerobot_ranges_norms: bool = False,
-) -> np.ndarray:
+) -> tuple[np.ndarray, List[str]]:
     """Convert a ``sensor_msgs/JointState`` message to a six element vector.
 
     Args:
@@ -250,7 +251,10 @@ def ros_jointstate_to_vec6(
             ranges using :func:`radians_to_normalized`.
 
     Returns:
-        ``numpy.ndarray`` shaped ``(6,)`` containing the joint positions.
+        ``out``: A numpy array of shape ``(6,)`` containing the joint positions
+            in the specified order.
+        ``joint_names``: A list of the joint names corresponding to the values
+            in ``out``.
 
     Raises:
         ValueError: If the provided message does not contain enough joint positions or
