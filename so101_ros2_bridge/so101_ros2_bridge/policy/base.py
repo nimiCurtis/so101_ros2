@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from re import A
 from typing import Any, Dict, List, Mapping, Optional, Type
 
 from rclpy.node import Node
@@ -128,15 +129,14 @@ class BasePolicy:
 
         Subclasses may override to handle language prompts, goals, etc.
         """
-        # Default: stateless
-        _ = context
+        raise NotImplementedError
 
     # ---- Core API --------------------------------------------------------
 
     def make_observation(
         self,
         ros_obs: Mapping[str, Any],
-    ) -> Dict[str, Any]:
+    ) -> Any:
         """Convert ROS messages into model-ready observation.
 
         Subclasses must override this method to:
@@ -162,8 +162,6 @@ class BasePolicy:
         commanded positions internally.
         """
         raise NotImplementedError
-
-    # ---- Optional hooks --------------------------------------------------
 
     def close(self) -> None:
         """Release any resources such as GPU memory or file handles."""
