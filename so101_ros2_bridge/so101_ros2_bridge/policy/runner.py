@@ -32,7 +32,7 @@ class SO101PolicyRunner(LifecycleNode):
         super().__init__('policy_runner')
 
         # Latest synced observation
-        self._latest_msgs: Optional[dict[str, Any]] = None
+        self._latest_msgs: Optional[Dict[str, Any]] = None
         self._obs_lock = threading.Lock()
 
         # Action buffer
@@ -66,13 +66,7 @@ class SO101PolicyRunner(LifecycleNode):
         self._sync = None
         self._cmd_pub = None
 
-        # --- DEBUG STATE ---
-        self._last_sync_time = None  # rclpy.time.Time
-        self._sync_count = 0
-
-        self._last_infer_time = None  # rclpy.time.Time
-        self._last_publish_time = None  # rclpy.time.Time
-        self._debug_inference_count = 0
+        self._cb_group = ReentrantCallbackGroup()
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -170,17 +164,12 @@ class SO101PolicyRunner(LifecycleNode):
         self.get_logger().info('Activating policy_runner ...')
 
         self._inference_timer = self.create_timer(
-            self._inference_period,
-            self._inference_step,
+            self._inference_period, self._inference_step, self._cb_group
         )
 
         self._publish_timer = self.create_timer(
-            self._publish_period,
-            self._publish_step,
+            self._publish_period, self._publish_step, self._cb_group
         )
-
-        self._last_inference_walltime = self.get_clock().now()
-        self._last_publish_walltime = self.get_clock().now()
 
         return TransitionCallbackReturn.SUCCESS
 
@@ -230,7 +219,6 @@ class SO101PolicyRunner(LifecycleNode):
         joint_state: JointState,
     ) -> None:
         """ApproximateTimeSynchronizer callback that updates latest observation."""
-        # now = self.get_clock().now()
 
         with self._obs_lock:
             self._latest_msgs = {
@@ -244,34 +232,23 @@ class SO101PolicyRunner(LifecycleNode):
         if self._cmd_pub is None:
             return
 
-        now = self.get_clock().now()
-        if self._last_publish_time is not None:
-            dt_real = (now - self._last_publish_time).nanoseconds / 1e9
-        else:
-            dt_real = float('nan')
-        self._last_publish_time = now
-
         with self._action_lock:
             buf_len = len(self._action_buffer)
-            # idx_before = self._action_index
 
             if not self._action_buffer:
-                self.get_logger().debug(
-                    f'[PUBLISH] empty buffer, dt_real={dt_real:.3f}s -> safe stop'
-                )
+                self.get_logger().warn('[PUBLISH] Empty actions buffer')
                 self._send_safe_stop()
                 return
 
             if self._action_index >= buf_len:
                 self._action_index = buf_len - 1
 
+            # Get current commanded position
             current_pos = list(self._action_buffer[self._action_index])
 
             # Advance index for next tick (or hold last)
             if self._action_index < buf_len - 1:
                 self._action_index += 1
-
-            # idx_after = self._action_index
 
         n = len(current_pos)
         dt = self._publish_period
@@ -305,32 +282,15 @@ class SO101PolicyRunner(LifecycleNode):
             self.get_logger().warn('Inference step: no policy instantiated.')
             return
 
-        now = self.get_clock().now()
-        if self._last_inference_walltime is not None:
-            dt_real = (now - self._last_inference_walltime).nanoseconds / 1e9
-        else:
-            dt_real = 0.0
-        self._last_inference_walltime = now
-
-        self._debug_inference_count += 1
-        if self._debug_inference_count % 10 == 0:
-            self.get_logger().info(
-                f'[INFER] dt_real={dt_real:.3f}s (target={self._inference_period:.3f}s)'
-            )
-
         with self._obs_lock:
             ros_obs = self._latest_msgs
 
         if ros_obs is None:
-            if self._debug_inference_count % 10 == 0:
-                self.get_logger().warn('Inference step: no observation received yet.')
+            self.get_logger().warn('Inference step: no observation received yet.')
             return
 
-        # start_time = self.get_clock().now()
         observation = self._policy.make_observation(ros_obs=ros_obs)
         action_seq = self._policy.act_sequence(observation)
-        # end_time = self.get_clock().now()
-        # elapsed = (end_time - start_time).nanoseconds / 1e9
 
         action_seq = action_seq[0].cpu().numpy().tolist()
 
@@ -346,9 +306,10 @@ class SO101PolicyRunner(LifecycleNode):
         with self._action_lock:
             self._action_buffer = sliced_seq
             self._action_index = 0
-            # buf_len = len(self._action_buffer)
 
     def _send_safe_stop(self) -> None:
+        """Send a safe stop command."""
+
         if self._cmd_pub is None:
             return
 
@@ -374,4 +335,4 @@ class SO101PolicyRunner(LifecycleNode):
 
         self._cmd_pub.publish(js_cmd)
         # Throttle logging slightly
-        self.get_logger().info('Safe stop: holding last observed joint positions.')
+        self.get_logger().warn('Safe stop: holding last observed joint positions.')

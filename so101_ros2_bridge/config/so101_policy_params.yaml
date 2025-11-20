@@ -3,6 +3,7 @@
 /**:
   ros__parameters:
     # Sync / timing
+    device: "cuda:0"            # device to run policy on
     inference_rate: 5.0          # Hz, how often to run policy
     publish_rate: 25.0           # Hz, how often to publish JointState commands
     queue_size: 10               # message_filters queue_size
@@ -13,12 +14,6 @@
 
     # Velocity filtering
     velocity_lowpass_alpha: 0.2  # [0,1], 0.2 = fairly smooth
-
-
-# -------------------------------------------------------------------
-# Per-policy sections (node-specific).
-# The key MUST match the node name used in the launch file.
-# -------------------------------------------------------------------
 
 smolvla:
   ros__parameters:
@@ -34,9 +29,9 @@ pi0:
     checkpoint_path: "lerobot/pi0_base"
 
 
-pi05:
+pi0_5:
   ros__parameters:
-    policy_name: "pi0.5"
+    policy_name: "pi0_5"
     device: "cuda:0"
     checkpoint_path: "lerobot/pi0_5_base"
 

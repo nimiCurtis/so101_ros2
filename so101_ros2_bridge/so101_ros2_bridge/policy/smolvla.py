@@ -107,7 +107,7 @@ class SmolVLA(BasePolicy):
     def make_observation(
         self,
         ros_obs: Mapping[str, Any],  # e.g., images: Dict[str, Image], joint_state: JointState
-    ) -> EnvTransition:
+    ) -> Any:
         """Convert ROS messages into a LeRobot-style observation dict."""
 
         raw_obs_features: dict[str, dict] = ros_to_dataset_features(
@@ -124,11 +124,11 @@ class SmolVLA(BasePolicy):
         )
 
         # Preprocess the inference frame (e.g., to tensors, normalization, etc.)
-        observation: EnvTransition = self._pre_processor(inference_frame)
+        observation = self._pre_processor(inference_frame)
 
         return observation
 
-    def act_sequence(self, observation: EnvTransition) -> List[List[float]]:
+    def act_sequence(self, observation) -> List[List[float]]:
         """Run SmolVLA to get a sequence of future joint positions.
 
         This is a stub implementation. Replace the internals with real model
@@ -136,6 +136,7 @@ class SmolVLA(BasePolicy):
         """
         action_chunk = self.model.predict_action_chunk(observation)
         action_chunk = self._post_processor(action_chunk)
+        action_chunk = action_chunk[0].cpu().numpy().tolist()
         return action_chunk
 
     def reset(self, context: Optional[Mapping[str, Any]] = None) -> None:
