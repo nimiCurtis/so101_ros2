@@ -232,28 +232,18 @@ class SO101PolicyRunner(LifecycleNode):
         if self._cmd_pub is None:
             return
 
-        with self._action_lock:
-            buf_len = len(self._action_buffer)
+        # 1) Get next joint position vector from the policy
+        action = self._policy.get_action() if self._policy is not None else None
+        if action is None:
+            self.get_logger().warn('[PUBLISH] No action available from policy.')
+            self._send_safe_stop()
+            return
 
-            if not self._action_buffer:
-                self.get_logger().warn('[PUBLISH] Empty actions buffer')
-                self._send_safe_stop()
-                return
-
-            if self._action_index >= buf_len:
-                self._action_index = buf_len - 1
-
-            # Get current commanded position
-            current_pos = list(self._action_buffer[self._action_index])
-
-            # Advance index for next tick (or hold last)
-            if self._action_index < buf_len - 1:
-                self._action_index += 1
-
+        current_pos = list(action)
         n = len(current_pos)
         dt = self._publish_period
 
-        # velocities from commanded positions
+        # 2) Compute velocities from commanded positions
         if self._last_cmd_position is None or len(self._last_cmd_position) != n:
             raw_vel = [0.0] * n
         else:
@@ -269,15 +259,17 @@ class SO101PolicyRunner(LifecycleNode):
         self._last_cmd_position = current_pos
         self._last_filtered_velocity = filt_vel
 
+        # 3) Use fixed JOINT_NAMES or infer from last observation; here we keep JOINT_NAMES
         js_cmd = JointState()
         js_cmd.header.stamp = self.get_clock().now().to_msg()
-        js_cmd.name = self.JOINT_NAMES
+        js_cmd.name = self.JOINT_NAMES[:n]
         js_cmd.position = current_pos
-        # js_cmd.velocity = filt_vel
+        # js_cmd.velocity = filt_vel  # enable once ready
 
         self._cmd_pub.publish(js_cmd)
 
     def _inference_step(self) -> None:
+        """Timer: ask the policy to refresh its internal action queue/buffer."""
         if self._policy is None:
             self.get_logger().warn('Inference step: no policy instantiated.')
             return
@@ -289,23 +281,8 @@ class SO101PolicyRunner(LifecycleNode):
             self.get_logger().warn('Inference step: no observation received yet.')
             return
 
-        observation = self._policy.make_observation(ros_obs=ros_obs)
-        action_seq = self._policy.act_sequence(observation)
-
-        action_seq = action_seq[0].cpu().numpy().tolist()
-
-        if not action_seq:
-            self.get_logger().warn('Inference step: policy returned empty action sequence.')
-            return
-
-        start = max(0, self._action0_index)
-        if start >= len(action_seq):
-            start = len(action_seq) - 1
-        sliced_seq = action_seq[start:]
-
-        with self._action_lock:
-            self._action_buffer = sliced_seq
-            self._action_index = 0
+        # The policy handles RTC vs simple buffering internally
+        self._policy.infer(ros_obs=ros_obs, time_per_action=self._publish_period)
 
     def _send_safe_stop(self) -> None:
         """Send a safe stop command."""

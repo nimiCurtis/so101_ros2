@@ -146,20 +146,20 @@ class BasePolicy:
         """
         raise NotImplementedError
 
-    def act_sequence(self, obs: Mapping[str, Any]) -> List[List[float]]:
+    def infer(self, ros_obs: Mapping[str, Any], time_per_action: float) -> None:
         """Run policy and return a sequence of future joint positions.
+        Subclasses must override this method to:
+        - run the model forward pass,
+        - handle any internal buffering or RTC logic,
+        """
+        raise NotImplementedError
 
-        The result should be a list of length T, each element a list
-        of length n_joints:
+    def get_action(self) -> Optional[List[float]]:
+        """Return the next action to execute.
 
-            [
-              [q_0_joint_0, ..., q_0_joint_N],
-              [q_1_joint_0, ..., q_1_joint_N],
-              ...
-            ]
-
-        The PolicyRunnerNode computes joint velocities from these
-        commanded positions internally.
+        Subclasses must override this method to:
+        - return the next action from internal buffer,
+        - return None if no action is available.
         """
         raise NotImplementedError
 

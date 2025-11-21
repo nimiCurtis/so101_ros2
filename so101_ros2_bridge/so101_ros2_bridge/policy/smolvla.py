@@ -1,32 +1,42 @@
+#!/usr/bin/env python3
 from __future__ import annotations
 
-from curses import raw
-from shlex import join
-
-# Ensure the conda site-packages directory is in the system path
-from so101_ros2_bridge.utils import ensure_conda_site_packages_from_env
-
-ensure_conda_site_packages_from_env()
-
 import math
-from typing import Any, Dict, List, Mapping, Optional
+import time
+from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 import numpy as np
-from lerobot.configs.types import FeatureType, PolicyFeature
+import torch
+from lerobot.configs.types import PolicyFeature, RTCAttentionSchedule
 from lerobot.policies.factory import make_pre_post_processors
+from lerobot.policies.rtc.action_queue import ActionQueue
+from lerobot.policies.rtc.configuration_rtc import RTCConfig
+from lerobot.policies.rtc.latency_tracker import LatencyTracker
 from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
-from lerobot.policies.utils import build_inference_frame, make_robot_action
-from lerobot.processor.core import EnvAction, EnvTransition
+from lerobot.policies.utils import build_inference_frame
+from lerobot.processor.core import EnvTransition
 from rclpy.node import Node
+from rclpy.parameter import ParameterType
 from sensor_msgs.msg import Image, JointState
+
+from so101_ros2_bridge.utils import ensure_conda_site_packages_from_env
 
 from .base import BasePolicy, PolicyConfig
 from .registry import register_policy
 
+ensure_conda_site_packages_from_env()
+
 
 @register_policy('smolvla')
 class SmolVLA(BasePolicy):
-    """SmolVLA policy."""
+    """SmolVLA policy adapter with optional Real-Time Chunking (RTC).
+
+    Responsibilities:
+    - Convert ROS observations -> LeRobot EnvTransition.
+    - Run SmolVLA predict_action_chunk() with or without RTC.
+    - Maintain an internal buffer / action queue.
+    - Provide a simple get_action() API returning one joint-position vector.
+    """
 
     JOINT_NAMES = [
         'shoulder_pan',
@@ -41,10 +51,15 @@ class SmolVLA(BasePolicy):
         super().__init__(cfg, node)
 
         node.get_logger().info(
-            f'[SmolVLAPolicy] Init with device={cfg.device}, checkpoint={cfg.checkpoint_path}'
+            f'[SmolVLA] Init with device={cfg.device}, checkpoint={cfg.checkpoint_path}'
         )
 
-        self.model = SmolVLAPolicy.from_pretrained(cfg.checkpoint_path).to(cfg.device)
+        # ------------------------------------------------------------------
+        # Core model + pre/post processors
+        # ------------------------------------------------------------------
+        self.model: SmolVLAPolicy = SmolVLAPolicy.from_pretrained(cfg.checkpoint_path).to(
+            cfg.device
+        )
         self.model.eval()
 
         self._pre_processor, self._post_processor = make_pre_post_processors(
@@ -56,23 +71,69 @@ class SmolVLA(BasePolicy):
         self._device = cfg.device
         self._task = cfg.task
 
-        # Get the actual feature names from the model config
-        self._input_features = self.model.config.input_features
-        self._output_features = self.model.config.output_features
+        # Feature specs from the model
+        self._input_features: Dict[str, PolicyFeature] = self.model.config.input_features
+        self._output_features: Dict[str, PolicyFeature] = self.model.config.output_features
 
-        # Log what features the model expects
-        node.get_logger().info(f'Input features: {self._input_features}')
-        node.get_logger().info(f'Output features: {self._output_features}')
+        node.get_logger().info(f'[SmolVLA] Input features: {self._input_features}')
+        node.get_logger().info(f'[SmolVLA] Output features: {self._output_features}')
 
-        self.setup_dataset_features()
-
-    def setup_dataset_features(self) -> None:
-        """Setup dataset features based on the model's config."""
+        # Dataset feature description (used by build_inference_frame)
         self.dataset_features: Dict[str, Dict] = {}
+        self._setup_dataset_features()
 
-        state_names = [f'{joint}.pos' for joint in self.JOINT_NAMES] if self.JOINT_NAMES else None
+        # ------------------------------------------------------------------
+        # RTC / buffering state
+        # ------------------------------------------------------------------
+        # NOTE: We read RTC flags from cfg.extra to keep PolicyConfig generic.
+        self._rtc_enabled: bool = bool(cfg.extra.get('rtc_enabled', True))
+        execution_horizon = int(
+            cfg.extra.get('rtc_execution_horizon', 10)
+        )  # Number of actions to predict per chunk
+        queue_threshold = int(
+            cfg.extra.get('rtc_queue_threshold', 30)
+        )  # Minimum actions in queue before requesting more
 
-        action_names = [f'{joint}.pos' for joint in self.JOINT_NAMES] if self.JOINT_NAMES else None
+        self._rtc_cfg: Optional[RTCConfig] = None
+        self._action_queue: Optional[ActionQueue] = None
+        self._latency_tracker: Optional[LatencyTracker] = None
+        self._rtc_queue_threshold: int = queue_threshold
+
+        if self._rtc_enabled:
+            # TODO: change hardcoded RTCConfig params to be read from cfg.extra
+            self._rtc_cfg = RTCConfig(
+                execution_horizon=execution_horizon,
+                max_guidance_weight=float(cfg.extra.get('rtc_max_guidance_weight', 10.0)),
+                prefix_attention_schedule=RTCAttentionSchedule[
+                    cfg.extra.get('rtc_prefix_attention_schedule', 'EXP')
+                ],
+            )
+            # Attach RTC config to the SmolVLA policy and init its internal RTC processor
+            self.model.config.rtc_config = self._rtc_cfg
+            self.model.init_rtc_processor()
+
+            self._action_queue = ActionQueue(self._rtc_cfg)
+            self._latency_tracker = LatencyTracker()
+
+            node.get_logger().info(
+                f'[SmolVLA] RTC enabled: execution_horizon={execution_horizon}, '
+                f'queue_threshold={self._rtc_queue_threshold}'
+            )
+        else:
+            node.get_logger().info('[SmolVLA] RTC disabled: using simple chunk buffering')
+
+        # Non-RTC fallback: simple Python list buffer
+        self._buffer_actions: List[List[float]] = []
+        self._buffer_index: int = 0
+
+    # ------------------------------------------------------------------
+    # Dataset feature description
+    # ------------------------------------------------------------------
+    def _setup_dataset_features(self) -> None:
+        """Setup dataset feature metadata based on the model's config."""
+        state_names = [f'{joint}.pos' for joint in self.JOINT_NAMES]
+
+        action_names = [f'{joint}.pos' for joint in self.JOINT_NAMES]
 
         for key, feature in self._input_features.items():
             if feature.type.value == 'STATE':
@@ -102,19 +163,19 @@ class SmolVLA(BasePolicy):
             }
 
     # ------------------------------------------------------------------
-    # Observation construction
+    # ROS → EnvTransition
     # ------------------------------------------------------------------
     def make_observation(
         self,
-        ros_obs: Mapping[str, Any],  # e.g., images: Dict[str, Image], joint_state: JointState
-    ) -> Any:
-        """Convert ROS messages into a LeRobot-style observation dict."""
-
-        raw_obs_features: dict[str, dict] = ros_to_dataset_features(
-            ros_obs=ros_obs, input_features=self._input_features
+        ros_obs: Mapping[str, Any],
+    ) -> EnvTransition:
+        """Convert ROS messages into a LeRobot EnvTransition."""
+        raw_obs_features: Dict[str, Any] = ros_to_dataset_features(
+            ros_obs=ros_obs,
+            input_features=self._input_features,
         )
 
-        # Build the inference frame expected by SmolVLA
+        # LeRobot helper: build a single-frame "inference frame" dict
         inference_frame = build_inference_frame(
             observation=raw_obs_features,
             ds_features=self.dataset_features,
@@ -123,94 +184,188 @@ class SmolVLA(BasePolicy):
             robot_type='so101_follower',
         )
 
-        # Preprocess the inference frame (e.g., to tensors, normalization, etc.)
-        observation = self._pre_processor(inference_frame)
-
+        # Preprocess → EnvTransition
+        observation: EnvTransition = self._pre_processor(inference_frame)
         return observation
 
-    def act_sequence(self, observation) -> List[List[float]]:
-        """Run SmolVLA to get a sequence of future joint positions.
+    # ------------------------------------------------------------------
+    # NEW: RTC-aware inference API
+    # ------------------------------------------------------------------
+    def infer(self, ros_obs: Mapping[str, Any], time_per_action: float) -> None:
+        """Update internal action buffer / queue from the latest observation.
 
-        This is a stub implementation. Replace the internals with real model
-        inference that returns positions in the correct joint order and units.
+        This does NOT return actions directly. Instead:
+        - If RTC is enabled: fills an ActionQueue using predict_action_chunk
+          with RTC parameters (inference_delay, prev_chunk_left_over, etc.).
+        - If RTC is disabled: fills a simple Python list buffer.
         """
-        action_chunk = self.model.predict_action_chunk(observation)
-        action_chunk = self._post_processor(action_chunk)
-        action_chunk = action_chunk[0].cpu().numpy().tolist()
-        return action_chunk
+        if ros_obs is None or 'observation.state' not in ros_obs:
+            self.node.get_logger().warn('[SmolVLA] infer: observation is missing.')
+            return
+
+        # Build EnvTransition
+        observation = self.make_observation(ros_obs=ros_obs)
+
+        if self._rtc_enabled and self._action_queue is not None:
+            self._infer_rtc(observation, time_per_action)
+        else:
+            self._infer_simple(observation)
+
+    def get_action(self) -> Optional[List[float]]:
+        """Return the next joint position vector, or None if not available."""
+        if self._rtc_enabled and self._action_queue is not None:
+            # RTC path: pop one action from ActionQueue
+            action = self._action_queue.get()
+            if action is None:
+                return None
+            return action.cpu().tolist()
+
+        # Non-RTC path: simple Python list buffer
+        if not self._buffer_actions:
+            return None
+
+        if self._buffer_index >= len(self._buffer_actions):
+            self._buffer_index = len(self._buffer_actions) - 1
+
+        current = self._buffer_actions[self._buffer_index]
+        if self._buffer_index < len(self._buffer_actions) - 1:
+            self._buffer_index += 1
+
+        return current
+
+    # ------------------------------------------------------------------
+    # Internal inference modes
+    # ------------------------------------------------------------------
+    def _infer_rtc(self, observation: EnvTransition, time_per_action: float) -> None:
+        """RTC mode: request a new action chunk if queue is below threshold."""
+        assert self._action_queue is not None
+
+        # If queue has enough actions, do nothing this tick
+        if self._action_queue.qsize() > self._rtc_queue_threshold:
+            return
+
+        now = time.perf_counter()
+
+        action_index_before = self._action_queue.get_action_index()
+        prev_leftover = self._action_queue.get_left_over()
+
+        # Estimate inference_delay from latency history
+        if self._latency_tracker is not None:
+            max_latency = self._latency_tracker.max()
+        else:
+            max_latency = None
+
+        if max_latency is None:
+            inference_delay = 0
+        else:
+            inference_delay = math.ceil(max_latency / time_per_action)
+
+        # Call RTC-aware predict_action_chunk on the HF SmolVLA policy
+        actions = self.model.predict_action_chunk(
+            observation,
+            inference_delay=inference_delay,
+            prev_chunk_left_over=prev_leftover,
+        )
+
+        # actions: [B=1, T, n_joints]
+        original_actions = actions.squeeze(0).detach()
+        post_actions = self._post_processor(actions).squeeze(0)
+
+        new_latency = time.perf_counter() - now
+        if self._latency_tracker is not None:
+            self._latency_tracker.add(new_latency)
+
+        new_delay = math.ceil(new_latency / time_per_action)
+
+        if self._rtc_cfg is not None:
+            if self._rtc_queue_threshold < (self._rtc_cfg.execution_horizon + new_delay):
+                self.node.get_logger().warn(
+                    '[SmolVLA] rtc_queue_threshold is too small: '
+                    'should be higher than execution_horizon + inference_delay.'
+                )
+
+        # Merge into RTC queue
+        self._action_queue.merge(
+            original_actions,
+            post_actions,
+            new_delay,
+            action_index_before,
+        )
+
+    def _infer_simple(self, observation: EnvTransition) -> None:
+        """Non-RTC: produce a full sequence and store in a Python list buffer."""
+        # [B=1, T, n_joints]
+        actions = self.model.predict_action_chunk(observation)
+        actions = self._post_processor(actions)
+        actions_np = actions[0].cpu().numpy().tolist()
+
+        if not actions_np:
+            self.node.get_logger().warn('[SmolVLA] infer_simple: empty action sequence returned.')
+            return
+
+        self._buffer_actions = actions_np
+        self._buffer_index = 0
 
     def reset(self, context: Optional[Mapping[str, Any]] = None) -> None:
         self.model.reset()
+        self._buffer_actions = []
+        self._buffer_index = 0
+        if self._rtc_enabled and self._action_queue is not None:
+            self._action_queue = ActionQueue(self._rtc_cfg)
+            assert self._action_queue.empty()
 
-    def close(self):
+    def close(self) -> None:
         return super().close()
 
 
+# ----------------------------------------------------------------------
+# Helper functions (unchanged)
+# ----------------------------------------------------------------------
 def ros_to_dataset_features(
     ros_obs: Mapping[str, Any],
-    input_features: dict[str, PolicyFeature],
-) -> dict[str, Any]:
-    """Convert ROS observation messages to the raw values dict
-    expected by LeRobot's build_dataset_frame.
-    """
-
-    values: dict[str, Any] = {}
+    input_features: Dict[str, PolicyFeature],
+) -> Dict[str, Any]:
+    """Convert ROS observation messages to raw values dict for build_inference_frame."""
+    values: Dict[str, Any] = {}
 
     # 1) STATE features -> per-joint keys like "shoulder_pan.pos"
     if 'observation.state' in ros_obs:
         joint_state_msg: JointState = ros_obs['observation.state']
 
-        # Make sure we use the same order as in SmolVLA.JOINT_NAMES
         joint_vec, joint_names = ros_jointstate_to_vec6(
             js_msg=joint_state_msg,
             joint_order=SmolVLA.JOINT_NAMES,
-            use_lerobot_ranges_norms=False,  # or True if you want normalized values
+            use_lerobot_ranges_norms=False,
         )
 
         for name, val in zip(joint_names, joint_vec):
             values[f'{name}.pos'] = float(val)
 
-    # 2) VISUAL features -> keys like "camera1", "camera2"
+    # 2) VISUAL features -> keys like "observation.images.camera1", ...
     for key, feature in input_features.items():
         if feature.type.value != 'VISUAL':
             continue
 
-        # key is e.g. "observation.images.camera1"
         if key not in ros_obs:
             raise ValueError(f"Image for VISUAL feature key '{key}' not found in ROS observation.")
 
         img_msg: Image = ros_obs[key]
         np_img = ros_image_to_hwc_float01(img_msg)
 
-        # LeRobot's build_dataset_frame expects values["camera1"], "camera2", ...
         cam_id = key.split('.images.', 1)[1]  # "camera1"
         values[cam_id] = np_img
 
     return values
 
 
-def ros_image_to_hwc_float01(msg) -> np.ndarray:
-    """Convert a ROS image message to an HWC float array scaled to ``[0, 1]``.
-
-    Args:
-        msg: A ROS ``sensor_msgs/Image`` like object with ``encoding``, ``height``,
-            ``width`` and ``data`` attributes.
-
-    Returns:
-        ``numpy.ndarray`` with shape ``(height, width, 3)`` containing float32 values in
-        the range ``[0, 1]``.
-
-    Raises:
-        ValueError: If the encoding is not one of ``rgb8``, ``bgr8`` or ``mono8``.
-    """
-
+def ros_image_to_hwc_float01(msg: Image) -> np.ndarray:
+    """Convert a ROS image message to an HWC float array scaled to [0, 1]."""
     enc = msg.encoding
     if enc not in ('rgb8', 'bgr8', 'mono8'):
         raise ValueError(f'Unsupported encoding: {enc}')
     ch = 3 if enc in ('rgb8', 'bgr8') else 1
     arr = np.frombuffer(msg.data, dtype=np.uint8).reshape(msg.height, msg.width, ch)
     if enc == 'bgr8':
-        # Convert BGR to RGB
         arr = arr[..., ::-1]
     if ch == 1:
         arr = np.repeat(arr, 3, axis=2)
@@ -218,50 +373,18 @@ def ros_image_to_hwc_float01(msg) -> np.ndarray:
 
 
 def radians_to_normalized(joint_name: str, rad: float) -> float:
-    """Convert a radian command into the normalized SO101 joint range.
-
-    Args:
-        joint_name: Name of the joint for which the command is expressed. The gripper has
-            a special conversion.
-        rad: Command expressed in radians as provided by MoveIt.
-
-    Returns:
-        The normalized joint value expected by the SO101 API.
-    """
+    """Convert a radian command into the normalized SO101 joint range."""
     if joint_name == 'gripper':
-        # Convert radian command [0, pi] to the robot's expected gripper range [0, 100]
-        normalized = (rad / math.pi) * 100.0
-    else:
-        # Convert radians to normalized range [-100, 100]
-        normalized = (rad / math.pi) * 100.0
-    return normalized
+        return (rad / math.pi) * 100.0
+    return (rad / math.pi) * 100.0
 
 
 def ros_jointstate_to_vec6(
-    js_msg,
+    js_msg: JointState,
     joint_order: Optional[List[str]] = None,
     use_lerobot_ranges_norms: bool = False,
-) -> tuple[np.ndarray, List[str]]:
-    """Convert a ``sensor_msgs/JointState`` message to a six element vector.
-
-    Args:
-        js_msg: Message providing ``position`` and optionally ``name`` attributes.
-        joint_order: Optional explicit joint ordering for the returned vector.
-        use_lerobot_ranges_norms: Whether to map the values to LeRobot's normalized
-            ranges using :func:`radians_to_normalized`.
-
-    Returns:
-        ``out``: A numpy array of shape ``(6,)`` containing the joint positions
-            in the specified order.
-        ``joint_names``: A list of the joint names corresponding to the values
-            in ``out``.
-
-    Raises:
-        ValueError: If the provided message does not contain enough joint positions or
-            the ``joint_order`` does not contain exactly six joints.
-        KeyError: If a name specified in ``joint_order`` is missing in the message.
-    """
-
+) -> Tuple[np.ndarray, List[str]]:
+    """Convert a JointState message to a 6D vector in joint_order."""
     pos = list(getattr(js_msg, 'position', []))
     names = list(getattr(js_msg, 'name', []))
     out = np.zeros((6,), dtype=np.float32)
@@ -287,12 +410,11 @@ def ros_jointstate_to_vec6(
             raise ValueError(f'JointState.position has {len(pos)} values, need >= 6')
         vals = pos[:6]
         if use_lerobot_ranges_norms:
-            # When no joint_order is provided, use the joint names from the message
             joint_names = names[:6] if len(names) >= 6 else [f'joint_{i}' for i in range(6)]
-            print(joint_names)
             vals = [
                 radians_to_normalized(joint_name, val) for joint_name, val in zip(joint_names, vals)
             ]
         out[:] = np.array(vals, dtype=np.float32)
+        joint_names = names[:6] if names else [f'joint_{i}' for i in range(6)]
 
     return out, joint_names
