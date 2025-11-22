@@ -310,7 +310,7 @@ class SmolVLA(BasePolicy):
         self.model.reset()
         self._buffer_actions = []
         self._buffer_index = 0
-        if self._rtc_enabled and self._action_queue is not None:
+        if self._rtc_enabled and self._action_queue is not None and self._rtc_cfg is not None:
             self._action_queue = ActionQueue(self._rtc_cfg)
             assert self._action_queue.empty()
 
