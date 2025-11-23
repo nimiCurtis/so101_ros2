@@ -73,10 +73,18 @@ def generate_launch_description():
     )
     args.append(teleop_mode_arg)
 
+    expert_arg = DeclareLaunchArgument(
+        'expert',
+        default_value='human',
+        description='Execution mode: human, policy',
+    )
+    args.append(expert_arg)
+
     model = LaunchConfiguration('model')
     display_config = LaunchConfiguration('display_config')
     display = LaunchConfiguration('display')
     teleop_mode = LaunchConfiguration('teleop_mode')
+    expert = LaunchConfiguration('expert')
 
     # Debug: Log the mode
     mode_log = LogInfo(msg=['[TELEOP LAUNCH] Mode is set to: ', teleop_mode])
@@ -98,9 +106,17 @@ def generate_launch_description():
             'model': model,
             'use_sim_time': 'false',
         }.items(),
+        if_condition=IfCondition(EqualsSubstitution(expert, 'human')),
     )
-    # delayed_leader_launch = TimerAction(period=8.0, actions=[leader_robot_launch])
     actions.append(leader_robot_launch)
+
+    policy_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(bringup_pkg, 'launch', 'include', 'policy.launch.py')
+        ),
+        condition=IfCondition(EqualsSubstitution(expert, 'policy')),
+    )
+    actions.append(policy_launch)
 
     follower_robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
