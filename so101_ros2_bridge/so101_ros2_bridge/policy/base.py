@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from re import A
-from typing import Any, Dict, List, Mapping, Optional, Type
+from pathlib import Path
+from typing import Any, Dict, List, Mapping, Optional
 
 from rclpy.node import Node
-from rclpy.parameter import ParameterType
-from sensor_msgs.msg import Image, JointState
+
+from so101_ros2_bridge import POLICY_BASE_DIR, POLICY_SHARE_BASE_DIR
 
 
 @dataclass
@@ -14,97 +14,54 @@ class PolicyConfig:
     """Configuration for a policy adapter.
 
     Attributes:
-        policy_name: Name used for registry lookup (e.g., 'smolvla', 'pi0').
-        device: Target device string (e.g., 'cuda:0', 'cpu').
-        checkpoint_path: Path or identifier for the model weights.
-        extra: Additional free-form configuration parameters.
+        policy_name: Name of the policy.
+        device: Device to run the policy on (e.g., 'cuda:0' or 'cpu').
+        checkpoint_path: Path to the model checkpoint file.
+        task: Task type (e.g., 'pick_and_place', 'navigation').
+        extra: Additional configuration parameters.
     """
 
     policy_name: str
-    device: str = 'cuda:0'
-    checkpoint_path: Optional[str] = None
-    task: Optional[str] = None
+    device: str
+    checkpoint_path: str
+    task: str
+    robot_properties: Dict[str, Any] = field(default_factory=dict)
     extra: Dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_ros_params(cls, node: Node) -> 'PolicyConfig':
-        """Build configuration from ROS parameters on the given node."""
-        policy_name = node.get_parameter('policy_name').get_parameter_value().string_value
-        device_param = node.get_parameter_or(
-            'device',
-            node._parameters.get('device', None),  # type: ignore[attr-defined]
-        )
-        if device_param is not None:
-            device = device_param.get_parameter_value().string_value  # type: ignore[union-attr]
-        else:
-            device = 'cuda:0'
+    def create(
+        cls,
+        policy_name: str,
+        device: str,
+        checkpoint_path: Path,
+        task: str,
+        robot_properties: Dict[str, Any],
+    ) -> 'PolicyConfig':
+        """Create PolicyConfig from a YAML file in the policy config directory."""
+        import yaml
 
-        checkpoint_param = node.get_parameter_or(
-            'checkpoint_path',
-            node._parameters.get('checkpoint_path', None),  # type: ignore[attr-defined]
-        )
-        if checkpoint_param is not None:
-            checkpoint_path = (
-                checkpoint_param.get_parameter_value().string_value  # type: ignore[union-attr]
-            )
-        else:
-            checkpoint_path = None
+        extra_config_path = POLICY_SHARE_BASE_DIR / f'{policy_name}' / 'config.yaml'
 
-        task = node.get_parameter('task').get_parameter_value().string_value
-        # Optional: read a small set of known extras
-        extra: Dict[str, Any] = {}
+        # check that the config file exists
+        if not extra_config_path.exists():
+            raise FileNotFoundError(f'Policy config file not found: {extra_config_path}')
 
-        for name in [
-            'normalize_observations',
-            'observation_image_size',
-            'max_joint_delta',
-            'max_joint_velocity',
-            'action_scaling',
-            'text_prompt',
-            'use_language_conditioning',
-            'horizon',
-            'temperature',
-        ]:
-            if node.has_parameter(name):
-                p = node.get_parameter(name)
-                v = p.get_parameter_value()
+        # Load YAML config
+        with open(extra_config_path, 'r') as f:
+            extra_config = yaml.safe_load(f)
 
-                # Match rclpy ParameterType enums
-                if v.type == ParameterType.PARAMETER_DOUBLE:
-                    extra[name] = v.double_value
-
-                elif v.type == ParameterType.PARAMETER_INTEGER:
-                    extra[name] = v.integer_value
-
-                elif v.type == ParameterType.PARAMETER_STRING:
-                    extra[name] = v.string_value
-
-                elif v.type == ParameterType.PARAMETER_BOOL:
-                    extra[name] = v.bool_value
-
-                elif v.type == ParameterType.PARAMETER_DOUBLE_ARRAY:
-                    extra[name] = list(v.double_array_value)
-
-                elif v.type == ParameterType.PARAMETER_INTEGER_ARRAY:
-                    extra[name] = list(v.integer_array_value)
-
-                elif v.type == ParameterType.PARAMETER_STRING_ARRAY:
-                    extra[name] = list(v.string_array_value)
-
-                elif v.type == ParameterType.PARAMETER_BOOL_ARRAY:
-                    extra[name] = list(v.bool_array_value)
-
-                else:
-                    node.get_logger().warn(
-                        f"Parameter '{name}' has unsupported type {v.type}, skipping."
-                    )
+        # If checkpoint_path is relative, make it relative to the POLICY_BASE_DIR
+        if checkpoint_path and not checkpoint_path.startswith('/'):
+            checkpoint_path = (POLICY_BASE_DIR / checkpoint_path / 'pretrained_model').resolve()
+            checkpoint_path = str(checkpoint_path)
 
         return cls(
             policy_name=policy_name,
             device=device,
-            checkpoint_path=checkpoint_path,
-            extra=extra,
+            checkpoint_path=str(checkpoint_path),
             task=task,
+            robot_properties=robot_properties,
+            extra=extra_config.get('extra', {}),
         )
 
 
@@ -122,17 +79,6 @@ class BasePolicy:
         self.cfg = cfg
         self.node = node
 
-    # ---- Episode control -------------------------------------------------
-
-    def reset(self, context: Optional[Mapping[str, Any]] = None) -> None:
-        """Reset any internal state for a new episode.
-
-        Subclasses may override to handle language prompts, goals, etc.
-        """
-        raise NotImplementedError
-
-    # ---- Core API --------------------------------------------------------
-
     def make_observation(
         self,
         ros_obs: Mapping[str, Any],
@@ -146,11 +92,27 @@ class BasePolicy:
         """
         raise NotImplementedError
 
-    def infer(self, ros_obs: Mapping[str, Any], time_per_action: float) -> None:
+    def infer(
+        self,
+        ros_obs: Mapping[str, Any],
+        time_per_action: float,
+        inference_delay: float = 0.0,
+    ) -> None:
+        """Update internal action buffer / queue from the latest observation."""
+        if ros_obs is None or 'observation.state' not in ros_obs:
+            self.node.get_logger().warn('[SmolVLA] infer: observation is missing.')
+            return
+
+        observation = self.make_observation(ros_obs=ros_obs)
+        self.predict_action_chunk(observation, time_per_action, inference_delay)
+
+    def predict_action_chunk(
+        self, ros_obs: Mapping[str, Any], time_per_action: float, inference_delay: float
+    ) -> None:
         """Run policy and return a sequence of future joint positions.
         Subclasses must override this method to:
-        - run the model forward pass,
-        - handle any internal buffering or RTC logic,
+        - run model inference,
+        - fill internal action buffer with predicted actions.
         """
         raise NotImplementedError
 
@@ -163,7 +125,9 @@ class BasePolicy:
         """
         raise NotImplementedError
 
-    def close(self) -> None:
-        """Release any resources such as GPU memory or file handles."""
-        # Default: nothing to do
-        return
+    def reset(self, context: Optional[Mapping[str, Any]] = None) -> None:
+        """Reset any internal state for a new episode.
+
+        Subclasses may override to handle language prompts, goals, etc.
+        """
+        raise NotImplementedError
