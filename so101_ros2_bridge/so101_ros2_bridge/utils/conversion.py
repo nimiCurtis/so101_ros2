@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from so101_ros2_bridge.utils import ensure_conda_site_packages_from_env
+from so101_ros2_bridge.utils.core import ensure_conda_site_packages_from_env
 
 ensure_conda_site_packages_from_env()
 
@@ -35,43 +35,45 @@ def radians_to_normalized(joint_name: str, rad: float) -> float:
     return (rad / math.pi) * 100.0
 
 
-def ros_jointstate_to_vec6(
+def ros_jointstate_to_vec(
     js_msg: JointState,
     joint_order: Optional[List[str]] = None,
     use_lerobot_ranges_norms: bool = False,
 ) -> Tuple[np.ndarray, List[str]]:
-    """Convert a JointState message to a 6D vector in joint_order."""
+    """Convert a JointState message to a vector in the given joint_order.
+
+    If joint_order is provided, return joints in that order.
+    Otherwise, return all joints in the message.
+    """
     pos = list(getattr(js_msg, 'position', []))
     names = list(getattr(js_msg, 'name', []))
-    out = np.zeros((6,), dtype=np.float32)
 
     if joint_order:
-        if len(joint_order) != 6:
-            raise ValueError(f'joint_order must have 6 names, got {len(joint_order)}')
+        # Use ordered subset from joint_order
         name_to_idx = {n: i for i, n in enumerate(names)}
         try:
             vals = [pos[name_to_idx[n]] for n in joint_order]
-            if use_lerobot_ranges_norms:
-                vals = [
-                    radians_to_normalized(joint_name, val)
-                    for joint_name, val in zip(joint_order, vals)
-                ]
         except KeyError as e:
             missing = set(joint_order) - set(names)
             raise KeyError(f'Joint(s) {missing} not found in JointState.name') from e
-        out[:] = np.array(vals, dtype=np.float32)
-        joint_names = joint_order
-    else:
-        if len(pos) < 6:
-            raise ValueError(f'JointState.position has {len(pos)} values, need >= 6')
-        vals = pos[:6]
+
         if use_lerobot_ranges_norms:
-            joint_names = names[:6] if len(names) >= 6 else [f'joint_{i}' for i in range(6)]
-            vals = [
-                radians_to_normalized(joint_name, val) for joint_name, val in zip(joint_names, vals)
-            ]
-        out[:] = np.array(vals, dtype=np.float32)
-        joint_names = names[:6] if names else [f'joint_{i}' for i in range(6)]
+            vals = [radians_to_normalized(j_name, v) for j_name, v in zip(joint_order, vals)]
+
+        out = np.asarray(vals, dtype=np.float32)
+        joint_names = list(joint_order)
+    else:
+        # Use everything as-is
+        if not pos:
+            raise ValueError('JointState.position is empty')
+
+        joint_names = names if names else [f'joint_{i}' for i in range(len(pos))]
+        vals = pos
+
+        if use_lerobot_ranges_norms:
+            vals = [radians_to_normalized(j_name, v) for j_name, v in zip(joint_names, vals)]
+
+        out = np.asarray(vals, dtype=np.float32)
 
     return out, joint_names
 
@@ -87,7 +89,7 @@ def ros_to_dataset_features(
     if 'observation.state' in ros_obs:
         joint_state_msg: JointState = ros_obs['observation.state']
 
-        joint_vec, joint_names = ros_jointstate_to_vec6(
+        joint_vec, joint_names = ros_jointstate_to_vec(
             js_msg=joint_state_msg,
             joint_order=joint_order,
             use_lerobot_ranges_norms=False,

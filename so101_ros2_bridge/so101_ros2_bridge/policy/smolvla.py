@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from so101_ros2_bridge.utils import ensure_conda_site_packages_from_env
+from so101_ros2_bridge.utils.core import ensure_conda_site_packages_from_env
 
 ensure_conda_site_packages_from_env()
 

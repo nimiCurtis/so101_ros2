@@ -100,7 +100,7 @@ class BasePolicy:
     ) -> None:
         """Update internal action buffer / queue from the latest observation."""
         if ros_obs is None or 'observation.state' not in ros_obs:
-            self.node.get_logger().warn('[SmolVLA] infer: observation is missing.')
+            self.node.get_logger().warn(f'[{self.cfg.policy_name}] infer: observation is missing.')
             return
 
         observation = self.make_observation(ros_obs=ros_obs)

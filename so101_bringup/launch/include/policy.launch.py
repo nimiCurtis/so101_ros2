@@ -10,18 +10,33 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description() -> LaunchDescription:
-    """Launch the policy runner node with params and policy_type-based name."""
-    policy_type = LaunchConfiguration('policy_type')
+    """Launch the policy runner node with params and policy_name-based name."""
+    bridge_pkg = get_package_share_directory('so101_ros2_bridge')
 
-    policy_type_arg = DeclareLaunchArgument(
-        'policy_type',
+    policy_name = LaunchConfiguration('policy_name')
+    checkpoint_path = LaunchConfiguration('checkpoint_path')
+    task = LaunchConfiguration('task')
+
+    policy_name_arg = DeclareLaunchArgument(
+        'policy_name',
         default_value='smolvla',
-        description='Policy type / node name (smolvla, pi0, pi05, groot, ...).',
+        description='Policy name (smolvla, pi0, pi05, groot, ...).',
     )
 
-    pkg_share = get_package_share_directory('so101_ros2_bridge')
+    checkpoint_path_arg = DeclareLaunchArgument(
+        'checkpoint_path',
+        default_value='',
+        description='Path to the policy checkpoint.',
+    )
+
+    task_arg = DeclareLaunchArgument(
+        'task',
+        default_value='Pick the cube and place it inside the bowl.',
+        description='Task prompt (e.g., pick and place, navigation).',
+    )
+
     params_file = os.path.join(
-        pkg_share,
+        bridge_pkg,
         'config',
         'so101_policy_params.yaml',
     )
@@ -29,20 +44,27 @@ def generate_launch_description() -> LaunchDescription:
     policy_node = Node(
         package='so101_ros2_bridge',
         executable='so101_policy_runner',  # entry point for PolicyRunnerNode
-        name=policy_type,  # node name == policy_type
+        name='policy_runner',  # node name == policy_name
         output='screen',
-        parameters=[params_file],
-        # Add remappings if needed for your actual topics:
+        parameters=[
+            params_file,
+            # Override parameters from launch args
+            {
+                'policy_name': policy_name,
+                'checkpoint_path': checkpoint_path,
+                'task': task,
+            },
+        ],
+        # Add remappings if needed
         # remappings=[
-        #     ("/camera_top/image_raw", "/so101/cam_top/image_raw"),
-        #     ("/camera_wrist/image_raw", "/so101/cam_wrist/image_raw"),
-        #     ("/follower/joint_states", "/so101/follower/joint_states"),
         # ],
     )
 
     return LaunchDescription(
         [
-            policy_type_arg,
+            policy_name_arg,
+            checkpoint_path_arg,
+            task_arg,
             policy_node,
         ]
     )

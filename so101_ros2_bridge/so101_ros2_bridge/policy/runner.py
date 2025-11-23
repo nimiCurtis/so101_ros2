@@ -187,7 +187,16 @@ class SO101PolicyRunner(LifecycleNode):
 
         # --- Build subscribers + sync generically from `observations` ---
         obs_param: Parameter = self.get_parameter('observations')
-        obs_cfg = obs_param.value or {}
+        obs_cfg = obs_param.value or {
+            'observation.images.camera1': {
+                'topic': '/follower/cam_front/image_raw',
+                'msg_type': 'sensor_msgs/msg/Image',
+            },
+            'observation.state': {
+                'topic': '/follower/joint_states',
+                'msg_type': 'sensor_msgs/msg/JointState',
+            },
+        }
         if not isinstance(obs_cfg, dict):
             self.get_logger().error(f'Expected `observations` to be a dict, got {type(obs_cfg)}')
             return TransitionCallbackReturn.FAILURE
@@ -213,7 +222,10 @@ class SO101PolicyRunner(LifecycleNode):
 
         # --- Build action publisher from `action` param ---
         action_param: Parameter = self.get_parameter('action')
-        action_cfg = action_param.value or {}
+        action_cfg = action_param.value or {
+            'topic': '/leader/joint_states',
+            'msg_type': 'sensor_msgs/msg/JointState',
+        }
 
         if 'topic' in action_cfg:
             action_entry = action_cfg
