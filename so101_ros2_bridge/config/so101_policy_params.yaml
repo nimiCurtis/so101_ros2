@@ -12,7 +12,7 @@
     # Policy parameters
     policy_name: "smolvla"
     device: cuda:0
-    checkpoint_path: "005000"  # Default checkpoint path
+    checkpoint_path: "/home/nimrod/ros2_ws/src/so101_ros2/so101_ros2_bridge/config/policies/smolvla/checkpoints/005000/pretrained_model"  # Default checkpoint path
     task: "First, identify the cube position. Then, reach out and grasp the cube. Finally, move the cube and release it into the bowl"
 
     observations:

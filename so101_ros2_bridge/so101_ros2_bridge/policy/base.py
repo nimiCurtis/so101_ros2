@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Mapping, Optional
 
 from rclpy.node import Node
 
-from so101_ros2_bridge import POLICY_BASE_DIR, POLICY_SHARE_BASE_DIR
+# from so101_ros2_bridge.policy.registry import POLICY_REGISTRY
 
 
 @dataclass
@@ -38,22 +38,23 @@ class PolicyConfig:
         robot_properties: Dict[str, Any],
     ) -> 'PolicyConfig':
         """Create PolicyConfig from a YAML file in the policy config directory."""
-        import yaml
 
-        extra_config_path = POLICY_SHARE_BASE_DIR / f'{policy_name}' / 'config.yaml'
+        # policy name should be included in the registered policies
+        # if policy_name not in POLICY_REGISTRY:
+        #     raise ValueError(
+        #         f"Unknown policy '{policy_name}'. Registered policies: {sorted(POLICY_REGISTRY.keys())}"
+        #     )
 
-        # check that the config file exists
-        if not extra_config_path.exists():
-            raise FileNotFoundError(f'Policy config file not found: {extra_config_path}')
+        # device should be non-empty, and fallback to 'cpu' if not specified
+        if not device:
+            device = 'cpu'
 
-        # Load YAML config
-        with open(extra_config_path, 'r') as f:
-            extra_config = yaml.safe_load(f)
-
-        # If checkpoint_path is relative, make it relative to the POLICY_BASE_DIR
-        if checkpoint_path and not checkpoint_path.startswith('/'):
-            checkpoint_path = (POLICY_BASE_DIR / checkpoint_path / 'pretrained_model').resolve()
-            checkpoint_path = str(checkpoint_path)
+        # Checkpoint should be an absolute path
+        if checkpoint_path:
+            if not checkpoint_path.is_absolute():
+                raise ValueError(f'Checkpoint path must be absolute: {checkpoint_path}')
+        else:
+            raise ValueError('Checkpoint path must be provided and non-empty.')
 
         return cls(
             policy_name=policy_name,
@@ -61,7 +62,7 @@ class PolicyConfig:
             checkpoint_path=str(checkpoint_path),
             task=task,
             robot_properties=robot_properties,
-            extra=extra_config.get('extra', {}),
+            extra={},
         )
 
 

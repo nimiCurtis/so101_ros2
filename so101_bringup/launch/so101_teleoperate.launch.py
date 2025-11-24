@@ -106,7 +106,7 @@ def generate_launch_description():
             'model': model,
             'use_sim_time': 'false',
         }.items(),
-        if_condition=IfCondition(EqualsSubstitution(expert, 'human')),
+        condition=IfCondition(EqualsSubstitution(expert, 'human')),
     )
     actions.append(leader_robot_launch)
 

@@ -31,7 +31,7 @@ class SO101PolicyRunner(LifecycleNode):
             'elbow_flex',
             'wrist_flex',
             'wrist_roll',
-            'gripper_finger',
+            'gripper',
         ],
     }
 
@@ -40,9 +40,15 @@ class SO101PolicyRunner(LifecycleNode):
 
         # Scalar params declared once (can still be overridden from YAML)
         self.declare_parameter('policy_name', 'smolvla')
-        self.declare_parameter('checkpoint_path', '005000')
+        self.declare_parameter(
+            'checkpoint_path',
+            '/home/nimrod/ros2_ws/src/so101_ros2/so101_ros2_bridge/config/policies/smolvla/checkpoints/005000/pretrained_model',
+        )
         self.declare_parameter('device', 'cuda:0')
-        self.declare_parameter('task', '...')
+        self.declare_parameter(
+            'task',
+            'First, identify the cube position. Then, reach out and grasp the cube. Finally, move the cube and release it into the bowl.',
+        )
 
         self.declare_parameter('inference_rate', 1.0)
         self.declare_parameter('publish_rate', 20.0)
@@ -54,9 +60,28 @@ class SO101PolicyRunner(LifecycleNode):
         # --- Complex parameters (dicts) – allow dynamic typing ---
         dyn_desc = ParameterDescriptor(dynamic_typing=True)
 
-        # IMPORTANT: use `None` here, not {}.
         self.declare_parameter('observations', None, descriptor=dyn_desc)
         self.declare_parameter('action', None, descriptor=dyn_desc)
+
+        self._default_observations = {
+            'observation.images.camera1': {
+                'topic': '/follower/cam_front/image_raw',
+                'msg_type': 'sensor_msgs/msg/Image',
+            },
+            'observation.images.camera2': {
+                'topic': '/static_camera/cam_side/color/image_raw',
+                'msg_type': 'sensor_msgs/msg/Image',
+            },
+            'observation.state': {
+                'topic': '/follower/joint_states',
+                'msg_type': 'sensor_msgs/msg/JointState',
+            },
+        }
+
+        self._default_action = {
+            'topic': '/leader/joint_states',
+            'msg_type': 'sensor_msgs/msg/JointState',
+        }
 
         # Latest synced observation
         self._latest_msgs: Optional[Dict[str, Any]] = None
@@ -111,7 +136,7 @@ class SO101PolicyRunner(LifecycleNode):
 
         # --- Optional state joint names from observations.observation.state.names ---
         obs_param: Parameter = self.get_parameter('observations')
-        obs_cfg = obs_param.value or {}
+        obs_cfg = obs_param.value or self._default_observations
         if isinstance(obs_cfg, dict):
             state_cfg = obs_cfg.get('observation.state')
             if isinstance(state_cfg, dict) and 'names' in state_cfg:
@@ -120,7 +145,7 @@ class SO101PolicyRunner(LifecycleNode):
 
         # --- Optional action joint names from action.names / action.action.names ---
         action_param: Parameter = self.get_parameter('action')
-        action_cfg = action_param.value or {}
+        action_cfg = action_param.value or self._default_action
 
         if isinstance(action_cfg, dict):
             # Support both:
@@ -187,16 +212,7 @@ class SO101PolicyRunner(LifecycleNode):
 
         # --- Build subscribers + sync generically from `observations` ---
         obs_param: Parameter = self.get_parameter('observations')
-        obs_cfg = obs_param.value or {
-            'observation.images.camera1': {
-                'topic': '/follower/cam_front/image_raw',
-                'msg_type': 'sensor_msgs/msg/Image',
-            },
-            'observation.state': {
-                'topic': '/follower/joint_states',
-                'msg_type': 'sensor_msgs/msg/JointState',
-            },
-        }
+        obs_cfg = obs_param.value or self._default_observations
         if not isinstance(obs_cfg, dict):
             self.get_logger().error(f'Expected `observations` to be a dict, got {type(obs_cfg)}')
             return TransitionCallbackReturn.FAILURE
@@ -222,10 +238,7 @@ class SO101PolicyRunner(LifecycleNode):
 
         # --- Build action publisher from `action` param ---
         action_param: Parameter = self.get_parameter('action')
-        action_cfg = action_param.value or {
-            'topic': '/leader/joint_states',
-            'msg_type': 'sensor_msgs/msg/JointState',
-        }
+        action_cfg = action_param.value or self._default_action
 
         if 'topic' in action_cfg:
             action_entry = action_cfg
