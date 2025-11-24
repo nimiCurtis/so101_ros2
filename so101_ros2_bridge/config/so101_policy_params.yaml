@@ -4,50 +4,15 @@
   ros__parameters:
     # Sync / timing
     inference_rate: 1.0          # Hz, how often to run policy
-    inference_delay: 0.4         # sec, delay of inference
-    publish_rate: 20.0           # Hz, how often to publish JointState commands
-    sync.queue_size: 10               # message_filters queue_size
-    sync.slop: 0.05                   # ApproximateTimeSynchronizer slop [sec]
+    inference_delay: 0.4        # sec, delay of inference
+    publish_rate: 25.0           # Hz, how often to publish JointState commands
+    sync.queue_size: 20               # message_filters queue_size
+    sync.slop: 0.3                   # ApproximateTimeSynchronizer slop [sec]
 
-    # Policy parameters
+    # General policy parameters
     policy_name: "smolvla"
     device: cuda:0
-    checkpoint_path: "/home/nimrod/ros2_ws/src/so101_ros2/so101_ros2_bridge/config/policies/smolvla/checkpoints/005000/pretrained_model"  # Default checkpoint path
-    task: "First, identify the cube position. Then, reach out and grasp the cube. Finally, move the cube and release it into the bowl"
-
-    observations:
-      observation.images.camera1:
-        topic: "/follower/cam_front/image_raw"
-        msg_type: "sensor_msgs/msg/Image"
-
-      observation.images.camera2:
-        topic: "/static_camera/cam_side/color/image_raw"
-        msg_type: "sensor_msgs/msg/Image"
-
-      observation.state:
-        topic: "/follower/joint_states"
-        msg_type: "sensor_msgs/msg/JointState"
-        # Optional: specify joint names to extract from JointState message
-        # names:
-        # If not provided, Defaults will be used from the policy config
-          # - "shoulder_pan"
-          # - "shoulder_lift"
-          # - "elbow_flex"
-          # - "wrist_flex"
-          # - "wrist_roll"
-          # - "gripper_finger"
-
-    action:
-      action:
-        topic: "/leader/joint_states"
-        msg_type: "sensor_msgs/msg/JointState"
-        # Optional: specify joint names to extract from JointState message
-        # names:
-        # If not provided, Defaults will be used from the policy config
-          # - "shoulder_pan"
-          # - "shoulder_lift"
-          # - "elbow_flex"
-          # - "wrist_flex"
-          # - "wrist_roll"
-          # - "gripper_finger"
-
+    # checkpoint_path: "/home/nimrod/ros2_ws/src/so101_ros2/so101_ros2_bridge/config/policies/smolvla/checkpoints/005000/pretrained_model"  # Default checkpoint path
+    checkpoint_path: "/home/nimrod/010000/pretrained_model"  # Default checkpoint path
+    # task: "First, identify the cube position. Then, reach out and grasp the cube. Finally, move the cube and release it into the bowl"
+    task: "Pick the cube and place it in the bowl."

@@ -23,6 +23,10 @@ setup(
             os.path.join('share', package_name, 'config', 'calibration'),
             glob('config/calibration/*.json'),
         ),
+        (
+            os.path.join('share', package_name, 'config', 'policies'),
+            glob('config/policies/*.yaml'),
+        ),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

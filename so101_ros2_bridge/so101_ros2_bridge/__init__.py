@@ -22,12 +22,9 @@ from pathlib import Path
 
 from ament_index_python.packages import get_package_share_directory
 
-# Root directory of the package
-ROOT_DIR = Path(__file__).parent.resolve()
 # Path to the pkg share directory
 PACKAGE_DIR = Path(get_package_share_directory('so101_ros2_bridge'))
 # Default calibration path relative to this package
 CALIBRATION_BASE_DIR = PACKAGE_DIR / 'config' / 'calibration'
 # Default policy directory
-POLICY_BASE_DIR = ROOT_DIR / 'config' / 'policies'
-POLICY_SHARE_BASE_DIR = PACKAGE_DIR / 'config' / 'policies'
+POLICY_BASE_DIR = PACKAGE_DIR / 'config' / 'policies'

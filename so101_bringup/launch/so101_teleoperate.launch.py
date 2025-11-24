@@ -90,6 +90,10 @@ def generate_launch_description():
     mode_log = LogInfo(msg=['[TELEOP LAUNCH] Mode is set to: ', teleop_mode])
     actions.append(mode_log)
 
+    # Debug: Log the expert
+    expert_log = LogInfo(msg=['[TELEOP LAUNCH] Expert is set to: ', expert])
+    actions.append(expert_log)
+
     # Launch follower - ONLY in real mode
     follower_log = LogInfo(
         msg='[TELEOP LAUNCH] Launching REAL follower',

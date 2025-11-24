@@ -14,6 +14,7 @@ from lerobot.policies.factory import make_pre_post_processors
 from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
 from lerobot.policies.utils import build_inference_frame
 from lerobot.processor.core import EnvTransition
+from rclpy.logging import LoggingSeverity
 from rclpy.node import Node
 
 from ..utils.conversion import ros_to_dataset_features
@@ -36,9 +37,9 @@ class SmolVLA(BasePolicy):
             f'checkpoint={cfg.checkpoint_path}, task={cfg.task}'
         )
 
-        self.model: SmolVLAPolicy = SmolVLAPolicy.from_pretrained(cfg.checkpoint_path).to(
-            cfg.device
-        )
+        self.model: SmolVLAPolicy = SmolVLAPolicy.from_pretrained(
+            cfg.checkpoint_path, local_files_only=True
+        ).to(cfg.device)
         self.model.eval()
 
         self._pre_processor, self._post_processor = make_pre_post_processors(
@@ -84,7 +85,18 @@ class SmolVLA(BasePolicy):
         self._buffer_actions: List[List[float]] = []
         self._buffer_index: int = 0
 
-        self.filter = LowPassFilter(alpha=0.5)
+        # Low-pass filter for smoothing actions
+        lpf_cfg: Dict[str, Any] = cfg.extra.get('lpf_filtering', {})
+
+        self._filter = None
+        if lpf_cfg.get('enable', False):
+            alpha = lpf_cfg.get('alpha', 0.2)
+            self._filter = LowPassFilter(alpha=alpha)
+            node.get_logger().info(
+                f'[{__class__.__name__}] Low-pass filtering enabled with alpha={alpha}'
+            )
+        else:
+            node.get_logger().info(f'[{__class__.__name__}] Low-pass filtering disabled.')
 
     def _setup_dataset_features(self) -> None:
         """Setup dataset feature metadata based on the model's config."""
@@ -162,7 +174,11 @@ class SmolVLA(BasePolicy):
         actions_list: List[List[float]] = actions[0].cpu().numpy().tolist()
 
         if not actions_list:
-            self.node.get_logger().warn('[SmolVLA] Empty action sequence returned.')
+            self.node.get_logger().log(
+                f'[{__class__.__name__}] Empty action sequence returned.',
+                severity=LoggingSeverity.WARN,
+                throttle_duration_sec=2.0,
+            )
             return
 
         if inference_delay > 0.0 and time_per_action > 0.0:
@@ -171,23 +187,29 @@ class SmolVLA(BasePolicy):
             skip_actions = 0
 
         if skip_actions >= len(actions_list):
-            self.node.get_logger().warn(
-                f'[SmolVLA] predict_actions: skip_actions={skip_actions} >= len(chunk)={len(actions_list)}. '
-                f'Starting from last action instead.'
+            self.node.get_logger().log(
+                f'[{__class__.__name__}] predict_action_chunk: skip_actions={skip_actions} >= len(chunk)={len(actions_list)}. '
+                f'Starting from last action instead.',
+                severity=LoggingSeverity.WARN,
+                throttle_duration_sec=2.0,
             )
             self._buffer_index = len(actions_list) - 1
         elif skip_actions < 0:
-            self.node.get_logger().warn(
-                f'[SmolVLA] predict_actions: negative skip_actions={skip_actions}, starting from 0.'
+            self.node.get_logger().log(
+                f'[{__class__.__name__}] predict_action_chunk: negative skip_actions={skip_actions}, starting from 0.',
+                severity=LoggingSeverity.WARN,
+                throttle_duration_sec=2.0,
             )
             self._buffer_index = 0
         else:
             self._buffer_index = skip_actions
 
         self._buffer_actions = actions_list
-        self.node.get_logger().info(
-            f'[SmolVLA] predict_actions: new chunk with {len(actions_list)} actions, '
-            f'start_index={self._buffer_index} (skipped {self._buffer_index})'
+        self.node.get_logger().log(
+            f'[{__class__.__name__}] predict_action_chunk: new chunk with {len(actions_list)} actions, '
+            f'start_index={self._buffer_index} (skipped {self._buffer_index})',
+            severity=LoggingSeverity.INFO,
+            throttle_duration_sec=5.0,
         )
 
     def get_action(self) -> Optional[List[float]]:
@@ -202,10 +224,19 @@ class SmolVLA(BasePolicy):
         if self._buffer_index < len(self._buffer_actions) - 1:
             self._buffer_index += 1
 
-        return self.filter.filter(np.array(current)).tolist()
+        if self._filter is None:
+            return current
+        return self._filter.filter(np.array(current)).tolist()
 
     def reset(self, context: Optional[Mapping[str, Any]] = None) -> None:
+        self.node.get_logger().info(f'[{__class__.__name__}] Resetting policy.')
         self.model.reset()
         self._buffer_actions = []
         self._buffer_index = 0
-        self.filter.reset()
+        self._filter.reset()
+
+    def close(self) -> None:
+        """Clean up resources held by the policy."""
+        self.node.get_logger().info(
+            f'[{__class__.__name__}] Closing policy and releasing resources.'
+        )

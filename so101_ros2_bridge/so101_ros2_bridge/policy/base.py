@@ -4,9 +4,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional
 
+import yaml
+from rclpy.logging import LoggingSeverity
 from rclpy.node import Node
 
-# from so101_ros2_bridge.policy.registry import POLICY_REGISTRY
+from so101_ros2_bridge import POLICY_BASE_DIR
 
 
 @dataclass
@@ -39,12 +41,6 @@ class PolicyConfig:
     ) -> 'PolicyConfig':
         """Create PolicyConfig from a YAML file in the policy config directory."""
 
-        # policy name should be included in the registered policies
-        # if policy_name not in POLICY_REGISTRY:
-        #     raise ValueError(
-        #         f"Unknown policy '{policy_name}'. Registered policies: {sorted(POLICY_REGISTRY.keys())}"
-        #     )
-
         # device should be non-empty, and fallback to 'cpu' if not specified
         if not device:
             device = 'cpu'
@@ -56,13 +52,20 @@ class PolicyConfig:
         else:
             raise ValueError('Checkpoint path must be provided and non-empty.')
 
+        # Load extra config from YAML file if it exists
+        policy_config_path = POLICY_BASE_DIR / f'{policy_name}.yaml'
+        extra = {}
+        if policy_config_path.exists():
+            with policy_config_path.open('r') as f:
+                extra = yaml.safe_load(f) or {}
+
         return cls(
             policy_name=policy_name,
             device=device,
             checkpoint_path=str(checkpoint_path),
             task=task,
             robot_properties=robot_properties,
-            extra={},
+            extra=extra,
         )
 
 
@@ -101,7 +104,11 @@ class BasePolicy:
     ) -> None:
         """Update internal action buffer / queue from the latest observation."""
         if ros_obs is None or 'observation.state' not in ros_obs:
-            self.node.get_logger().warn(f'[{self.cfg.policy_name}] infer: observation is missing.')
+            self.node.get_logger().log(
+                f'[{__class__.__name__}] Observation is missing.',
+                severity=LoggingSeverity.WARN,
+                throttle_duration_sec=2.0,
+            )
             return
 
         observation = self.make_observation(ros_obs=ros_obs)

@@ -4,7 +4,7 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.actions import DeclareLaunchArgument, OpaqueFunction, SetEnvironmentVariable
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
@@ -51,7 +51,7 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description() -> LaunchDescription:
     policy_name_arg = DeclareLaunchArgument(
         'policy_name',
-        default_value='smolvla',
+        default_value='',
         description='Policy name (smolvla, pi0, pi05, groot, ...).',
     )
 
@@ -64,12 +64,14 @@ def generate_launch_description() -> LaunchDescription:
 
     task_arg = DeclareLaunchArgument(
         'task',
-        default_value='Pick the cube and place it inside the bowl.',
-        description='Task prompt (e.g., pick and place, navigation).',
+        default_value='',
+        description='Task prompt (e.g., pick and place).',
     )
 
     return LaunchDescription(
         [
+            SetEnvironmentVariable('HF_HUB_OFFLINE', '1'),
+            SetEnvironmentVariable('HF_HUB_DISABLE_TELEMETRY', '1'),
             policy_name_arg,
             checkpoint_path_arg,
             task_arg,
