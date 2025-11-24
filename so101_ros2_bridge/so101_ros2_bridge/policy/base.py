@@ -1,3 +1,23 @@
+# Copyright 2025 nimiCurtis
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -39,7 +59,18 @@ class PolicyConfig:
         task: str,
         robot_properties: Dict[str, Any],
     ) -> 'PolicyConfig':
-        """Create PolicyConfig from a YAML file in the policy config directory."""
+        """Create PolicyConfig from a YAML file in the policy config directory.
+        Args:
+            policy_name: Name of the policy.
+            device: Device to run the policy on.
+            checkpoint_path: Path to the model checkpoint file.
+            task: Task type.
+            robot_properties: Robot-specific properties.
+        Returns:
+            An instance of PolicyConfig.
+        Raises:
+            ValueError: If required fields are missing or invalid.
+        """
 
         # device should be non-empty, and fallback to 'cpu' if not specified
         if not device:
@@ -111,7 +142,10 @@ class BasePolicy:
             )
             return
 
+        # Build model-ready observation
         observation = self.make_observation(ros_obs=ros_obs)
+
+        # Run policy to fill internal action buffer
         self.predict_action_chunk(observation, time_per_action, inference_delay)
 
     def predict_action_chunk(

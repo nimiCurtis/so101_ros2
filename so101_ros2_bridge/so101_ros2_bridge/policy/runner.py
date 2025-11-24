@@ -1,4 +1,25 @@
 #!/usr/bin/env python3
+
+# Copyright 2025 nimiCurtis
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 from __future__ import annotations
 
 import threading
@@ -63,8 +84,8 @@ class SO101PolicyRunner(LifecycleNode):
         self.declare_parameter('sync.slop', 0.05)
 
         # Internal state
-        self._obs_cfg: Dict[str, Any] = None
-        self._action_cfg: Dict[str, Any] = None
+        self._obs_cfg: Dict[str, Any] = {}
+        self._action_cfg: Dict[str, Any] = {}
 
         # Latest synced observation
         self._latest_msgs: Optional[Dict[str, Any]] = None
@@ -324,12 +345,14 @@ class SO101PolicyRunner(LifecycleNode):
     def on_activate(self, state) -> TransitionCallbackReturn:
         self.get_logger().info('Activating policy_runner ...')
 
+        # Start timers
         self._inference_timer = self.create_timer(
             self._inference_period, self._inference_step, self._cb_group
         )
         self._publish_timer = self.create_timer(
             self._publish_period, self._publish_step, self._cb_group
         )
+
         return TransitionCallbackReturn.SUCCESS
 
     def on_deactivate(self, state) -> TransitionCallbackReturn:
@@ -351,7 +374,7 @@ class SO101PolicyRunner(LifecycleNode):
     def on_cleanup(self, state) -> TransitionCallbackReturn:
         self.get_logger().info('Cleaning up policy_runner...')
 
-        # 1. Cancel timers if they somehow survived deactivate
+        # Cancel timers if they somehow survived deactivate
         if self._inference_timer is not None:
             self._inference_timer.cancel()
             self._inference_timer = None
@@ -360,20 +383,20 @@ class SO101PolicyRunner(LifecycleNode):
             self._publish_timer.cancel()
             self._publish_timer = None
 
-        # 2. Drop the sync object and any subscribers it holds
-        self._sync = None  # message_filters cleanup is via GC
+        # Drop the sync object and any subscribers it holds
+        self._sync = None
 
-        # 3. Destroy publisher if it exists
+        # Destroy publisher if it exists
         if self._cmd_pub is not None:
             self.destroy_publisher(self._cmd_pub)
             self._cmd_pub = None
 
-        # 4. Reset / drop the policy
+        # Reset / drop the policy
         if self._policy is not None:
             # self._policy.close()
             self._policy = None
 
-        # 5. Clear latest observation
+        # Clear latest observation
         with self._obs_lock:
             self._latest_msgs = None
 
@@ -410,6 +433,7 @@ class SO101PolicyRunner(LifecycleNode):
         if self._cmd_pub is None or self._policy is None:
             return
 
+        # Get next action from policy
         action = self._policy.get_action()
         if action is None:
             self.get_logger().log(
@@ -422,6 +446,7 @@ class SO101PolicyRunner(LifecycleNode):
         current_pos = list(action)
         n = len(current_pos)
 
+        # Build JointState command
         js_cmd = JointState()
         js_cmd.header.stamp = self.get_clock().now().to_msg()
         js_cmd.name = self._action_joint_names[:n]
@@ -437,6 +462,8 @@ class SO101PolicyRunner(LifecycleNode):
 
     def _inference_step(self) -> None:
         """Timer: ask the policy to refresh its internal action buffer/buffer."""
+
+        # Early out if no policy
         if self._policy is None:
             self.get_logger().log(
                 'Inference step: no policy instantiated.',
@@ -445,9 +472,11 @@ class SO101PolicyRunner(LifecycleNode):
             )
             return
 
+        # Get latest observation
         with self._obs_lock:
             ros_obs = self._latest_msgs
 
+        # Early out if no observation yet
         if ros_obs is None:
             self.get_logger().log(
                 'Inference step: no observation received yet.',
@@ -456,8 +485,10 @@ class SO101PolicyRunner(LifecycleNode):
             )
             return
 
+        # Determine inference delay to use
         delay = self._inference_delay if self._use_delay_compensation else 0.0
 
+        # Run policy inference
         self._policy.infer(
             ros_obs=ros_obs,
             time_per_action=self._publish_period,
@@ -466,12 +497,16 @@ class SO101PolicyRunner(LifecycleNode):
 
     def _send_safe_stop(self) -> None:
         """Send a safe stop command (hold last observed positions)."""
+
+        # Early out if no publisher
         if self._cmd_pub is None:
             return
 
+        # Get last observation
         with self._obs_lock:
             msgs = self._latest_msgs
 
+        # Early out if no last observation
         if msgs is None:
             self.get_logger().log(
                 'Safe stop: no last observation, no command published.',
@@ -480,6 +515,7 @@ class SO101PolicyRunner(LifecycleNode):
             )
             return
 
+        # Build JointState command holding last positions
         last_joint_state: JointState = msgs['observation.state']
         positions = list(last_joint_state.position)
         if not positions:

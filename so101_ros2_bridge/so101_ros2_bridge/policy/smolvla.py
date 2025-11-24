@@ -1,4 +1,25 @@
 #!/usr/bin/env python3
+
+# Copyright 2025 nimiCurtis
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 from __future__ import annotations
 
 from so101_ros2_bridge.utils.core import ensure_conda_site_packages_from_env
@@ -37,11 +58,13 @@ class SmolVLA(BasePolicy):
             f'checkpoint={cfg.checkpoint_path}, task={cfg.task}'
         )
 
+        # Load model
         self.model: SmolVLAPolicy = SmolVLAPolicy.from_pretrained(
             cfg.checkpoint_path, local_files_only=True
         ).to(cfg.device)
         self.model.eval()
 
+        # Pre- and post-processors
         self._pre_processor, self._post_processor = make_pre_post_processors(
             self.model.config,
             cfg.checkpoint_path,
@@ -55,22 +78,12 @@ class SmolVLA(BasePolicy):
         robot_props = cfg.robot_properties
         self._robot_type: str = robot_props.get('robot_type', 'so101_follower')
 
-        self._default_joint_names: List[str] = robot_props.get(
-            'joint_names',
-            [
-                'shoulder_pan',
-                'shoulder_lift',
-                'elbow_flex',
-                'wrist_flex',
-                'wrist_roll',
-                'gripper_finger',
-            ],
-        )
+        # Joint names
         self._state_joint_names: List[str] = robot_props.get(
-            'state_joint_names', self._default_joint_names
+            'state_joint_names', robot_props.get('joint_names')
         )
         self._action_joint_names: List[str] = robot_props.get(
-            'action_joint_names', self._default_joint_names
+            'action_joint_names', robot_props.get('joint_names')
         )
 
         # Feature specs from the model
@@ -141,13 +154,19 @@ class SmolVLA(BasePolicy):
         self,
         ros_obs: Mapping[str, Any],
     ) -> EnvTransition:
-        """Convert ROS messages into a LeRobot EnvTransition."""
+        """Convert ROS messages into a LeRobot EnvTransition.
+        Args:
+            ros_obs: A mapping of ROS observation messages.
+        Returns:
+            An EnvTransition object suitable for policy inference.
+        """
         raw_obs_features: Dict[str, Any] = ros_to_dataset_features(
             ros_obs=ros_obs,
             joint_order=self._state_joint_names,
             input_features=self._input_features,
         )
 
+        # Build model-ready inference frame
         inference_frame = build_inference_frame(
             observation=raw_obs_features,
             ds_features=self.dataset_features,
@@ -168,7 +187,17 @@ class SmolVLA(BasePolicy):
         time_per_action: float,
         inference_delay: float,
     ) -> None:
-        """Run policy and update internal action buffer with predicted joint positions."""
+        """Run policy and update internal action buffer with predicted joint positions.
+        Args:
+            observation: The preprocessed observation for the policy.
+            time_per_action: The time duration each action is expected to cover.
+            inference_delay: The expected delay (in seconds) between inference
+                and action execution, used to skip ahead in the action chunk.
+        Returns:
+            None. Updates internal action buffer.
+        """
+
+        # Run model inference
         actions = self.model.predict_action_chunk(observation)  # [B, T, n_joints]
         actions = self._post_processor(actions)
         actions_list: List[List[float]] = actions[0].cpu().numpy().tolist()
@@ -181,11 +210,13 @@ class SmolVLA(BasePolicy):
             )
             return
 
+        # Determine how many actions to skip based on inference delay
         if inference_delay > 0.0 and time_per_action > 0.0:
             skip_actions = math.ceil(inference_delay / time_per_action)
         else:
             skip_actions = 0
 
+        # Clamp skip_actions to valid range
         if skip_actions >= len(actions_list):
             self.node.get_logger().log(
                 f'[{__class__.__name__}] predict_action_chunk: skip_actions={skip_actions} >= len(chunk)={len(actions_list)}. '
@@ -204,6 +235,7 @@ class SmolVLA(BasePolicy):
         else:
             self._buffer_index = skip_actions
 
+        # Update action buffer
         self._buffer_actions = actions_list
         self.node.get_logger().log(
             f'[{__class__.__name__}] predict_action_chunk: new chunk with {len(actions_list)} actions, '
@@ -213,17 +245,23 @@ class SmolVLA(BasePolicy):
         )
 
     def get_action(self) -> Optional[List[float]]:
-        """Return the next joint position vector, or None if not available."""
+        """Return the next joint position vector, or None if not available.
+        Returns:
+            A list of joint positions, or None if no actions are buffered.
+        """
         if not self._buffer_actions:
             return None
 
+        # Clamp buffer index
         if self._buffer_index >= len(self._buffer_actions):
             self._buffer_index = len(self._buffer_actions) - 1
 
+        # Get current action and advance buffer index
         current = self._buffer_actions[self._buffer_index]
         if self._buffer_index < len(self._buffer_actions) - 1:
             self._buffer_index += 1
 
+        # Apply low-pass filtering if enabled
         if self._filter is None:
             return current
         return self._filter.filter(np.array(current)).tolist()
@@ -233,10 +271,5 @@ class SmolVLA(BasePolicy):
         self.model.reset()
         self._buffer_actions = []
         self._buffer_index = 0
-        self._filter.reset()
-
-    def close(self) -> None:
-        """Clean up resources held by the policy."""
-        self.node.get_logger().info(
-            f'[{__class__.__name__}] Closing policy and releasing resources.'
-        )
+        if self._filter is not None:
+            self._filter.reset()
