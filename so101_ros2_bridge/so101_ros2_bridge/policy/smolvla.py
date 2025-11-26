@@ -38,6 +38,7 @@ from lerobot.processor.core import EnvTransition
 from rclpy.logging import LoggingSeverity
 from rclpy.node import Node
 
+from ..utils.buffer import ActionBuffer
 from ..utils.conversion import ros_to_dataset_features
 from ..utils.filtering import LowPassFilter
 from .base import BasePolicy, PolicyConfig
@@ -94,10 +95,6 @@ class SmolVLA(BasePolicy):
         self.dataset_features: Dict[str, Dict] = {}
         self._setup_dataset_features()
 
-        # Chunk buffer
-        self._buffer_actions: List[List[float]] = []
-        self._buffer_index: int = 0
-
         # Low-pass filter for smoothing actions
         lpf_cfg: Dict[str, Any] = cfg.extra.get('lpf_filtering', {})
 
@@ -110,6 +107,9 @@ class SmolVLA(BasePolicy):
             )
         else:
             node.get_logger().info(f'[{__class__.__name__}] Low-pass filtering disabled.')
+
+        # Chunk buffer
+        self._action_buffer = ActionBuffer(lpf=self._filter)
 
     def _setup_dataset_features(self) -> None:
         """Setup dataset feature metadata based on the model's config."""
@@ -216,30 +216,32 @@ class SmolVLA(BasePolicy):
         else:
             skip_actions = 0
 
-        # Clamp skip_actions to valid range
+        # Clamp start_index to valid range (0 .. len-1)
         if skip_actions >= len(actions_list):
             self.node.get_logger().log(
-                f'[{__class__.__name__}] predict_action_chunk: skip_actions={skip_actions} >= len(chunk)={len(actions_list)}. '
-                f'Starting from last action instead.',
+                f'[{__class__.__name__}] predict_action_chunk: skip_actions={skip_actions} '
+                f'>= len(chunk)={len(actions_list)}. Starting from last action instead.',
                 severity=LoggingSeverity.WARN,
                 throttle_duration_sec=2.0,
             )
-            self._buffer_index = len(actions_list) - 1
+            start_index = len(actions_list) - 1
         elif skip_actions < 0:
             self.node.get_logger().log(
-                f'[{__class__.__name__}] predict_action_chunk: negative skip_actions={skip_actions}, starting from 0.',
+                f'[{__class__.__name__}] predict_action_chunk: negative skip_actions={skip_actions}, '
+                f'starting from 0.',
                 severity=LoggingSeverity.WARN,
                 throttle_duration_sec=2.0,
             )
-            self._buffer_index = 0
+            start_index = 0
         else:
-            self._buffer_index = skip_actions
+            start_index = skip_actions
 
         # Update action buffer
-        self._buffer_actions = actions_list
+        self._action_buffer.set(actions_list, start_index=start_index)
+
         self.node.get_logger().log(
             f'[{__class__.__name__}] predict_action_chunk: new chunk with {len(actions_list)} actions, '
-            f'start_index={self._buffer_index} (skipped {self._buffer_index})',
+            f'start_index={start_index} (requested_skip={skip_actions})',
             severity=LoggingSeverity.INFO,
             throttle_duration_sec=5.0,
         )
@@ -249,27 +251,9 @@ class SmolVLA(BasePolicy):
         Returns:
             A list of joint positions, or None if no actions are buffered.
         """
-        if not self._buffer_actions:
-            return None
-
-        # Clamp buffer index
-        if self._buffer_index >= len(self._buffer_actions):
-            self._buffer_index = len(self._buffer_actions) - 1
-
-        # Get current action and advance buffer index
-        current = self._buffer_actions[self._buffer_index]
-        if self._buffer_index < len(self._buffer_actions) - 1:
-            self._buffer_index += 1
-
-        # Apply low-pass filtering if enabled
-        if self._filter is None:
-            return current
-        return self._filter.filter(np.array(current)).tolist()
+        return self._action_buffer.get()
 
     def reset(self, context: Optional[Mapping[str, Any]] = None) -> None:
         self.node.get_logger().info(f'[{__class__.__name__}] Resetting policy.')
         self.model.reset()
-        self._buffer_actions = []
-        self._buffer_index = 0
-        if self._filter is not None:
-            self._filter.reset()
+        self._action_buffer.reset()  # clear action buffer
