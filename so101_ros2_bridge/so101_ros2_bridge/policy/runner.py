@@ -519,7 +519,7 @@ class SO101PolicyRunner(LifecycleNode):
         last_joint_state: JointState = msgs.get('observation.state')
         if last_joint_state is None:
             self.get_logger().log(
-                "Safe stop: last observation.state missing, no command published.",
+                'Safe stop: last observation.state missing, no command published.',
                 severity=LoggingSeverity.WARN,
                 throttle_duration_sec=2.0,
             )
