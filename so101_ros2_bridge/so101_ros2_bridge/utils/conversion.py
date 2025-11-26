@@ -49,8 +49,6 @@ def ros_image_to_hwc_uint8(msg: Image) -> np.ndarray:
 
 def radians_to_normalized(joint_name: str, rad: float) -> float:
     """Convert a radian command into the normalized SO101 joint range."""
-    if joint_name == 'gripper':
-        return (rad / math.pi) * 100.0
     return (rad / math.pi) * 100.0
 
 
