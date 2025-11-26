@@ -177,9 +177,6 @@ class SmolVLA(BasePolicy):
         observation: EnvTransition = self._pre_processor(inference_frame)
         return observation
 
-    def infer(self, ros_obs, time_per_action, inference_delay=0):
-        return super().infer(ros_obs, time_per_action, inference_delay)
-
     def predict_action_chunk(
         self,
         observation: EnvTransition,
