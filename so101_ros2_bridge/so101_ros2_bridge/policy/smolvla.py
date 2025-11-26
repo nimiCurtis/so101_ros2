@@ -29,7 +29,6 @@ ensure_conda_site_packages_from_env()
 import math
 from typing import Any, Dict, List, Mapping, Optional
 
-import numpy as np
 from lerobot.configs.types import PolicyFeature
 from lerobot.policies.factory import make_pre_post_processors
 from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
