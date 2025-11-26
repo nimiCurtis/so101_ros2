@@ -1,0 +1,4 @@
+# Specific smolvla policy configuration
+lpf_filtering:
+  enable: True # Enable or disable low-pass filtering
+  alpha: 0.1 # Smoothing factor for low-pass filter [0.0 - 1.0], lower values mean more smoothing

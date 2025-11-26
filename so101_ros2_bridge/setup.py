@@ -23,18 +23,23 @@ setup(
             os.path.join('share', package_name, 'config', 'calibration'),
             glob('config/calibration/*.json'),
         ),
+        (
+            os.path.join('share', package_name, 'config', 'policies'),
+            glob('config/policies/*.yaml'),
+        ),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='nimrod',
     maintainer_email='nimicu21@gmail.com',
-    description='ROS 2 bridge for SO101 robot',
+    description='ROS2 bridge for SO101 robot',
     license='MIT',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'follower_ros2_node = so101_ros2_bridge.follower_ros2_node:main',
             'leader_ros2_node = so101_ros2_bridge.leader_ros2_node:main',
+            'policy_runner_ros2_node = so101_ros2_bridge.policy_runner_ros2_node:main',
         ],
     },
 )

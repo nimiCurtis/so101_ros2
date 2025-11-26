@@ -1,0 +1,35 @@
+observations:
+
+  observation.images.camera1:
+    topic: "/follower/cam_front/image_raw"
+    msg_type: "sensor_msgs/msg/Image"
+
+  observation.images.camera2:
+    topic: "/static_camera/cam_side/color/image_raw"
+    msg_type: "sensor_msgs/msg/Image"
+
+  observation.state:
+    topic: "/follower/joint_states"
+    msg_type: "sensor_msgs/msg/JointState"
+    # Optional: specify joint names to extract from JointState message
+    # names:
+    # If not provided, Defaults will be used from the policy config
+      # - "shoulder_pan"
+      # - "shoulder_lift"
+      # - "elbow_flex"
+      # - "wrist_flex"
+      # - "wrist_roll"
+      # - "gripper_finger"
+
+action:
+  topic: "/leader/joint_states"
+  msg_type: "sensor_msgs/msg/JointState"
+  # Optional: specify joint names to extract from JointState message
+  # names:
+  # If not provided, Defaults will be used from the policy config
+    # - "shoulder_pan"
+    # - "shoulder_lift"
+    # - "elbow_flex"
+    # - "wrist_flex"
+    # - "wrist_roll"
+    # - "gripper_finger"

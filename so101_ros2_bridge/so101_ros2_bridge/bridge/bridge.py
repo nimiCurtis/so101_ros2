@@ -39,7 +39,7 @@ from sensor_msgs.msg import JointState
 from std_msgs.msg import Float64MultiArray
 
 # Ensure the conda site-packages directory is in the system path
-from so101_ros2_bridge.utils import ensure_conda_site_packages_from_env
+from so101_ros2_bridge.utils.core import ensure_conda_site_packages_from_env
 
 ensure_conda_site_packages_from_env()
 

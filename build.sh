@@ -17,6 +17,11 @@ if ! grep -Fqx 'export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp' "$BASHRC_FILE"; th
   echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> "$BASHRC_FILE"
 fi
 
+# Enable colored logging
+if ! grep -Fqx 'export RCUTILS_COLORIZED_OUTPUT=1' "$BASHRC_FILE"; then
+  echo "export RCUTILS_COLORIZED_OUTPUT=1" >> "$BASHRC_FILE"
+fi
+
 source "$BASHRC_FILE"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
