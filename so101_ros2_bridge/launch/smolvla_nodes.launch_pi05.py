@@ -38,13 +38,13 @@ def generate_launch_description():
 
     model_id_arg = DeclareLaunchArgument(
         'model_id',
-        default_value='/home/anton/outputs/train/isaac_pick_and_place_train/checkpoints/005000/pretrained_model',# '/home/anton/outputs/train/pi05_train_mgpu_001/checkpoints/last/pretrained_model',#'lerobot/smolvla_base',
+        default_value= '/home/anton/outputs/train/pick_and_place_merged_train_001/checkpoints/010000/pretrained_model', # '/home/anton/lerobot/outputs/train/isaac_pick_and_place_pi05/checkpoints/003000/pretrained_model', #'/home/anton/outputs/train/isaac_pick_and_place_train/checkpoints/005000/pretrained_model',# '/home/anton/outputs/train/pi05_train_mgpu_001/checkpoints/last/pretrained_model',#'lerobot/smolvla_base',
         description='HuggingFace model ID for SmolVLA policy'
     )
     
     task_arg = DeclareLaunchArgument(
         'task',
-        default_value='First, identify the cube position. Then, reach out and grasp the cube. Finally, move the cube and release it into the bowl.',
+        default_value= 'Pick the cube and place it in the bowl.', #'First, identify the cube position. Then, reach out and grasp the cube. Finally, move the cube and release it into the bowl.',
         description='Task description for the robot'
     )
     

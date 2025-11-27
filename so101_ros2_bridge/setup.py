@@ -27,6 +27,7 @@ setup(
     entry_points={
         'console_scripts': [
             # node scripts
+            'inference_node = so101_ros2_bridge.inference_node:main',
             'follower_ros2_node = so101_ros2_bridge.follower_ros2_node:main',
             'leader_ros2_node = so101_ros2_bridge.leader_ros2_node:main',
             'smolvla_inference_node = so101_ros2_bridge.smolvla_inference_node:main',

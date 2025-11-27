@@ -1,0 +1,261 @@
+#!/usr/bin/env python3
+import os
+
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.actions import IncludeLaunchDescription
+from launch.conditions import IfCondition
+from launch.substitutions import EqualsSubstitution
+from ament_index_python.packages import get_package_share_directory
+
+def generate_launch_description():
+    """
+    Generates the launch description for the unified inference and action chunk executor nodes.
+    
+    This launch file configures both:
+    1. Inference Node - Performs VLA model inference (SmolVLA or PI05)
+    2. Action Chunk Executor Node - Executes predicted action chunks
+    """
+
+    # =============================================================================
+    # Declare Launch Arguments - Inference Node
+    # =============================================================================
+    teleop_mode_arg = DeclareLaunchArgument(
+        "teleop_mode",
+        default_value="isaac",
+        description="Execution mode: real, gazebo, isaac",
+    )
+
+    model_arg = DeclareLaunchArgument(
+        "model",
+        default_value=os.path.join(
+            get_package_share_directory("so101_description"), "urdf", "so101_new_calib.urdf.xacro"
+        ),
+    )
+
+    model_id_arg = DeclareLaunchArgument(
+        'model_id',
+        default_value='/home/anton/outputs/train/pick_and_place_merged_train_001/checkpoints/010000/pretrained_model',
+        description='HuggingFace model ID or path to pretrained model'
+    )
+    
+    model_type_arg = DeclareLaunchArgument(
+        'model_type',
+        default_value='smolvla',
+        description='Type of model to use: "smolvla" or "pi05"'
+    )
+    
+    task_arg = DeclareLaunchArgument(
+        'task',
+        default_value='Pick the cube and place it in the bowl.',
+        description='Task description for the robot'
+    )
+    
+    robot_type_arg = DeclareLaunchArgument(
+        'robot_type',
+        default_value='so101',
+        description='Robot type identifier'
+    )
+    
+    camera1_topic_arg = DeclareLaunchArgument(
+        'camera1_topic',
+        default_value='/follower/cam_front/image_raw',
+        description='Topic for front camera feed'
+    )
+    
+    camera2_topic_arg = DeclareLaunchArgument(
+        'camera2_topic',
+        default_value='/static_camera/cam_side/image_raw',
+        description='Topic for side camera feed'
+    )
+    
+    joint_state_topic_arg = DeclareLaunchArgument(
+        'joint_state_topic',
+        default_value='/follower/joint_states',
+        description='Topic for robot joint states'
+    )
+    
+    action_topic_arg = DeclareLaunchArgument(
+        'action_topic',
+        default_value='/leader/joint_states',
+        description='Topic for publishing single actions (JointState)'
+    )
+    
+    inference_rate_arg = DeclareLaunchArgument(
+        'inference_rate',
+        default_value='1',
+        description='Publishing rate for inference node in Hz (typically 1-5 Hz)'
+    )
+    
+    use_dummy_input_arg = DeclareLaunchArgument(
+        'use_dummy_input',
+        default_value='false',
+        description='Use dummy inputs instead of real camera/joint data for testing'
+    )
+    
+    image_qos_arg = DeclareLaunchArgument(
+        'image_qos',
+        default_value='2',
+        description='QoS depth for image subscriptions'
+    )
+    
+    joint_state_qos_arg = DeclareLaunchArgument(
+        'joint_state_qos',
+        default_value='2',
+        description='QoS depth for joint state subscriptions'
+    )
+    
+    # =============================================================================
+    # Declare Launch Arguments - Action Chunk Executor Node
+    # =============================================================================
+    
+    action_chunk_topic_arg = DeclareLaunchArgument(
+        'action_chunk_topic',
+        default_value='/smolvla_inference/action_chunk',
+        description='Topic for receiving action chunks from inference node'
+    )
+    
+    joint_command_topic_arg = DeclareLaunchArgument(
+        'joint_command_topic',
+        default_value='leader/joint_states',
+        description='Topic for publishing joint commands to robot controller'
+    )
+    
+    publish_rate_arg = DeclareLaunchArgument(
+        'publish_rate',
+        default_value='30.0',
+        description='Action execution rate in Hz (30Hz = ~33ms per action)'
+    )
+    
+    inference_delay_arg = DeclareLaunchArgument(
+        'inference_delay',
+        default_value='0.5',
+        description='Expected inference delay in seconds for delay compensation'
+    )
+    
+    chunk_size_arg = DeclareLaunchArgument(
+        'chunk_size',
+        default_value='50',
+        description='Expected number of actions in each chunk'
+    )
+    
+    action_dim_arg = DeclareLaunchArgument(
+        'action_dim',
+        default_value='6',
+        description='Number of joints/action dimensions'
+    )
+    
+    use_delay_compensation_arg = DeclareLaunchArgument(
+        'use_delay_compensation',
+        default_value='true',
+        description='Enable/disable delay compensation (skip initial actions)'
+    )
+
+    # =============================================================================
+    # Configure Nodes
+    # =============================================================================
+
+    # Unified Inference Node (supports both SmolVLA and PI05)
+    inference_node = Node(
+        package='so101_ros2_bridge',
+        executable='inference_node',
+        name='inference_node',
+        output='screen',
+        parameters=[{
+            'model_id': LaunchConfiguration('model_id'),
+            'model_type': LaunchConfiguration('model_type'),
+            'task': LaunchConfiguration('task'),
+            'robot_type': LaunchConfiguration('robot_type'),
+            'camera1_topic': LaunchConfiguration('camera1_topic'),
+            'camera2_topic': LaunchConfiguration('camera2_topic'),
+            'joint_state_topic': LaunchConfiguration('joint_state_topic'),
+            'action_topic': LaunchConfiguration('action_topic'),
+            'action_chunk_topic': LaunchConfiguration('action_chunk_topic'),
+            'publisher_rate': LaunchConfiguration('inference_rate'),
+            'use_dummy_input': LaunchConfiguration('use_dummy_input'),
+            'image_subscription_qos': LaunchConfiguration('image_qos'),
+            'joint_state_subscription_qos': LaunchConfiguration('joint_state_qos'),
+        }],
+    )
+
+    # Action Chunk Executor Node
+    action_chunk_executor_node = Node(
+        package='so101_ros2_bridge',
+        executable='action_chunk_executor_node',
+        name='action_chunk_executor_node',
+        output='screen',
+        parameters=[{
+            'action_chunk_topic': LaunchConfiguration('action_chunk_topic'),
+            'joint_command_topic': LaunchConfiguration('joint_command_topic'),
+            'publish_rate': LaunchConfiguration('publish_rate'),
+            'inference_delay': LaunchConfiguration('inference_delay'),
+            'chunk_size': LaunchConfiguration('chunk_size'),
+            'action_dim': LaunchConfiguration('action_dim'),
+            'use_delay_compensation': LaunchConfiguration('use_delay_compensation'),
+        }]
+    )
+
+    # Isaac simulation launch
+    sim_isaac_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory("so101_bringup"), "launch", "include", "sim_isaac.launch.py")
+        ),
+        launch_arguments={
+            "model": LaunchConfiguration("model"),
+        }.items(),
+        condition=IfCondition(EqualsSubstitution(LaunchConfiguration("teleop_mode"), "isaac")),
+    )
+
+    # Teleop launch
+    teleop_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("so101_teleop"),
+                "launch",
+                "so101_leader_teleop.launch.py",
+            )
+        ),
+        launch_arguments={
+            "mode": LaunchConfiguration("teleop_mode"),
+        }.items(),
+    )
+
+    # =============================================================================
+    # Build Launch Description
+    # =============================================================================
+    
+    return LaunchDescription([
+        # Inference node arguments
+        model_arg,
+        teleop_mode_arg,
+        model_id_arg,
+        model_type_arg,
+        task_arg,
+        robot_type_arg,
+        camera1_topic_arg,
+        camera2_topic_arg,
+        joint_state_topic_arg,
+        action_topic_arg,
+        inference_rate_arg,
+        use_dummy_input_arg,
+        image_qos_arg,
+        joint_state_qos_arg,
+        
+        # Executor node arguments
+        action_chunk_topic_arg,
+        joint_command_topic_arg,
+        publish_rate_arg,
+        inference_delay_arg,
+        chunk_size_arg,
+        action_dim_arg,
+        use_delay_compensation_arg,
+        
+        # Nodes
+        inference_node,
+        action_chunk_executor_node,
+        sim_isaac_launch,
+        teleop_launch,
+    ])
