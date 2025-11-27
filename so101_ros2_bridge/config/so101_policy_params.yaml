@@ -3,9 +3,9 @@
 /**:
   ros__parameters:
     # Sync / timing
-    inference_rate: 2.0          # Hz, how often to run policy
+    inference_rate: 1.0          # Hz, how often to run policy
     inference_delay: 0.5        # sec, delay of inference
-    publish_rate: 30.0           # Hz, how often to publish JointState commands
+    publish_rate: 25.0           # Hz, how often to publish JointState commands
     sync.queue_size: 20               # message_filters queue_size
     sync.slop: 0.5                  # ApproximateTimeSynchronizer slop [sec]
 
@@ -13,6 +13,7 @@
     policy_name: "smolvla"
     device: cuda:0
     # checkpoint_path: "/home/nimrod/ros2_ws/src/so101_ros2/so101_ros2_bridge/config/policies/smolvla/checkpoints/005000/pretrained_model"  # Default checkpoint path
-    checkpoint_path: "/home/nimrod/ros2_ws/src/so101_ros2/so101_ros2_bridge/config/policies/smolvla/checkpoints/last/pretrained_model"  # Default checkpoint path
+    checkpoint_path: "/home/nimrod/ros2_ws/src/so101_ros2/so101_ros2_bridge/config/policies/smolvla/checkpoints/010000/pretrained_model"  # Default checkpoint path
+    # checkpoint_path: "/home/nimrod/ros2_ws/src/so101_ros2/so101_ros2_bridge/config/policies/smolvla/checkpoints/last_merged/pretrained_model"  # Default checkpoint path
     # task: "First, identify the cube position. Then, reach out and grasp the cube. Finally, move the cube and release it into the bowl"
     task: "Pick the cube and place it in the bowl."
